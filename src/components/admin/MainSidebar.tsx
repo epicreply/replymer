@@ -1,6 +1,9 @@
 import { useState } from "react";
 import {
-  LayoutDashboard,
+  Inbox,
+  CheckCircle2,
+  XCircle,
+  BarChart3,
   Settings,
   Users,
   User,
@@ -11,6 +14,11 @@ import {
   Search,
   MessageCircle,
   ChevronDown,
+  Package,
+  Globe,
+  Sparkles,
+  ChevronUp,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -26,14 +34,31 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useLeads } from "@/context/LeadsContext";
 
 interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  badge?: number;
 }
 
+const primaryNavItems: NavItem[] = [
+  { icon: Inbox, label: "Inbox", path: "/inbox" },
+  { icon: CheckCircle2, label: "Completed", path: "/completed" },
+  { icon: XCircle, label: "Discarded", path: "/discarded" },
+];
+
+const secondaryNavItems: NavItem[] = [
+  { icon: BarChart3, label: "Analytics", path: "/analytics" },
+];
+
 const settingsItems: NavItem[] = [
+  { icon: Package, label: "Product Setup", path: "/settings/product" },
+  { icon: Globe, label: "Communities", path: "/settings/communities" },
+  { icon: Sparkles, label: "Prompts", path: "/settings/prompts" },
   { icon: Users, label: "Team", path: "/settings/team" },
   { icon: User, label: "Profile", path: "/settings/profile" },
   { icon: CreditCard, label: "Billing", path: "/settings/billing" },
@@ -52,8 +77,8 @@ export function MainSidebar({
 }: MainSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { stats, usageQuota, brands, activeBrand, setActiveBrand } = useLeads();
   
-  // Check if we're in settings section
   const isInSettings = location.pathname.startsWith("/settings");
   const [settingsOpen, setSettingsOpen] = useState(isInSettings);
 
@@ -68,7 +93,8 @@ export function MainSidebar({
   };
 
   const isActive = (path: string) => location.pathname === path;
-  const isDashboardActive = location.pathname === "/" || location.pathname === "/dashboard";
+
+  const usagePercent = (usageQuota.used / usageQuota.limit) * 100;
 
   return (
     <div className="flex min-h-screen flex-col bg-sidebar">
@@ -98,22 +124,90 @@ export function MainSidebar({
         </div>
       </div>
 
+      {/* Brand Selector */}
+      <div className="px-3 pb-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-between h-10 px-3"
+            >
+              <span className="truncate font-medium">{activeBrand.name}</span>
+              <ChevronUp className="h-4 w-4 text-muted-foreground rotate-180" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            {brands.map((brand) => (
+              <DropdownMenuItem
+                key={brand.id}
+                onClick={() => setActiveBrand(brand.id)}
+                className={cn(brand.isActive && "bg-accent")}
+              >
+                {brand.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-2">
+      <nav className="flex-1 px-3 py-2 overflow-y-auto">
         <div className="space-y-1">
-          {/* Dashboard */}
-          <Button
-            variant={isDashboardActive ? "sidebarActive" : "sidebar"}
-            size="sidebar"
-            onClick={() => handleNavClick("/dashboard")}
-            className={cn(
-              "gap-3 rounded-lg",
-              isDashboardActive && "bg-sidebar-accent"
-            )}
-          >
-            <LayoutDashboard className="h-5 w-5" />
-            <span>Dashboard</span>
-          </Button>
+          {/* Primary Navigation */}
+          {primaryNavItems.map((item) => {
+            const isItemActive = isActive(item.path);
+            const Icon = item.icon;
+            const badgeCount = item.path === "/inbox" ? stats.unread : undefined;
+
+            return (
+              <Button
+                key={item.path}
+                variant={isItemActive ? "sidebarActive" : "sidebar"}
+                size="sidebar"
+                onClick={() => handleNavClick(item.path)}
+                className={cn(
+                  "gap-3 rounded-lg justify-between",
+                  isItemActive && "bg-sidebar-accent"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </div>
+                {badgeCount !== undefined && badgeCount > 0 && (
+                  <Badge variant="default" className="h-5 min-w-5 px-1.5 text-xs">
+                    {badgeCount}
+                  </Badge>
+                )}
+              </Button>
+            );
+          })}
+
+          <div className="py-2">
+            <div className="h-px bg-border" />
+          </div>
+
+          {/* Secondary Navigation */}
+          {secondaryNavItems.map((item) => {
+            const isItemActive = isActive(item.path);
+            const Icon = item.icon;
+
+            return (
+              <Button
+                key={item.path}
+                variant={isItemActive ? "sidebarActive" : "sidebar"}
+                size="sidebar"
+                onClick={() => handleNavClick(item.path)}
+                className={cn(
+                  "gap-3 rounded-lg",
+                  isItemActive && "bg-sidebar-accent"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </Button>
+            );
+          })}
 
           {/* Settings with submenu */}
           <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
@@ -166,41 +260,64 @@ export function MainSidebar({
         </div>
       </nav>
 
-      {/* Footer */}
-      <div className="mt-auto flex items-center gap-3 px-4 pb-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full border border-border bg-card hover:bg-accent"
-            >
-              <HelpCircle className="h-5 w-5 text-muted-foreground" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            sideOffset={8}
-            className="w-56 rounded-xl border border-border bg-card p-1.5 shadow-lg"
+      {/* Footer - Usage & Actions */}
+      <div className="mt-auto border-t border-border">
+        {/* Usage Quota */}
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between text-xs mb-2">
+            <span className="text-muted-foreground">Replies used</span>
+            <span className="font-medium text-foreground">
+              {usageQuota.used}/{usageQuota.limit}
+            </span>
+          </div>
+          <Progress value={usagePercent} className="h-1.5" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-3 text-primary border-primary/30 hover:bg-primary/10"
+            onClick={() => handleNavClick("/settings/billing")}
           >
-            <DropdownMenuItem className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors focus:bg-accent focus:text-foreground">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <span>Search Help Center</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors focus:bg-accent focus:text-foreground">
-              <MessageCircle className="h-4 w-4 text-muted-foreground" />
-              <span>Contact support</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ml-auto h-9 w-9 rounded-full border border-border bg-card hover:bg-accent"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-5 w-5 text-muted-foreground" />
-        </Button>
+            <Zap className="h-4 w-4 mr-1" />
+            Upgrade Plan
+          </Button>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex items-center gap-3 px-4 pb-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full border border-border bg-card hover:bg-accent"
+              >
+                <HelpCircle className="h-5 w-5 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              sideOffset={8}
+              className="w-56 rounded-xl border border-border bg-card p-1.5 shadow-lg"
+            >
+              <DropdownMenuItem className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors focus:bg-accent focus:text-foreground">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <span>Search Help Center</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors focus:bg-accent focus:text-foreground">
+                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                <span>Contact support</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto h-9 w-9 rounded-full border border-border bg-card hover:bg-accent"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-5 w-5 text-muted-foreground" />
+          </Button>
+        </div>
       </div>
     </div>
   );
