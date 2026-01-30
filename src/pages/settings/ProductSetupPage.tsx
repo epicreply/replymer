@@ -185,7 +185,7 @@ export default function ProductSetupPage() {
 
     setIsSaving(true);
     try {
-      const response = await fetch(`http://localhost:8000/v1.0/projects/${selectedProjectId}`, {
+      const response = await fetch(`https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${accessToken}`,
