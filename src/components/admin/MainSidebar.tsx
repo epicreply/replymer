@@ -117,11 +117,12 @@ export function MainSidebar({
   return (
     <div className="flex min-h-screen flex-col bg-sidebar">
       {/* Header with Logo */}
-      <div className="flex items-center gap-3 px-4 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+      <div className="flex items-center gap-3 px-4 py-4">\
+        <img src="/logo.png" alt="Emirates Escape" class="h-9 w-auto object-contain">
+        {/* <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
           <span className="text-lg font-bold text-primary-foreground">L</span>
         </div>
-        <span className="text-base font-semibold text-foreground">Lovable</span>
+        <span className="text-base font-semibold text-foreground">Lovable</span> */}
         <div className="ml-auto">
           {onToggleSidebar ? (
             <Button
