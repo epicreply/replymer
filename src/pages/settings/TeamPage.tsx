@@ -24,19 +24,21 @@ export default function TeamPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="text-xl font-semibold text-foreground">Team</h1>
-      
-      <TeamCard
-        teamName={teamName}
-        memberCount={mockMembers.length}
-        onNameChange={setTeamName}
-      />
-
-      <MemberList
-        members={mockMembers}
-        onInvite={handleInvite}
-      />
+    <div className="mx-auto max-w-2xl">
+      <div className="space-y-6">
+        <h1 className="text-xl font-semibold text-foreground">Team</h1>
+        
+        <TeamCard
+          teamName={teamName}
+          memberCount={mockMembers.length}
+          onNameChange={setTeamName}
+        />
+  
+        <MemberList
+          members={mockMembers}
+          onInvite={handleInvite}
+        />
+      </div>
     </div>
   );
 }
