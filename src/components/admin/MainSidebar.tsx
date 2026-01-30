@@ -120,8 +120,8 @@ export function MainSidebar({
       <div className="flex items-center gap-3 px-4 py-4">
         <img
           src="/logo.png"
-          alt="Lovable logo"
-          className="h-10 object-cover"
+          alt="Autoreply logo"
+          className="h-8 object-cover"
         />
         <div className="ml-auto">
           {onToggleSidebar ? (
