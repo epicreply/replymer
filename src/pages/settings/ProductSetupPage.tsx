@@ -82,6 +82,7 @@ export default function ProductSetupPage() {
   const [formData, setFormData] = useState<ProductSettings>(defaultProductSettings);
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
@@ -146,13 +147,83 @@ export default function ProductSetupPage() {
     setIsDirty(true);
   };
 
-  const handleSave = () => {
-    setSavedFormData(formData);
-    setIsDirty(false);
-    toast({
-      title: 'Settings saved',
-      description: 'Your product information has been updated.',
+  const buildUpdatePayload = () => {
+    const payload: Record<string, string | null> = {};
+    const fieldMap: Record<keyof ProductSettings, string> = {
+      name: 'name',
+      websiteUrl: 'website_url',
+      description: 'description',
+      targetAudience: 'target_audience',
+      valueProposition: 'value_proposition',
+    };
+
+    (Object.keys(fieldMap) as Array<keyof ProductSettings>).forEach((field) => {
+      if (formData[field] !== savedFormData[field]) {
+        const value = formData[field].trim();
+        payload[fieldMap[field]] = value.length > 0 ? value : null;
+      }
     });
+
+    return payload;
+  };
+
+  const handleSave = async () => {
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: 'Unable to save settings',
+        description: 'Missing authentication or project selection.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const payload = buildUpdatePayload();
+    if (Object.keys(payload).length === 0) {
+      setIsDirty(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`http://localhost:8000/v1.0/projects/${selectedProjectId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update project settings');
+      }
+
+      const updatedProject = await response.json();
+      const normalizedSettings: ProductSettings = {
+        name: updatedProject.name ?? '',
+        websiteUrl: updatedProject.website_url ?? '',
+        description: updatedProject.description ?? '',
+        targetAudience: updatedProject.target_audience ?? '',
+        valueProposition: updatedProject.value_proposition ?? '',
+      };
+
+      setSavedFormData(normalizedSettings);
+      setFormData(normalizedSettings);
+      setIsDirty(false);
+      toast({
+        title: 'Settings saved',
+        description: 'Your product information has been updated.',
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Save failed',
+        description: 'We could not update your product settings. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -180,9 +251,9 @@ export default function ProductSetupPage() {
                 <X className="h-4 w-4 mr-1" />
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" onClick={handleSave} disabled={isSaving}>
                 <Save className="h-4 w-4 mr-1" />
-                Save
+                {isSaving ? 'Saving...' : 'Save'}
               </Button>
             </div>
           )}
