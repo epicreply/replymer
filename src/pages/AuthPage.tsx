@@ -14,14 +14,32 @@ const AuthPage = () => {
     if (!email) return;
     
     setIsLoading(true);
-    // Simulate magic link sending
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await fetch('https://internal-api.autoreply.ing/v1.0/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send magic link');
+      }
+
       toast({
         title: "Magic link sent!",
         description: `Check your email at ${email}`,
       });
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send magic link. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleAuth = () => {
