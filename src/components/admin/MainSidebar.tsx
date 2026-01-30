@@ -79,7 +79,7 @@ export function MainSidebar({
   const location = useLocation();
   const navigate = useNavigate();
   const { stats, usageQuota } = useLeads();
-  const { user } = useAuth();
+  const { user, selectProject } = useAuth();
 
   const isInSettings = location.pathname.startsWith("/settings");
   const [settingsOpen, setSettingsOpen] = useState(isInSettings);
@@ -108,6 +108,18 @@ export function MainSidebar({
   const handleLogout = () => {
     navigate("/auth");
     onClose?.();
+  };
+
+  const handleProjectSelect = async (project: Project) => {
+    const previousProject = activeProject;
+    setActiveProject(project);
+
+    try {
+      await selectProject(project.id);
+    } catch (error) {
+      setActiveProject(previousProject);
+      console.error("Failed to update selected project", error);
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -161,7 +173,7 @@ export function MainSidebar({
             {projects.map((project) => (
               <DropdownMenuItem
                 key={project.id}
-                onClick={() => setActiveProject(project)}
+                onClick={() => handleProjectSelect(project)}
                 className={cn(activeProject?.id === project.id && "bg-accent")}
               >
                 {project.name}

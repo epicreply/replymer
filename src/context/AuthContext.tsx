@@ -25,6 +25,7 @@ interface AuthContextType {
   accessToken: string | null;
   login: (accessToken: string, user: User) => void;
   logout: () => void;
+  selectProject: (projectId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -119,8 +120,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthenticated(false);
   };
 
+  const selectProject = async (projectId: string) => {
+    if (!accessToken || !user) {
+      throw new Error("Missing access token or user");
+    }
+
+    const previousUser = user;
+    const updatedProjects = user.projects?.map((project) => ({
+      ...project,
+      is_selected: project.id === projectId,
+    }));
+    const updatedUser = {
+      ...user,
+      projects: updatedProjects,
+      default_project_id: projectId,
+    };
+
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+
+    try {
+      const response = await fetch(
+        "https://internal-api.autoreply.ing/v1.0/users/me/selected-project",
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ selected_project: projectId }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update selected project");
+      }
+    } catch (error) {
+      setUser(previousUser);
+      localStorage.setItem("user", JSON.stringify(previousUser));
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, user, accessToken, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isLoading,
+        user,
+        accessToken,
+        login,
+        logout,
+        selectProject,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
