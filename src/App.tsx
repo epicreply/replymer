@@ -19,6 +19,7 @@ import ProfilePage from "./pages/settings/ProfilePage";
 import BillingPage from "./pages/settings/BillingPage";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
+import MagicLinkCallback from "./pages/MagicLinkCallback";
 import OnboardingPage from "./pages/OnboardingPage";
 
 const queryClient = new QueryClient();
@@ -33,9 +34,10 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
-                {/* Auth Routes */}
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/onboarding" element={<OnboardingPage />} />
+              {/* Auth Routes */}
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/auth/magic-link" element={<MagicLinkCallback />} />
+              <Route path="/onboarding" element={<OnboardingPage />} />
                 
                 {/* Main Layout with all routes */}
                 <Route element={<MainLayout />}>
