@@ -330,6 +330,12 @@ export default function CommunitiesPage() {
       setEnabledPlatforms((prev) =>
         checked ? [...new Set([...prev, platform])] : prev.filter((item) => item !== platform)
       );
+      toast({
+        title: checked ? 'Platform enabled' : 'Platform disabled',
+        description: `${getPlatformLabel(platform)} monitoring has been ${
+          checked ? 'enabled' : 'disabled'
+        }.`,
+      });
     } catch (error) {
       toast({
         title: 'Error',
@@ -341,6 +347,7 @@ export default function CommunitiesPage() {
 
   const handleRemoveCommunity = async (communityId: string) => {
     if (!accessToken || !selectedProjectId) return;
+    const communityLabel = communities.find((community) => community.id === communityId)?.name;
 
     try {
       const response = await fetch(
@@ -367,6 +374,12 @@ export default function CommunitiesPage() {
       }
 
       setCommunities((prev) => prev.filter((community) => community.id !== communityId));
+      toast({
+        title: 'Community removed',
+        description: communityLabel
+          ? `${communityLabel} has been removed from monitoring.`
+          : 'Community has been removed from monitoring.',
+      });
     } catch (error) {
       toast({
         title: 'Error',
