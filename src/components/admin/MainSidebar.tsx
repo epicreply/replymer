@@ -118,8 +118,12 @@ export function MainSidebar({
     <div className="flex min-h-screen flex-col bg-sidebar">
       {/* Header with Logo */}
       <div className="flex items-center gap-3 px-4 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-          <span className="text-lg font-bold text-primary-foreground">L</span>
+        <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-primary">
+          <img
+            src="/logo.png"
+            alt="Lovable logo"
+            className="h-full w-full object-cover"
+          />
         </div>
         <span className="text-base font-semibold text-foreground">Lovable</span>
         <div className="ml-auto">
