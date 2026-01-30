@@ -168,6 +168,7 @@ export default function PromptsPage() {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
+          'X-Project-ID': selectedProjectId,
         },
         body: JSON.stringify({
           search_prompt: formData.searchPrompt,
