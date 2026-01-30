@@ -37,8 +37,30 @@ const MagicLinkCallback = () => {
 
         const data = await response.json();
         
+        // Fetch user details
+        const userResponse = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
+          headers: {
+            Authorization: `Bearer ${data.access_token}`,
+          },
+        });
+
+        if (!userResponse.ok) {
+          throw new Error("Failed to fetch user details");
+        }
+
+        const userData = await userResponse.json();
+        
         // Store auth data and update context
-        login(data.access_token, data.user);
+        login(data.access_token, {
+          id: data.user.id,
+          email: userData.email,
+          name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || data.user.name,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          theme: userData.theme,
+          default_project_id: userData.default_project_id,
+          team_member_status: data.user.team_member_status,
+        });
         
         // Redirect to home
         navigate("/", { replace: true });
