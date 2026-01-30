@@ -18,6 +18,7 @@ const suggestedCommunities = [
   { name: '#buildinpublic', platform: 'twitter' as Platform },
   { name: 'Tech Startups', platform: 'linkedin' as Platform },
 ];
+const platforms: Platform[] = ['reddit', 'twitter', 'linkedin'];
 
 interface PlatformConnection {
   platform: Platform;
@@ -41,7 +42,6 @@ export default function CommunitiesPage() {
     () => user?.projects?.find((project) => project.is_selected)?.id ?? user?.default_project_id ?? null,
     [user]
   );
-  const platforms: Platform[] = ['reddit', 'twitter', 'linkedin'];
   const [communities, setCommunities] = useState<MonitoredCommunity[]>([]);
   const [newCommunity, setNewCommunity] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>('reddit');
@@ -151,7 +151,7 @@ export default function CommunitiesPage() {
     return () => {
       controller.abort();
     };
-  }, [accessToken, selectedProjectId, platforms]);
+  }, [accessToken, selectedProjectId]);
 
   const handleAddCommunity = async (name: string, platform: Platform) => {
     const trimmedName = name.trim();
