@@ -45,7 +45,7 @@ const MagicLinkCallback = () => {
         const data = await response.json();
         
         // Fetch user details
-        const userResponse = await fetch("https://internal-api.autoreply.ing/v1.0/user/me", {
+        const userResponse = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
           headers: {
             Authorization: `Bearer ${data.access_token}`,
           },
