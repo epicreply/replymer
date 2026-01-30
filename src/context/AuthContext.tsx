@@ -1,5 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
+interface Project {
+  id: string;
+  name: string;
+  is_selected: boolean;
+}
+
 interface User {
   id: string;
   email: string;
@@ -9,6 +15,7 @@ interface User {
   theme?: string;
   default_project_id?: string;
   team_member_status: string;
+  projects?: Project[];
 }
 
 interface AuthContextType {
@@ -77,3 +84,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export type { Project, User };
