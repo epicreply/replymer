@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLeads } from '@/context/LeadsContext';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
@@ -23,6 +24,51 @@ const placeholders = [
   { name: '[author_name]', description: 'Name of the post author' },
   { name: '[your_name]', description: 'Your name' },
 ];
+
+function PromptsPageSkeleton() {
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-28" />
+            <Skeleton className="h-9 w-20" />
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <Skeleton className="h-5 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton key={`placeholder-skeleton-${index}`} className="h-6 w-28" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Card key={`prompt-skeleton-${index}`}>
+            <CardHeader>
+              <Skeleton className="h-5 w-36" />
+              <Skeleton className="h-4 w-full max-w-md" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-40 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function PromptsPage() {
   const { accessToken, user } = useAuth();
@@ -170,6 +216,10 @@ export default function PromptsPage() {
       description: 'Prompts have been reset to defaults. Click Save to confirm.',
     });
   };
+
+  if (isLoading) {
+    return <PromptsPageSkeleton />;
+  }
 
   return (
     <div className="mx-auto max-w-2xl">
