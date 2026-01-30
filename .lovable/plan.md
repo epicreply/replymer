@@ -1,120 +1,145 @@
 
 
-# Enhanced Analytics Charts with Fullscreen Mode and Per-Card Filtering
+# Magic Link Callback Handler
 
 ## Overview
-Add interactive fullscreen capability and individual time range filtering to each analytics chart card. When users hover over a chart card, a fullscreen icon appears. Clicking it opens the chart in a fullscreen dialog. Each card will also have its own week/month/year filter in the top right corner.
+Create a new page to handle magic link authentication callbacks. When users click the magic link in their email, they'll be directed to `/auth/magic-link?token=...&email=...`. This page will verify the token with the API, store the access token, and redirect to the main app.
 
 ---
 
-## 1. Create StatisticCard Component
+## 1. Create MagicLinkCallback Page
 
-A new reusable component that wraps chart cards with:
-- Hover state showing a fullscreen icon (top right, semi-transparent until hover)
-- Click handler to open fullscreen dialog
-- Individual time range filter dropdown (Week, Month, Year) in the header
-- Props for title, children (chart content), and data
+**File:** `src/pages/MagicLinkCallback.tsx`
 
-**File:** `src/components/analytics/StatisticCard.tsx`
+This page will:
+- Extract `token` and `email` from URL query parameters
+- Display a loading spinner while verifying
+- Call the confirm API endpoint
+- Handle success and error states
 
+**UI States:**
 ```text
 +------------------------------------------+
-|  Title                    [Week v] [⛶]  |  <- Filter + fullscreen icon (visible on hover)
 |                                          |
-|           [Chart Content]                |
+|              [Spinner]                   |
+|         Verifying your login...          |
+|                                          |
++------------------------------------------+
+
+On Error:
++------------------------------------------+
+|                                          |
+|           [Error Icon]                   |
+|     Link expired or invalid              |
+|         [Back to Login]                  |
 |                                          |
 +------------------------------------------+
 ```
 
----
-
-## 2. Create ChartDialog Component
-
-A fullscreen dialog for displaying enlarged charts:
-- Uses existing Dialog component from UI library
-- Full viewport width/height with padding
-- Same chart content rendered at larger size
-- Close button (X) in top right
-- Time range filter available in dialog header too
-
-**File:** `src/components/analytics/ChartDialog.tsx`
+**API Call:**
+```typescript
+const response = await fetch('https://internal-api.autoreply.ing/v1.0/signin/confirm', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, token }),
+});
+```
 
 ---
 
-## 3. Update AnalyticsPage
+## 2. Update AuthContext
 
-Refactor the three chart cards to use the new StatisticCard component:
-- "Leads & Replies Over Time" (LineChart)
-- "Performance by Platform" (BarChart)  
-- "Top Performing Communities" (horizontal BarChart)
+**File:** `src/context/AuthContext.tsx`
 
-Each card will maintain its own filter state (timeRange: 'week' | 'month' | 'year')
+Enhance the context to:
+- Store the access token in localStorage
+- Store user data (id, name, email, team_member_status)
+- Update the login function signature to accept the full API response
 
----
+**New Interface:**
+```typescript
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  team_member_status: string;
+}
 
-## 4. Mock Data Updates
+interface AuthContextType {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  accessToken: string | null;
+  login: (accessToken: string, user: User) => void;
+  logout: () => void;
+}
+```
 
-Extend `analyticsData` in mockLeads.ts to include data variants for different time ranges:
-- Weekly data (7 data points)
-- Monthly data (30 data points)
-- Yearly data (12 monthly data points)
-
-This allows each card to show appropriate data based on its selected filter.
-
----
-
-## Technical Implementation Details
-
-**Hover Effect:**
-- Use Tailwind's `group` and `group-hover` utilities
-- Fullscreen icon: `opacity-0 group-hover:opacity-100 transition-opacity`
-- Icon from lucide-react: `Maximize2` or `Expand`
-
-**Dialog Behavior:**
-- Dialog content: `max-w-4xl w-full h-[80vh]`
-- ResponsiveContainer inside dialog uses full available space
-- Chart re-renders at larger size for better readability
-
-**Filter Options:**
-- Week (last 7 days)
-- Month (last 30 days)  
-- Year (last 12 months)
-
-**State Management:**
-- Each StatisticCard maintains its own `timeRange` state
-- Parent passes data variants, child selects based on timeRange
-- Dialog receives current filtered data and timeRange
+**Storage Keys:**
+- `accessToken` - JWT token for API calls
+- `user` - JSON stringified user object
+- `isAuthenticated` - boolean flag
 
 ---
 
-## Component Structure
+## 3. Add Route
+
+**File:** `src/App.tsx`
+
+Add the new route for the magic link callback:
+```typescript
+<Route path="/auth/magic-link" element={<MagicLinkCallback />} />
+```
+
+---
+
+## Flow Diagram
 
 ```text
-AnalyticsPage
-├── Header with global filters (existing)
-├── Summary Cards (unchanged)
-└── Chart Grid
-    ├── StatisticCard (Leads Over Time)
-    │   ├── CardHeader with title + filter + fullscreen icon
-    │   ├── LineChart
-    │   └── ChartDialog (when open)
-    ├── StatisticCard (Platform Performance)
-    │   ├── CardHeader with title + filter + fullscreen icon
-    │   ├── BarChart
-    │   └── ChartDialog (when open)
-    └── StatisticCard (Top Communities)
-        ├── CardHeader with title + filter + fullscreen icon
-        ├── BarChart (horizontal)
-        └── ChartDialog (when open)
+User clicks magic link in email
+           |
+           v
++---------------------------+
+| /auth/magic-link?         |
+| token=xxx&email=yyy       |
++---------------------------+
+           |
+           v
++---------------------------+
+| Extract params from URL   |
+| Show loading spinner      |
++---------------------------+
+           |
+           v
++---------------------------+
+| POST /v1.0/signin/confirm |
+| { email, token }          |
++---------------------------+
+           |
+     +-----+-----+
+     |           |
+  Success      Error
+     |           |
+     v           v
++----------+  +------------------+
+| Store:   |  | Show error msg   |
+| - token  |  | "Link expired"   |
+| - user   |  | [Back to Login]  |
++----------+  +------------------+
+     |
+     v
++---------------------------+
+| Update AuthContext        |
+| Redirect to /             |
++---------------------------+
 ```
 
 ---
 
 ## Files to Create
-1. `src/components/analytics/StatisticCard.tsx` - Reusable card wrapper with hover/fullscreen/filter
-2. `src/components/analytics/ChartDialog.tsx` - Fullscreen dialog for charts
+1. `src/pages/MagicLinkCallback.tsx` - Callback handler page
 
 ## Files to Modify
-1. `src/pages/AnalyticsPage.tsx` - Use new StatisticCard component for each chart
-2. `src/data/mockLeads.ts` - Add week/month/year data variants for analytics
+1. `src/context/AuthContext.tsx` - Enhanced to store token and user data
+2. `src/App.tsx` - Add route for `/auth/magic-link`
 
