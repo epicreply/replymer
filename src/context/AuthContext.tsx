@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(parsedUser);
         setIsAuthenticated(true);
 
-        const response = await fetch("https://internal-api.autoreply.ing/v1.0/user/me", {
+        const response = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
           headers: {
             Authorization: `Bearer ${storedToken}`,
           },
