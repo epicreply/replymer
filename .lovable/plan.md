@@ -1,168 +1,120 @@
 
 
-# AI-Powered Reply & Outreach Platform Dashboard
+# Enhanced Analytics Charts with Fullscreen Mode and Per-Card Filtering
 
 ## Overview
-Transform the existing admin panel into a complete AI-powered outreach dashboard for monitoring social conversations across Reddit, X/Twitter, and LinkedIn, generating AI replies/DMs, and tracking performance metrics.
+Add interactive fullscreen capability and individual time range filtering to each analytics chart card. When users hover over a chart card, a fullscreen icon appears. Clicking it opens the chart in a fullscreen dialog. Each card will also have its own week/month/year filter in the top right corner.
 
 ---
 
-## 1. Updated Sidebar Navigation
+## 1. Create StatisticCard Component
 
-Restructure the main sidebar to include the new workflow-focused navigation:
+A new reusable component that wraps chart cards with:
+- Hover state showing a fullscreen icon (top right, semi-transparent until hover)
+- Click handler to open fullscreen dialog
+- Individual time range filter dropdown (Week, Month, Year) in the header
+- Props for title, children (chart content), and data
 
-**Primary Navigation:**
-- **Inbox** - Main leads/opportunities view (with unread count badge)
-- **Completed** - Successfully replied conversations
-- **Discarded** - Marked as not relevant
+**File:** `src/components/analytics/StatisticCard.tsx`
 
-**Secondary Navigation:**
-- **Analytics** - Performance metrics and charts
-- **Settings** (collapsible)
-  - Product Setup - Product info & target audience
-  - Communities - Monitored subreddits/platforms
-  - Prompts - AI response customization
-  - Team - Existing team management
-  - Profile - User profile settings
-  - Billing - Subscription & usage
-
-**Footer Elements:**
-- Brand selector dropdown (for multi-brand users)
-- Usage quota progress bar (e.g., "47/100 replies used")
-- Upgrade button
+```text
++------------------------------------------+
+|  Title                    [Week v] [⛶]  |  <- Filter + fullscreen icon (visible on hover)
+|                                          |
+|           [Chart Content]                |
+|                                          |
++------------------------------------------+
+```
 
 ---
 
-## 2. Inbox / Leads Page (Main Dashboard)
+## 2. Create ChartDialog Component
 
-A three-panel layout for managing incoming leads:
+A fullscreen dialog for displaying enlarged charts:
+- Uses existing Dialog component from UI library
+- Full viewport width/height with padding
+- Same chart content rendered at larger size
+- Close button (X) in top right
+- Time range filter available in dialog header too
 
-**Left Panel - Filters:**
-- Relevancy score slider (0-100%)
-- Platform filter (Reddit, X, LinkedIn checkboxes)
-- Community/keyword filter with post counts
-- Date range selector
-
-**Center Panel - Lead List:**
-- Each lead card shows:
-  - Relevancy score badge (color-coded)
-  - Platform icon
-  - Community/subreddit name
-  - Post age (e.g., "2 hours ago")
-  - Post title preview (truncated)
-  - Unread/read visual indicator
-
-**Right Panel - Lead Detail & Suggestions:**
-- Full post content with author handle and timestamp
-- Action buttons: "Not Relevant", "Complete", "Close"
-- **Suggested Comment** card with:
-  - AI-generated response text
-  - Rewrite, Edit Prompt, Copy & Open buttons
-- **Suggested DM** card with:
-  - Personalized message script
-  - Same action buttons
-
-**Status Tabs:** All, Unread, Completed, Discarded (with count badges)
+**File:** `src/components/analytics/ChartDialog.tsx`
 
 ---
 
-## 3. Completed Page
+## 3. Update AnalyticsPage
 
-List view of all successfully handled leads:
-- Filterable by platform, date, keyword
-- Each item shows: original post, your reply, timestamp, engagement metrics (if available)
-- Option to view original post
+Refactor the three chart cards to use the new StatisticCard component:
+- "Leads & Replies Over Time" (LineChart)
+- "Performance by Platform" (BarChart)  
+- "Top Performing Communities" (horizontal BarChart)
 
----
-
-## 4. Discarded Page
-
-Archive of leads marked as not relevant:
-- Same list structure as Completed
-- "Restore" action to move back to Inbox
-- Bulk delete option
+Each card will maintain its own filter state (timeRange: 'week' | 'month' | 'year')
 
 ---
 
-## 5. Analytics / Reports Page
+## 4. Mock Data Updates
 
-Dashboard with performance visualizations:
+Extend `analyticsData` in mockLeads.ts to include data variants for different time ranges:
+- Weekly data (7 data points)
+- Monthly data (30 data points)
+- Yearly data (12 monthly data points)
 
-**Summary Cards:**
-- Total leads found
-- Replies sent
-- DMs sent
-- Overall reply rate %
-
-**Charts (using existing Recharts):**
-- Leads & replies over time (line chart)
-- Performance by platform (bar chart)
-- Top performing keywords/communities (horizontal bar)
-- Reply rate trends
-
-**Filters:**
-- Date range picker
-- Platform selector
-- Export to CSV button
+This allows each card to show appropriate data based on its selected filter.
 
 ---
 
-## 6. Settings Pages
+## Technical Implementation Details
 
-### Product Setup (new)
-- Product name, website URL, description fields
-- Target audience and value proposition
-- Save/Cancel actions
+**Hover Effect:**
+- Use Tailwind's `group` and `group-hover` utilities
+- Fullscreen icon: `opacity-0 group-hover:opacity-100 transition-opacity`
+- Icon from lucide-react: `Maximize2` or `Expand`
 
-### Communities & Keywords (new)
-- Add/remove subreddits and communities with autocomplete
-- Suggested communities based on product description
-- Keyword/phrase input with tags
-- Platform toggles (Reddit, X, LinkedIn)
+**Dialog Behavior:**
+- Dialog content: `max-w-4xl w-full h-[80vh]`
+- ResponsiveContainer inside dialog uses full available space
+- Chart re-renders at larger size for better readability
 
-### Prompts Customization (new)
-- **Search Prompt Editor** - How the AI finds relevant posts
-- **Comment Prompt Editor** - Template for public replies
-- **DM Prompt Editor** - Template for direct messages
-- Placeholders guide (e.g., `<product_name>`, `[recipient]`)
-- Reset to default, Save, Cancel buttons
+**Filter Options:**
+- Week (last 7 days)
+- Month (last 30 days)  
+- Year (last 12 months)
 
-### Enhanced Billing
-- Current plan display with quota usage bar
-- Plan comparison cards (Starter, Pro, Enterprise)
-- Payment method section
-- Billing history table
-- Upgrade/downgrade actions
+**State Management:**
+- Each StatisticCard maintains its own `timeRange` state
+- Parent passes data variants, child selects based on timeRange
+- Dialog receives current filtered data and timeRange
 
 ---
 
-## 7. Enhanced Onboarding Flow
+## Component Structure
 
-Update the existing onboarding to include outreach setup:
-
-**Step 1:** Terms agreement (existing)
-**Step 2:** User details (existing)  
-**Step 3:** Product information form (new)
-**Step 4:** Select platforms & add initial communities/keywords (new)
-**Step 5:** Plan selection (existing)
+```text
+AnalyticsPage
+├── Header with global filters (existing)
+├── Summary Cards (unchanged)
+└── Chart Grid
+    ├── StatisticCard (Leads Over Time)
+    │   ├── CardHeader with title + filter + fullscreen icon
+    │   ├── LineChart
+    │   └── ChartDialog (when open)
+    ├── StatisticCard (Platform Performance)
+    │   ├── CardHeader with title + filter + fullscreen icon
+    │   ├── BarChart
+    │   └── ChartDialog (when open)
+    └── StatisticCard (Top Communities)
+        ├── CardHeader with title + filter + fullscreen icon
+        ├── BarChart (horizontal)
+        └── ChartDialog (when open)
+```
 
 ---
 
-## 8. Mock Data Structure
+## Files to Create
+1. `src/components/analytics/StatisticCard.tsx` - Reusable card wrapper with hover/fullscreen/filter
+2. `src/components/analytics/ChartDialog.tsx` - Fullscreen dialog for charts
 
-Create realistic mock data for:
-- 20-30 sample leads across all platforms
-- Various relevancy scores and statuses
-- Pre-generated AI responses and DM scripts
-- Sample analytics data for charts
-
----
-
-## Technical Approach
-
-- **State Management:** React Context for leads, filters, and settings
-- **Existing Components:** Leverage current Card, Button, Badge, Progress, Tabs, Slider components
-- **New Components:** LeadCard, FilterPanel, PromptEditor, PlatformBadge
-- **Styling:** Use existing gradient backgrounds, admin-card classes, and animation utilities
-- **Charts:** Recharts (already installed) for analytics visualizations
+## Files to Modify
+1. `src/pages/AnalyticsPage.tsx` - Use new StatisticCard component for each chart
+2. `src/data/mockLeads.ts` - Add week/month/year data variants for analytics
 
