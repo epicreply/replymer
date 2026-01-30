@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Inbox,
   CheckCircle2,
@@ -37,6 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useLeads } from "@/context/LeadsContext";
+import { useAuth, type Project } from "@/context/AuthContext";
 
 interface NavItem {
   icon: React.ElementType;
@@ -77,10 +78,27 @@ export function MainSidebar({
 }: MainSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { stats, usageQuota, brands, activeBrand, setActiveBrand } = useLeads();
-  
+  const { stats, usageQuota } = useLeads();
+  const { user } = useAuth();
+
   const isInSettings = location.pathname.startsWith("/settings");
   const [settingsOpen, setSettingsOpen] = useState(isInSettings);
+
+  // Get projects from user, default to empty array if not available
+  const projects = user?.projects || [];
+
+  // Find the default selected project or use the first one
+  const defaultProject = projects.find(p => p.is_selected) || projects[0];
+
+  // State for active project
+  const [activeProject, setActiveProject] = useState<Project | undefined>(defaultProject);
+
+  // Update active project when user projects change
+  useEffect(() => {
+    if (defaultProject && !activeProject) {
+      setActiveProject(defaultProject);
+    }
+  }, [defaultProject, activeProject]);
 
   const handleNavClick = (path: string) => {
     navigate(path);
@@ -124,7 +142,7 @@ export function MainSidebar({
         </div>
       </div>
 
-      {/* Brand Selector */}
+      {/* Project Selector */}
       <div className="px-3 pb-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -132,18 +150,20 @@ export function MainSidebar({
               variant="outline"
               className="w-full justify-between h-10 px-3"
             >
-              <span className="truncate font-medium">{activeBrand.name}</span>
+              <span className="truncate font-medium">
+                {activeProject?.name || "My Product"}
+              </span>
               <ChevronUp className="h-4 w-4 text-muted-foreground rotate-180" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
-            {brands.map((brand) => (
+            {projects.map((project) => (
               <DropdownMenuItem
-                key={brand.id}
-                onClick={() => setActiveBrand(brand.id)}
-                className={cn(brand.isActive && "bg-accent")}
+                key={project.id}
+                onClick={() => setActiveProject(project)}
+                className={cn(activeProject?.id === project.id && "bg-accent")}
               >
-                {brand.name}
+                {project.name}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

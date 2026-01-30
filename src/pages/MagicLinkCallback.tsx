@@ -60,6 +60,7 @@ const MagicLinkCallback = () => {
           theme: userData.theme,
           default_project_id: userData.default_project_id,
           team_member_status: data.user.team_member_status,
+          projects: userData.projects,
         });
         
         // Redirect to home
