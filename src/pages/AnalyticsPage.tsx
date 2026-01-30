@@ -21,9 +21,43 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { analyticsData } from '@/data/mockLeads';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { StatisticCard, TimeRange } from '@/components/analytics/StatisticCard';
+
+type DataKey = 'leads' | 'replies' | 'dms';
+
+const ClickableLegend = ({ 
+  payload, 
+  hiddenKeys, 
+  onToggle 
+}: { 
+  payload?: Array<{ value: string; color: string; dataKey: string }>;
+  hiddenKeys: Set<string>;
+  onToggle: (key: string) => void;
+}) => {
+  if (!payload) return null;
+  
+  return (
+    <div className="flex justify-center gap-4 pt-2">
+      {payload.map((entry) => (
+        <button
+          key={entry.value}
+          onClick={() => onToggle(entry.dataKey)}
+          className={`flex items-center gap-1.5 text-xs transition-opacity hover:opacity-80 ${
+            hiddenKeys.has(entry.dataKey) ? 'opacity-40 line-through' : ''
+          }`}
+        >
+          <span
+            className="h-2.5 w-2.5 rounded-sm"
+            style={{ backgroundColor: entry.color }}
+          />
+          {entry.value}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 const tooltipStyle = {
   backgroundColor: 'hsl(var(--card))',
@@ -75,6 +109,36 @@ const formatDate = (value: string, timeRange: TimeRange) => {
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState('7d');
   const [platform, setPlatform] = useState('all');
+  const [hiddenLeadsKeys, setHiddenLeadsKeys] = useState<Set<string>>(new Set());
+  const [hiddenPlatformKeys, setHiddenPlatformKeys] = useState<Set<string>>(new Set());
+  const [hiddenCommunitiesKeys, setHiddenCommunitiesKeys] = useState<Set<string>>(new Set());
+
+  const toggleLeadsKey = useCallback((key: string) => {
+    setHiddenLeadsKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  const togglePlatformKey = useCallback((key: string) => {
+    setHiddenPlatformKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  const toggleCommunitiesKey = useCallback((key: string) => {
+    setHiddenCommunitiesKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
 
   const handleExport = () => {
     toast({
@@ -96,10 +160,10 @@ export default function AnalyticsPage() {
         />
         <YAxis className="text-xs" />
         <Tooltip contentStyle={tooltipStyle} />
-        <Legend />
-        <Line type="monotone" dataKey="leads" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="replies" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="dms" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
+        <Legend content={<ClickableLegend hiddenKeys={hiddenLeadsKeys} onToggle={toggleLeadsKey} />} />
+        <Line type="monotone" dataKey="leads" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} hide={hiddenLeadsKeys.has('leads')} />
+        <Line type="monotone" dataKey="replies" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} hide={hiddenLeadsKeys.has('replies')} />
+        <Line type="monotone" dataKey="dms" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} hide={hiddenLeadsKeys.has('dms')} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -111,9 +175,9 @@ export default function AnalyticsPage() {
         <XAxis dataKey="platform" className="text-xs" />
         <YAxis className="text-xs" />
         <Tooltip contentStyle={tooltipStyle} />
-        <Legend />
-        <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+        <Legend content={<ClickableLegend hiddenKeys={hiddenPlatformKeys} onToggle={togglePlatformKey} />} />
+        <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} hide={hiddenPlatformKeys.has('leads')} />
+        <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} hide={hiddenPlatformKeys.has('replies')} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -125,9 +189,9 @@ export default function AnalyticsPage() {
         <XAxis type="number" className="text-xs" />
         <YAxis dataKey="name" type="category" width={120} className="text-xs" />
         <Tooltip contentStyle={tooltipStyle} />
-        <Legend />
-        <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-        <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} />
+        <Legend content={<ClickableLegend hiddenKeys={hiddenCommunitiesKeys} onToggle={toggleCommunitiesKey} />} />
+        <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} hide={hiddenCommunitiesKeys.has('leads')} />
+        <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} hide={hiddenCommunitiesKeys.has('replies')} />
       </BarChart>
     </ResponsiveContainer>
   );
