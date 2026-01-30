@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserProfile {
   email: string;
@@ -29,32 +30,27 @@ function ProfilePageSkeleton() {
         <Skeleton className="h-7 w-24" />
         
         <div className="admin-card animate-fade-in">
-          {/* Avatar Section Skeleton */}
           <div className="admin-card-section flex items-center gap-4">
             <Skeleton className="h-16 w-16 rounded-full" />
             <Skeleton className="h-5 w-32" />
           </div>
   
-          {/* Name Field Skeleton */}
           <div className="admin-card-section flex items-center justify-between gap-4">
             <Skeleton className="h-4 w-20" />
             <Skeleton className="h-10 w-[250px] rounded-lg" />
           </div>
   
-          {/* Email Field Skeleton */}
           <div className="admin-card-section flex items-center justify-between gap-4">
             <Skeleton className="h-4 w-16" />
             <Skeleton className="h-10 w-[250px] rounded-lg" />
           </div>
   
-          {/* Appearance Skeleton */}
           <div className="admin-card-section flex items-center justify-between gap-4">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-10 w-48 rounded-full" />
           </div>
         </div>
   
-        {/* Delete Account Section Skeleton */}
         <div className="admin-card animate-fade-in">
           <div className="admin-card-section flex items-center justify-between gap-4">
             <Skeleton className="h-4 w-28" />
@@ -68,6 +64,7 @@ function ProfilePageSkeleton() {
 
 export default function ProfilePage() {
   const { accessToken } = useAuth();
+  const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [firstName, setFirstName] = useState("");
@@ -75,6 +72,107 @@ export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
+  
+  // Track original values for comparison
+  const originalFirstName = useRef("");
+  const originalLastName = useRef("");
+  
+  // Debounce timers
+  const firstNameTimer = useRef<NodeJS.Timeout | null>(null);
+  const lastNameTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const updateProfile = useCallback(async (field: string, value: string) => {
+    if (!accessToken) return;
+    
+    try {
+      const response = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ [field]: value }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      // Update original value on success
+      if (field === "first_name") {
+        originalFirstName.current = value;
+      } else if (field === "last_name") {
+        originalLastName.current = value;
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [accessToken, toast]);
+
+  const handleThemeChange = useCallback(async (newTheme: "light" | "dark" | "system") => {
+    setTheme(newTheme);
+    
+    if (!accessToken) return;
+    
+    try {
+      const response = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ theme: newTheme }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update theme");
+      }
+    } catch (error) {
+      console.error("Error updating theme:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update theme. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [accessToken, setTheme, toast]);
+
+  const handleFirstNameChange = (value: string) => {
+    setFirstName(value);
+    
+    // Clear existing timer
+    if (firstNameTimer.current) {
+      clearTimeout(firstNameTimer.current);
+    }
+    
+    // Debounce the API call
+    firstNameTimer.current = setTimeout(() => {
+      if (value !== originalFirstName.current) {
+        updateProfile("first_name", value);
+      }
+    }, 500);
+  };
+
+  const handleLastNameChange = (value: string) => {
+    setLastName(value);
+    
+    // Clear existing timer
+    if (lastNameTimer.current) {
+      clearTimeout(lastNameTimer.current);
+    }
+    
+    // Debounce the API call
+    lastNameTimer.current = setTimeout(() => {
+      if (value !== originalLastName.current) {
+        updateProfile("last_name", value);
+      }
+    }, 500);
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -95,6 +193,8 @@ export default function ProfilePage() {
         setProfile(data);
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
+        originalFirstName.current = data.first_name || "";
+        originalLastName.current = data.last_name || "";
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
@@ -105,13 +205,20 @@ export default function ProfilePage() {
     fetchProfile();
   }, [accessToken]);
 
-  const displayName = profile 
-    ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email
-    : "";
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (firstNameTimer.current) clearTimeout(firstNameTimer.current);
+      if (lastNameTimer.current) clearTimeout(lastNameTimer.current);
+    };
+  }, []);
+
+  const displayName = firstName || lastName 
+    ? `${firstName} ${lastName}`.trim()
+    : profile?.email || "";
 
   const handleDeleteAccount = () => {
     if (profile && confirmEmail === profile.email) {
-      // Handle delete account logic
       console.log("Account deleted");
       setDeleteDialogOpen(false);
     }
@@ -127,7 +234,6 @@ export default function ProfilePage() {
         <h1 className="text-xl font-semibold text-foreground">Profile</h1>
   
         <div className="admin-card animate-fade-in">
-          {/* Avatar Section */}
           <div className="admin-card-section flex items-center gap-4">
             <MemberAvatar name={displayName} className="h-16 w-16 text-xl" />
             <div>
@@ -135,27 +241,24 @@ export default function ProfilePage() {
             </div>
           </div>
   
-          {/* First Name Field */}
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">First Name</span>
             <Input
               value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              onChange={(e) => handleFirstNameChange(e.target.value)}
               className="max-w-[250px] rounded-lg border-border bg-card text-right text-sm"
             />
           </div>
 
-          {/* Last Name Field */}
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">Last Name</span>
             <Input
               value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              onChange={(e) => handleLastNameChange(e.target.value)}
               className="max-w-[250px] rounded-lg border-border bg-card text-right text-sm"
             />
           </div>
   
-          {/* Email Field */}
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">Email</span>
             <div className="flex h-10 w-full max-w-[250px] items-center justify-end rounded-lg bg-card px-3 text-sm text-foreground">
@@ -163,14 +266,13 @@ export default function ProfilePage() {
             </div>
           </div>
   
-          {/* Appearance */}
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">Appearance</span>
             <div className="flex rounded-full bg-muted p-1">
               {(["light", "dark", "system"] as const).map((mode) => (
                 <button
                   key={mode}
-                  onClick={() => setTheme(mode)}
+                  onClick={() => handleThemeChange(mode)}
                   className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all capitalize ${
                     theme === mode
                       ? "bg-card text-foreground shadow-sm"
@@ -184,7 +286,6 @@ export default function ProfilePage() {
           </div>
         </div>
   
-        {/* Delete Account Section */}
         <div className="admin-card animate-fade-in">
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">Delete account</span>
@@ -198,7 +299,6 @@ export default function ProfilePage() {
           </div>
         </div>
   
-        {/* Delete Account Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md rounded-2xl">
             <DialogHeader>
