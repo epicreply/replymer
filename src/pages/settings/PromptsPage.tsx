@@ -35,7 +35,14 @@ export default function PromptsPage() {
   const [formData, setFormData] = useState<PromptSettings>(promptSettings);
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const isSaveDisabled = !accessToken || !selectedProjectId || isLoading;
+  const [isSaving, setIsSaving] = useState(false);
+  const isSaveDisabled = !accessToken || !selectedProjectId || isLoading || isSaving;
+
+  const normalizePromptSettings = (promptData: Partial<Record<string, string | null>>) => ({
+    searchPrompt: promptData.search_prompt ?? defaultPromptSettings.searchPrompt,
+    commentPrompt: promptData.comment_prompt ?? defaultPromptSettings.commentPrompt,
+    dmPrompt: promptData.dm_prompt ?? defaultPromptSettings.dmPrompt,
+  });
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
@@ -65,11 +72,7 @@ export default function PromptsPage() {
         }
 
         const promptData = await response.json();
-        const normalizedSettings: PromptSettings = {
-          searchPrompt: promptData.search_prompt ?? defaultPromptSettings.searchPrompt,
-          commentPrompt: promptData.comment_prompt ?? defaultPromptSettings.commentPrompt,
-          dmPrompt: promptData.dm_prompt ?? defaultPromptSettings.dmPrompt,
-        };
+        const normalizedSettings = normalizePromptSettings(promptData);
 
         setSavedFormData(normalizedSettings);
         setFormData(normalizedSettings);
@@ -102,17 +105,56 @@ export default function PromptsPage() {
     setIsDirty(true);
   };
 
-  const handleSave = () => {
-    if (isSaveDisabled) {
+  const handleSave = async () => {
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: 'Unable to save settings',
+        description: 'Missing authentication or project selection.',
+        variant: 'destructive',
+      });
       return;
     }
-    setPromptSettings(formData);
-    setSavedFormData(formData);
-    setIsDirty(false);
-    toast({
-      title: 'Prompts saved',
-      description: 'Your AI prompt settings have been updated.',
-    });
+
+    setIsSaving(true);
+    try {
+      const response = await fetch('https://internal-api.autoreply.ing/v1.0/prompts', {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          search_prompt: formData.searchPrompt,
+          comment_prompt: formData.commentPrompt,
+          dm_prompt: formData.dmPrompt,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update prompt settings');
+      }
+
+      const promptData = await response.json();
+      const normalizedSettings = normalizePromptSettings(promptData);
+
+      setSavedFormData(normalizedSettings);
+      setFormData(normalizedSettings);
+      setPromptSettings(normalizedSettings);
+      setIsDirty(false);
+      toast({
+        title: 'Prompts saved',
+        description: 'Your AI prompt settings have been updated.',
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Save failed',
+        description: 'We could not update your prompt settings. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -152,7 +194,7 @@ export default function PromptsPage() {
                 </Button>
                 <Button size="sm" onClick={handleSave} disabled={isSaveDisabled}>
                   <Save className="h-4 w-4 mr-1" />
-                  Save
+                  {isSaving ? 'Saving...' : 'Save'}
                 </Button>
               </>
             )}
