@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { RadioToggle } from '@/components/ui/radio-toggle';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { Platform } from '@/data/mockLeads';
@@ -394,7 +394,7 @@ export default function CommunitiesPage() {
               <div className="flex flex-wrap gap-4">
                 {platforms.map((platform) => (
                   <div key={platform} className="flex items-center gap-2">
-                    <Checkbox
+                    <RadioToggle
                       id={`platform-${platform}`}
                       checked={enabledPlatforms.includes(platform)}
                       onCheckedChange={(checked) =>
