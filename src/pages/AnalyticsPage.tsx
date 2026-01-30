@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
         </div>
   
         {/* Charts Row */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-4">
           {/* Leads & Replies Over Time */}
           <Card>
             <CardHeader>
