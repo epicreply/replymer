@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Save, X, RotateCcw, Info } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { useLeads } from '@/context/LeadsContext';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { defaultPromptSettings } from '@/data/mockLeads';
+import { defaultPromptSettings, type PromptSettings } from '@/data/mockLeads';
 import {
   Tooltip,
   TooltipContent,
@@ -24,9 +25,77 @@ const placeholders = [
 ];
 
 export default function PromptsPage() {
+  const { accessToken, user } = useAuth();
+  const selectedProjectId = useMemo(
+    () => user?.projects?.find((project) => project.is_selected)?.id ?? user?.default_project_id ?? null,
+    [user]
+  );
   const { promptSettings, setPromptSettings } = useLeads();
-  const [formData, setFormData] = useState(promptSettings);
+  const [savedFormData, setSavedFormData] = useState<PromptSettings>(promptSettings);
+  const [formData, setFormData] = useState<PromptSettings>(promptSettings);
   const [isDirty, setIsDirty] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const isSaveDisabled = !accessToken || !selectedProjectId || isLoading;
+
+  useEffect(() => {
+    if (!accessToken || !selectedProjectId) {
+      setSavedFormData(defaultPromptSettings);
+      setFormData(defaultPromptSettings);
+      setPromptSettings(defaultPromptSettings);
+      setIsDirty(false);
+      setIsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsLoading(true);
+
+    const loadPrompts = async () => {
+      try {
+        const response = await fetch('https://internal-api.autoreply.ing/v1.0/prompts', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'X-Project-ID': selectedProjectId,
+          },
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load prompt settings');
+        }
+
+        const promptData = await response.json();
+        const normalizedSettings: PromptSettings = {
+          searchPrompt: promptData.search_prompt ?? defaultPromptSettings.searchPrompt,
+          commentPrompt: promptData.comment_prompt ?? defaultPromptSettings.commentPrompt,
+          dmPrompt: promptData.dm_prompt ?? defaultPromptSettings.dmPrompt,
+        };
+
+        setSavedFormData(normalizedSettings);
+        setFormData(normalizedSettings);
+        setPromptSettings(normalizedSettings);
+        setIsDirty(false);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          toast({
+            title: 'Unable to load prompts',
+            description: 'We could not load your prompt settings. Please try again.',
+            variant: 'destructive',
+          });
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadPrompts();
+
+    return () => {
+      controller.abort();
+    };
+  }, [accessToken, selectedProjectId, setPromptSettings]);
 
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -34,7 +103,11 @@ export default function PromptsPage() {
   };
 
   const handleSave = () => {
+    if (isSaveDisabled) {
+      return;
+    }
     setPromptSettings(formData);
+    setSavedFormData(formData);
     setIsDirty(false);
     toast({
       title: 'Prompts saved',
@@ -43,7 +116,7 @@ export default function PromptsPage() {
   };
 
   const handleCancel = () => {
-    setFormData(promptSettings);
+    setFormData(savedFormData);
     setIsDirty(false);
   };
 
@@ -77,7 +150,7 @@ export default function PromptsPage() {
                   <X className="h-4 w-4 mr-1" />
                   Cancel
                 </Button>
-                <Button size="sm" onClick={handleSave}>
+                <Button size="sm" onClick={handleSave} disabled={isSaveDisabled}>
                   <Save className="h-4 w-4 mr-1" />
                   Save
                 </Button>
@@ -127,6 +200,7 @@ export default function PromptsPage() {
                 id="searchPrompt"
                 value={formData.searchPrompt}
                 onChange={(e) => handleChange('searchPrompt', e.target.value)}
+                disabled={isLoading}
                 className="min-h-40 font-mono text-sm"
               />
             </div>
@@ -148,6 +222,7 @@ export default function PromptsPage() {
                 id="commentPrompt"
                 value={formData.commentPrompt}
                 onChange={(e) => handleChange('commentPrompt', e.target.value)}
+                disabled={isLoading}
                 className="min-h-40 font-mono text-sm"
               />
             </div>
@@ -169,6 +244,7 @@ export default function PromptsPage() {
                 id="dmPrompt"
                 value={formData.dmPrompt}
                 onChange={(e) => handleChange('dmPrompt', e.target.value)}
+                disabled={isLoading}
                 className="min-h-40 font-mono text-sm"
               />
             </div>
