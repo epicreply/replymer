@@ -246,6 +246,10 @@ export default function CommunitiesPage() {
         },
       ]);
       setNewKeyword('');
+      toast({
+        title: 'Keyword added',
+        description: `${trimmedKeyword} has been added to your monitored keywords.`,
+      });
     } catch (error) {
       toast({
         title: 'Error',
@@ -257,6 +261,7 @@ export default function CommunitiesPage() {
 
   const handleRemoveKeyword = async (keywordId: string) => {
     if (!accessToken || !selectedProjectId) return;
+    const keywordLabel = keywords.find((keyword) => keyword.id === keywordId)?.keyword;
 
     try {
       const response = await fetch(
@@ -283,6 +288,12 @@ export default function CommunitiesPage() {
       }
 
       setKeywords((prev) => prev.filter((keyword) => keyword.id !== keywordId));
+      toast({
+        title: 'Keyword removed',
+        description: keywordLabel
+          ? `${keywordLabel} has been removed from monitoring.`
+          : 'Keyword has been removed from monitoring.',
+      });
     } catch (error) {
       toast({
         title: 'Error',
