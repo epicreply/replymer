@@ -26,14 +26,14 @@ export default function MainLayout() {
 
   return (
     <div className="flex min-h-screen w-full bg-card">
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - Fixed */}
       <aside
         className={cn(
-          "hidden shrink-0 bg-card md:block transition-all duration-300 ease-in-out overflow-hidden",
+          "hidden md:block fixed top-0 left-0 h-screen bg-card z-40 transition-all duration-300 ease-in-out overflow-hidden",
           desktopSidebarOpen ? "w-[280px]" : "w-0"
         )}
       >
-        <div className="w-[280px]">
+        <div className="w-[280px] h-full">
           <MainSidebar
             onToggleSidebar={handleToggleDesktopSidebar}
             isDesktopSidebarOpen={desktopSidebarOpen}
@@ -41,11 +41,11 @@ export default function MainLayout() {
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content - with margin for fixed sidebar */}
       <main
         className={cn(
-          "flex flex-1 flex-col overflow-hidden md:py-3 md:pr-3",
-          desktopSidebarOpen ? "" : "border border-border/50 md:pl-3"
+          "flex flex-1 flex-col overflow-hidden md:py-3 md:pr-3 transition-all duration-300 ease-in-out",
+          desktopSidebarOpen ? "md:ml-[280px]" : "md:ml-0 md:pl-3"
         )}
       >
         <div className="flex flex-1 flex-col rounded-none md:rounded-[32px] bg-gradient-to-b from-primary/5 via-background to-[hsl(25_100%_95%)] dark:to-[hsl(25_30%_15%)]">
@@ -93,7 +93,7 @@ export default function MainLayout() {
           </header>
 
           {/* Page Content */}
-          <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col overflow-auto">
             <div className="flex-1 px-4 py-6 md:px-8 md:py-8">
               <Outlet />
             </div>
