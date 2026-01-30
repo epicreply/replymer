@@ -76,14 +76,10 @@ export default function ProfilePage() {
   // Track original values for comparison
   const originalFirstName = useRef("");
   const originalLastName = useRef("");
-  
-  // Debounce timers
-  const firstNameTimer = useRef<NodeJS.Timeout | null>(null);
-  const lastNameTimer = useRef<NodeJS.Timeout | null>(null);
 
   const updateProfile = useCallback(async (field: string, value: string) => {
     if (!accessToken) return;
-    
+
     try {
       const response = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
         method: "PATCH",
@@ -104,6 +100,13 @@ export default function ProfilePage() {
       } else if (field === "last_name") {
         originalLastName.current = value;
       }
+
+      // Show success toast
+      const fieldName = field === "first_name" ? "First name" : "Last name";
+      toast({
+        title: "Success",
+        description: `${fieldName} updated successfully.`,
+      });
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
@@ -142,36 +145,16 @@ export default function ProfilePage() {
     }
   }, [accessToken, setTheme, toast]);
 
-  const handleFirstNameChange = (value: string) => {
-    setFirstName(value);
-    
-    // Clear existing timer
-    if (firstNameTimer.current) {
-      clearTimeout(firstNameTimer.current);
+  const handleFirstNameBlur = () => {
+    if (firstName !== originalFirstName.current) {
+      updateProfile("first_name", firstName);
     }
-    
-    // Debounce the API call
-    firstNameTimer.current = setTimeout(() => {
-      if (value !== originalFirstName.current) {
-        updateProfile("first_name", value);
-      }
-    }, 500);
   };
 
-  const handleLastNameChange = (value: string) => {
-    setLastName(value);
-    
-    // Clear existing timer
-    if (lastNameTimer.current) {
-      clearTimeout(lastNameTimer.current);
+  const handleLastNameBlur = () => {
+    if (lastName !== originalLastName.current) {
+      updateProfile("last_name", lastName);
     }
-    
-    // Debounce the API call
-    lastNameTimer.current = setTimeout(() => {
-      if (value !== originalLastName.current) {
-        updateProfile("last_name", value);
-      }
-    }, 500);
   };
 
   useEffect(() => {
@@ -205,14 +188,6 @@ export default function ProfilePage() {
     fetchProfile();
   }, [accessToken]);
 
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      if (firstNameTimer.current) clearTimeout(firstNameTimer.current);
-      if (lastNameTimer.current) clearTimeout(lastNameTimer.current);
-    };
-  }, []);
-
   const displayName = firstName || lastName 
     ? `${firstName} ${lastName}`.trim()
     : profile?.email || "";
@@ -245,7 +220,8 @@ export default function ProfilePage() {
             <span className="text-sm font-medium text-foreground">First Name</span>
             <Input
               value={firstName}
-              onChange={(e) => handleFirstNameChange(e.target.value)}
+              onChange={(e) => setFirstName(e.target.value)}
+              onBlur={handleFirstNameBlur}
               className="max-w-[250px] rounded-lg border-border bg-card text-right text-sm"
             />
           </div>
@@ -254,7 +230,8 @@ export default function ProfilePage() {
             <span className="text-sm font-medium text-foreground">Last Name</span>
             <Input
               value={lastName}
-              onChange={(e) => handleLastNameChange(e.target.value)}
+              onChange={(e) => setLastName(e.target.value)}
+              onBlur={handleLastNameBlur}
               className="max-w-[250px] rounded-lg border-border bg-card text-right text-sm"
             />
           </div>
