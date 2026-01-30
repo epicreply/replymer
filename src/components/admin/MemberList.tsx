@@ -1,12 +1,14 @@
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { MemberAvatar } from "./MemberAvatar";
 
 interface Member {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   role: string;
+  status?: "invited" | "accepted";
   isCurrentUser?: boolean;
 }
 
@@ -48,15 +50,22 @@ export function MemberList({ members, onInvite }: MemberListProps) {
           >
             <MemberAvatar name={member.name} />
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-foreground truncate">
                   {member.name}
                 </span>
                 {member.isCurrentUser && (
                   <span className="text-sm text-muted-foreground">(you)</span>
                 )}
+                {member.status === "invited" && (
+                  <Badge variant="secondary" className="text-xs">
+                    Invited
+                  </Badge>
+                )}
               </div>
-              <p className="text-sm text-muted-foreground truncate">{member.email}</p>
+              {member.email && (
+                <p className="text-sm text-muted-foreground truncate">{member.email}</p>
+              )}
             </div>
             <span className="text-sm text-muted-foreground">{member.role}</span>
           </div>
