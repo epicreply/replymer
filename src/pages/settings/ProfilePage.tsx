@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/admin/MemberAvatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -11,21 +12,114 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/context/AuthContext";
+
+interface UserProfile {
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  theme: string;
+  default_project_id: string;
+}
+
+function ProfilePageSkeleton() {
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="space-y-6">
+        <Skeleton className="h-7 w-24" />
+        
+        <div className="admin-card animate-fade-in">
+          {/* Avatar Section Skeleton */}
+          <div className="admin-card-section flex items-center gap-4">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+  
+          {/* Name Field Skeleton */}
+          <div className="admin-card-section flex items-center justify-between gap-4">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-10 w-[250px] rounded-lg" />
+          </div>
+  
+          {/* Email Field Skeleton */}
+          <div className="admin-card-section flex items-center justify-between gap-4">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-10 w-[250px] rounded-lg" />
+          </div>
+  
+          {/* Appearance Skeleton */}
+          <div className="admin-card-section flex items-center justify-between gap-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-48 rounded-full" />
+          </div>
+        </div>
+  
+        {/* Delete Account Section Skeleton */}
+        <div className="admin-card animate-fade-in">
+          <div className="admin-card-section flex items-center justify-between gap-4">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-10 w-32 rounded-md" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ProfilePage() {
-  const [name, setName] = useState("Oleh Kuprovskyi");
-  const [email] = useState("oleh.kuprovskyi@gmail.com");
+  const { accessToken } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const { theme, setTheme } = useTheme();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!accessToken) return;
+      
+      try {
+        const response = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+
+        const data = await response.json();
+        setProfile(data);
+        setFirstName(data.first_name || "");
+        setLastName(data.last_name || "");
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [accessToken]);
+
+  const displayName = profile 
+    ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email
+    : "";
+
   const handleDeleteAccount = () => {
-    if (confirmEmail === email) {
+    if (profile && confirmEmail === profile.email) {
       // Handle delete account logic
       console.log("Account deleted");
       setDeleteDialogOpen(false);
     }
   };
+
+  if (isLoading) {
+    return <ProfilePageSkeleton />;
+  }
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -35,19 +129,28 @@ export default function ProfilePage() {
         <div className="admin-card animate-fade-in">
           {/* Avatar Section */}
           <div className="admin-card-section flex items-center gap-4">
-            <MemberAvatar name={name} className="h-16 w-16 text-xl" />
+            <MemberAvatar name={displayName} className="h-16 w-16 text-xl" />
             <div>
-              <p className="text-base font-medium text-foreground">{name}</p>
-              {/* <p className="text-sm text-muted-foreground">{email}</p> */}
+              <p className="text-base font-medium text-foreground">{displayName}</p>
             </div>
           </div>
   
-          {/* Name Field */}
+          {/* First Name Field */}
           <div className="admin-card-section flex items-center justify-between gap-4">
-            <span className="text-sm font-medium text-foreground">Full Name</span>
+            <span className="text-sm font-medium text-foreground">First Name</span>
             <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="max-w-[250px] rounded-lg border-border bg-card text-right text-sm"
+            />
+          </div>
+
+          {/* Last Name Field */}
+          <div className="admin-card-section flex items-center justify-between gap-4">
+            <span className="text-sm font-medium text-foreground">Last Name</span>
+            <Input
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               className="max-w-[250px] rounded-lg border-border bg-card text-right text-sm"
             />
           </div>
@@ -56,7 +159,7 @@ export default function ProfilePage() {
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">Email</span>
             <div className="flex h-10 w-full max-w-[250px] items-center justify-end rounded-lg bg-card px-3 text-sm text-foreground">
-              {email}
+              {profile?.email}
             </div>
           </div>
   
@@ -108,7 +211,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <p className="text-sm text-foreground">Type the email below to delete your account.</p>
               <Input
-                placeholder={email}
+                placeholder={profile?.email}
                 value={confirmEmail}
                 onChange={(e) => setConfirmEmail(e.target.value)}
                 className="rounded-xl"
@@ -127,7 +230,7 @@ export default function ProfilePage() {
               </Button>
               <Button
                 variant="outline"
-                disabled={confirmEmail !== email}
+                disabled={!profile || confirmEmail !== profile.email}
                 onClick={handleDeleteAccount}
                 className="rounded-full text-destructive hover:text-destructive disabled:opacity-50"
               >

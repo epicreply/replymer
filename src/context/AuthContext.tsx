@@ -4,6 +4,10 @@ interface User {
   id: string;
   email: string;
   name: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  theme?: string;
+  default_project_id?: string;
   team_member_status: string;
 }
 
