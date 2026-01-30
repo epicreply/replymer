@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -34,16 +33,8 @@ export function ChartDialog({
 }: ChartDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-[95vw] h-[80vh] flex flex-col [&>button]:hidden">
-        {/* Custom close button at absolute top right */}
-        <button
-          onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </button>
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pr-8">
+      <DialogContent className="max-w-5xl w-[95vw] h-[80vh] flex flex-col">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0">
           <DialogTitle>{title}</DialogTitle>
           <Select value={timeRange} onValueChange={(v) => onTimeRangeChange(v as TimeRange)}>
             <SelectTrigger className="h-8 w-24 text-xs">
