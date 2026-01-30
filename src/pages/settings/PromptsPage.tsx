@@ -57,122 +57,124 @@ export default function PromptsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Prompt Customization</h1>
-          <p className="text-sm text-muted-foreground">
-            Customize how the AI searches for and responds to leads
-          </p>
+    <div className="mx-auto max-w-2xl">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">Prompt Customization</h1>
+            <p className="text-sm text-muted-foreground">
+              Customize how the AI searches for and responds to leads
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleReset}>
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Reset to Default
+            </Button>
+            {isDirty && (
+              <>
+                <Button variant="outline" size="sm" onClick={handleCancel}>
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave}>
+                  <Save className="h-4 w-4 mr-1" />
+                  Save
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleReset}>
-            <RotateCcw className="h-4 w-4 mr-1" />
-            Reset to Default
-          </Button>
-          {isDirty && (
-            <>
-              <Button variant="outline" size="sm" onClick={handleCancel}>
-                <X className="h-4 w-4 mr-1" />
-                Cancel
-              </Button>
-              <Button size="sm" onClick={handleSave}>
-                <Save className="h-4 w-4 mr-1" />
-                Save
-              </Button>
-            </>
-          )}
-        </div>
+  
+        {/* Placeholders Guide */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              Available Placeholders
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {placeholders.map((placeholder) => (
+                <Tooltip key={placeholder.name}>
+                  <TooltipTrigger asChild>
+                    <code className="px-2 py-1 rounded bg-muted text-sm cursor-help">
+                      {placeholder.name}
+                    </code>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{placeholder.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+  
+        {/* Search Prompt */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Search Prompt</CardTitle>
+            <CardDescription>
+              Define how the AI identifies relevant posts and conversations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="searchPrompt">Search Criteria</Label>
+              <Textarea
+                id="searchPrompt"
+                value={formData.searchPrompt}
+                onChange={(e) => handleChange('searchPrompt', e.target.value)}
+                className="min-h-40 font-mono text-sm"
+              />
+            </div>
+          </CardContent>
+        </Card>
+  
+        {/* Comment Prompt */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Comment Prompt</CardTitle>
+            <CardDescription>
+              Template for generating public comment responses
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="commentPrompt">Comment Template</Label>
+              <Textarea
+                id="commentPrompt"
+                value={formData.commentPrompt}
+                onChange={(e) => handleChange('commentPrompt', e.target.value)}
+                className="min-h-40 font-mono text-sm"
+              />
+            </div>
+          </CardContent>
+        </Card>
+  
+        {/* DM Prompt */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Direct Message Prompt</CardTitle>
+            <CardDescription>
+              Template for generating personalized direct messages
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="dmPrompt">DM Template</Label>
+              <Textarea
+                id="dmPrompt"
+                value={formData.dmPrompt}
+                onChange={(e) => handleChange('dmPrompt', e.target.value)}
+                className="min-h-40 font-mono text-sm"
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Placeholders Guide */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Info className="h-4 w-4" />
-            Available Placeholders
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {placeholders.map((placeholder) => (
-              <Tooltip key={placeholder.name}>
-                <TooltipTrigger asChild>
-                  <code className="px-2 py-1 rounded bg-muted text-sm cursor-help">
-                    {placeholder.name}
-                  </code>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{placeholder.description}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Search Prompt */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Search Prompt</CardTitle>
-          <CardDescription>
-            Define how the AI identifies relevant posts and conversations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="searchPrompt">Search Criteria</Label>
-            <Textarea
-              id="searchPrompt"
-              value={formData.searchPrompt}
-              onChange={(e) => handleChange('searchPrompt', e.target.value)}
-              className="min-h-40 font-mono text-sm"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Comment Prompt */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Comment Prompt</CardTitle>
-          <CardDescription>
-            Template for generating public comment responses
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="commentPrompt">Comment Template</Label>
-            <Textarea
-              id="commentPrompt"
-              value={formData.commentPrompt}
-              onChange={(e) => handleChange('commentPrompt', e.target.value)}
-              className="min-h-40 font-mono text-sm"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* DM Prompt */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Direct Message Prompt</CardTitle>
-          <CardDescription>
-            Template for generating personalized direct messages
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="dmPrompt">DM Template</Label>
-            <Textarea
-              id="dmPrompt"
-              value={formData.dmPrompt}
-              onChange={(e) => handleChange('dmPrompt', e.target.value)}
-              className="min-h-40 font-mono text-sm"
-            />
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
