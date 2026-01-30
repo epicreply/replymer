@@ -37,21 +37,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Check if user is authenticated on mount
-    const storedToken = localStorage.getItem("accessToken");
-    const storedUser = localStorage.getItem("user");
-    
-    if (storedToken && storedUser) {
+    let isMounted = true;
+    const hydrateAuth = async () => {
+      const storedToken = localStorage.getItem("accessToken");
+      const storedUser = localStorage.getItem("user");
+
+      if (!storedToken || !storedUser) {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
       try {
+        const parsedUser = JSON.parse(storedUser);
         setAccessToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        setUser(parsedUser);
         setIsAuthenticated(true);
+
+        const response = await fetch("https://internal-api.autoreply.ing/v1.0/user/me", {
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to refresh user data");
+        }
+
+        const userData = await response.json();
+        const mergedUser = {
+          ...parsedUser,
+          ...userData,
+          projects: userData.projects ?? parsedUser.projects,
+          default_project_id: userData.default_project_id ?? parsedUser.default_project_id,
+          first_name: userData.first_name ?? parsedUser.first_name,
+          last_name: userData.last_name ?? parsedUser.last_name,
+          theme: userData.theme ?? parsedUser.theme,
+        };
+
+        localStorage.setItem("user", JSON.stringify(mergedUser));
+        if (isMounted) {
+          setUser(mergedUser);
+        }
       } catch {
-        // Invalid stored data, clear it
+        // Invalid stored data or token, clear it
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
+        if (isMounted) {
+          setAccessToken(null);
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-    }
-    setIsLoading(false);
+    };
+
+    hydrateAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = (token: string, userData: User) => {
