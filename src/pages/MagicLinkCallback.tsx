@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,15 @@ const MagicLinkCallback = () => {
   const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(true);
+  const hasConfirmed = useRef(false);
 
   useEffect(() => {
+    if (hasConfirmed.current) {
+      return;
+    }
+
+    hasConfirmed.current = true;
+
     const verifyMagicLink = async () => {
       const token = searchParams.get("token");
       const email = searchParams.get("email");
