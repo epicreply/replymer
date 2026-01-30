@@ -4,10 +4,73 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { defaultProductSettings, type ProductSettings } from '@/data/mockLeads';
+
+function ProductSetupSkeleton() {
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-20" />
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-full max-w-md" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-3 w-80" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-full max-w-md" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
 
 export default function ProductSetupPage() {
   const { accessToken, user } = useAuth();
@@ -18,16 +81,19 @@ export default function ProductSetupPage() {
   const [savedFormData, setSavedFormData] = useState<ProductSettings>(defaultProductSettings);
   const [formData, setFormData] = useState<ProductSettings>(defaultProductSettings);
   const [isDirty, setIsDirty] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
       setSavedFormData(defaultProductSettings);
       setFormData(defaultProductSettings);
       setIsDirty(false);
+      setIsLoading(false);
       return;
     }
 
     const controller = new AbortController();
+    setIsLoading(true);
 
     const loadProjectSettings = async () => {
       try {
@@ -61,6 +127,10 @@ export default function ProductSetupPage() {
         if (!controller.signal.aborted) {
           console.error(error);
         }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -89,6 +159,10 @@ export default function ProductSetupPage() {
     setFormData(savedFormData);
     setIsDirty(false);
   };
+
+  if (isLoading) {
+    return <ProductSetupSkeleton />;
+  }
 
   return (
     <div className="mx-auto max-w-2xl">
