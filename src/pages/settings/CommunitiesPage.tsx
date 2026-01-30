@@ -101,6 +101,9 @@ export default function CommunitiesPage() {
           if (data && typeof data === 'object' && 'items' in data) {
             return (data as { items: unknown[] }).items ?? [];
           }
+          if (data && typeof data === 'object' && 'connections' in data) {
+            return (data as { connections: unknown[] }).connections ?? [];
+          }
           return [];
         };
 
