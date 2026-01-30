@@ -38,7 +38,7 @@ export default function AnalyticsPage() {
   const { summary, leadsOverTime, platformPerformance, topCommunities } = analyticsData;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-4xl">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
