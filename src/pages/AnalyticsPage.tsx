@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -23,6 +23,54 @@ import {
 import { analyticsData } from '@/data/mockLeads';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { StatisticCard, TimeRange } from '@/components/analytics/StatisticCard';
+
+const tooltipStyle = {
+  backgroundColor: 'hsl(var(--card))',
+  border: '1px solid hsl(var(--border))',
+  borderRadius: '8px',
+};
+
+const getLeadsData = (timeRange: TimeRange) => {
+  switch (timeRange) {
+    case 'week':
+      return analyticsData.leadsOverTimeWeek;
+    case 'month':
+      return analyticsData.leadsOverTimeMonth;
+    case 'year':
+      return analyticsData.leadsOverTimeYear;
+  }
+};
+
+const getPlatformData = (timeRange: TimeRange) => {
+  switch (timeRange) {
+    case 'week':
+      return analyticsData.platformPerformanceWeek;
+    case 'month':
+      return analyticsData.platformPerformanceMonth;
+    case 'year':
+      return analyticsData.platformPerformanceYear;
+  }
+};
+
+const getCommunitiesData = (timeRange: TimeRange) => {
+  switch (timeRange) {
+    case 'week':
+      return analyticsData.topCommunitiesWeek;
+    case 'month':
+      return analyticsData.topCommunitiesMonth;
+    case 'year':
+      return analyticsData.topCommunitiesYear;
+  }
+};
+
+const formatDate = (value: string, timeRange: TimeRange) => {
+  if (timeRange === 'year') {
+    const [year, month] = value.split('-');
+    return new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', { month: 'short' });
+  }
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState('7d');
@@ -35,7 +83,54 @@ export default function AnalyticsPage() {
     });
   };
 
-  const { summary, leadsOverTime, platformPerformance, topCommunities } = analyticsData;
+  const { summary } = analyticsData;
+
+  const renderLeadsChart = (timeRange: TimeRange, height: string = '100%') => (
+    <ResponsiveContainer width="100%" height={height}>
+      <LineChart data={getLeadsData(timeRange)}>
+        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+        <XAxis
+          dataKey="date"
+          tickFormatter={(value) => formatDate(value, timeRange)}
+          className="text-xs"
+        />
+        <YAxis className="text-xs" />
+        <Tooltip contentStyle={tooltipStyle} />
+        <Legend />
+        <Line type="monotone" dataKey="leads" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="replies" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="dms" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+
+  const renderPlatformChart = (timeRange: TimeRange, height: string = '100%') => (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={getPlatformData(timeRange)}>
+        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+        <XAxis dataKey="platform" className="text-xs" />
+        <YAxis className="text-xs" />
+        <Tooltip contentStyle={tooltipStyle} />
+        <Legend />
+        <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+
+  const renderCommunitiesChart = (timeRange: TimeRange, height: string = '100%') => (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={getCommunitiesData(timeRange)} layout="vertical">
+        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+        <XAxis type="number" className="text-xs" />
+        <YAxis dataKey="name" type="category" width={120} className="text-xs" />
+        <Tooltip contentStyle={tooltipStyle} />
+        <Legend />
+        <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -77,7 +172,7 @@ export default function AnalyticsPage() {
             </Button>
           </div>
         </div>
-  
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
@@ -105,116 +200,28 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </div>
-  
+
         {/* Charts Row */}
         <div className="grid lg:grid-cols-2 gap-4">
-          {/* Leads & Replies Over Time */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Leads & Replies Over Time</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={leadsOverTime}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      className="text-xs"
-                    />
-                    <YAxis className="text-xs" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="leads"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="replies"
-                      stroke="hsl(var(--chart-2))"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="dms"
-                      stroke="hsl(var(--chart-3))"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-  
-          {/* Performance by Platform */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Performance by Platform</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={platformPerformance}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="platform" className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                      }}
-                    />
-                    <Legend />
-                    <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <StatisticCard
+            title="Leads & Replies Over Time"
+            children={(timeRange) => renderLeadsChart(timeRange)}
+            dialogContent={(timeRange) => renderLeadsChart(timeRange)}
+          />
+
+          <StatisticCard
+            title="Performance by Platform"
+            children={(timeRange) => renderPlatformChart(timeRange)}
+            dialogContent={(timeRange) => renderPlatformChart(timeRange)}
+          />
         </div>
-  
+
         {/* Top Communities */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Top Performing Communities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topCommunities} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis type="number" className="text-xs" />
-                  <YAxis dataKey="name" type="category" width={120} className="text-xs" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <StatisticCard
+          title="Top Performing Communities"
+          children={(timeRange) => renderCommunitiesChart(timeRange)}
+          dialogContent={(timeRange) => renderCommunitiesChart(timeRange)}
+        />
       </div>
     </div>
   );

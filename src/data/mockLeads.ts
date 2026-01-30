@@ -302,9 +302,10 @@ export const mockLeads: Lead[] = [
   },
 ];
 
-// Analytics mock data
+// Analytics mock data with time range variants
 export const analyticsData = {
-  leadsOverTime: [
+  // Weekly data (7 days)
+  leadsOverTimeWeek: [
     { date: '2024-01-01', leads: 12, replies: 8, dms: 3 },
     { date: '2024-01-02', leads: 18, replies: 12, dms: 5 },
     { date: '2024-01-03', leads: 15, replies: 10, dms: 4 },
@@ -313,17 +314,68 @@ export const analyticsData = {
     { date: '2024-01-06', leads: 25, replies: 18, dms: 8 },
     { date: '2024-01-07', leads: 30, replies: 22, dms: 10 },
   ],
-  platformPerformance: [
+  // Monthly data (30 days - simplified to key points)
+  leadsOverTimeMonth: [
+    { date: '2024-01-01', leads: 45, replies: 32, dms: 12 },
+    { date: '2024-01-05', leads: 52, replies: 38, dms: 15 },
+    { date: '2024-01-10', leads: 38, replies: 28, dms: 10 },
+    { date: '2024-01-15', leads: 65, replies: 48, dms: 20 },
+    { date: '2024-01-20', leads: 72, replies: 55, dms: 22 },
+    { date: '2024-01-25', leads: 58, replies: 42, dms: 18 },
+    { date: '2024-01-30', leads: 80, replies: 62, dms: 25 },
+  ],
+  // Yearly data (12 months)
+  leadsOverTimeYear: [
+    { date: '2024-01', leads: 320, replies: 245, dms: 95 },
+    { date: '2024-02', leads: 280, replies: 210, dms: 82 },
+    { date: '2024-03', leads: 410, replies: 315, dms: 120 },
+    { date: '2024-04', leads: 385, replies: 290, dms: 110 },
+    { date: '2024-05', leads: 450, replies: 340, dms: 135 },
+    { date: '2024-06', leads: 520, replies: 395, dms: 150 },
+    { date: '2024-07', leads: 480, replies: 365, dms: 140 },
+    { date: '2024-08', leads: 545, replies: 420, dms: 165 },
+    { date: '2024-09', leads: 490, replies: 375, dms: 145 },
+    { date: '2024-10', leads: 610, replies: 470, dms: 180 },
+    { date: '2024-11', leads: 580, replies: 445, dms: 170 },
+    { date: '2024-12', leads: 650, replies: 500, dms: 195 },
+  ],
+  // Platform performance by time range
+  platformPerformanceWeek: [
     { platform: 'Reddit', leads: 45, replies: 32, replyRate: 71 },
     { platform: 'Twitter', leads: 28, replies: 18, replyRate: 64 },
     { platform: 'LinkedIn', leads: 22, replies: 15, replyRate: 68 },
   ],
-  topCommunities: [
+  platformPerformanceMonth: [
+    { platform: 'Reddit', leads: 180, replies: 130, replyRate: 72 },
+    { platform: 'Twitter', leads: 120, replies: 78, replyRate: 65 },
+    { platform: 'LinkedIn', leads: 95, replies: 68, replyRate: 72 },
+  ],
+  platformPerformanceYear: [
+    { platform: 'Reddit', leads: 2100, replies: 1520, replyRate: 72 },
+    { platform: 'Twitter', leads: 1450, replies: 945, replyRate: 65 },
+    { platform: 'LinkedIn', leads: 1170, replies: 820, replyRate: 70 },
+  ],
+  // Top communities by time range
+  topCommunitiesWeek: [
     { name: 'r/Entrepreneur', leads: 14, replies: 11 },
     { name: 'r/SaaS', leads: 12, replies: 9 },
     { name: 'r/startups', leads: 10, replies: 7 },
     { name: '#startup', leads: 9, replies: 6 },
     { name: 'Startup Founders', leads: 7, replies: 5 },
+  ],
+  topCommunitiesMonth: [
+    { name: 'r/Entrepreneur', leads: 58, replies: 45 },
+    { name: 'r/SaaS', leads: 48, replies: 38 },
+    { name: 'r/startups', leads: 42, replies: 32 },
+    { name: '#startup', leads: 38, replies: 28 },
+    { name: 'Startup Founders', leads: 32, replies: 24 },
+  ],
+  topCommunitiesYear: [
+    { name: 'r/Entrepreneur', leads: 680, replies: 520 },
+    { name: 'r/SaaS', leads: 560, replies: 445 },
+    { name: 'r/startups', leads: 490, replies: 375 },
+    { name: '#startup', leads: 420, replies: 315 },
+    { name: 'Startup Founders', leads: 380, replies: 285 },
   ],
   summary: {
     totalLeads: 95,
