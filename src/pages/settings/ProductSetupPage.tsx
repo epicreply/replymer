@@ -1,17 +1,75 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Save, X } from 'lucide-react';
-import { useLeads } from '@/context/LeadsContext';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
+import { defaultProductSettings, type ProductSettings } from '@/data/mockLeads';
 
 export default function ProductSetupPage() {
-  const { productSettings, setProductSettings } = useLeads();
-  const [formData, setFormData] = useState(productSettings);
+  const { accessToken, user } = useAuth();
+  const selectedProjectId = useMemo(
+    () => user?.projects?.find((project) => project.is_selected)?.id ?? null,
+    [user]
+  );
+  const [savedFormData, setSavedFormData] = useState<ProductSettings>(defaultProductSettings);
+  const [formData, setFormData] = useState<ProductSettings>(defaultProductSettings);
   const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    if (!accessToken || !selectedProjectId) {
+      setSavedFormData(defaultProductSettings);
+      setFormData(defaultProductSettings);
+      setIsDirty(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadProjectSettings = async () => {
+      try {
+        const response = await fetch(
+          `https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            signal: controller.signal,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to load project settings');
+        }
+
+        const projectData = await response.json();
+        const normalizedSettings: ProductSettings = {
+          name: projectData.name ?? '',
+          websiteUrl: projectData.website_url ?? '',
+          description: projectData.description ?? '',
+          targetAudience: projectData.target_audience ?? '',
+          valueProposition: projectData.value_proposition ?? '',
+        };
+
+        setSavedFormData(normalizedSettings);
+        setFormData(normalizedSettings);
+        setIsDirty(false);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error(error);
+        }
+      }
+    };
+
+    loadProjectSettings();
+
+    return () => {
+      controller.abort();
+    };
+  }, [accessToken, selectedProjectId]);
 
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -19,7 +77,7 @@ export default function ProductSetupPage() {
   };
 
   const handleSave = () => {
-    setProductSettings(formData);
+    setSavedFormData(formData);
     setIsDirty(false);
     toast({
       title: 'Settings saved',
@@ -28,7 +86,7 @@ export default function ProductSetupPage() {
   };
 
   const handleCancel = () => {
-    setFormData(productSettings);
+    setFormData(savedFormData);
     setIsDirty(false);
   };
 
