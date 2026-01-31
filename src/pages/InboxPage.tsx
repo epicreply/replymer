@@ -31,7 +31,9 @@ export default function InboxPage() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const selectedDetailRef = useRef<HTMLDivElement | null>(null);
   const prevSelectedLeadIdRef = useRef<string | null>(null);
+  const prevScrolledLeadIdRef = useRef<string | null>(null);
 
   const handleStatusChange = (status: string) => {
     setFilters({ ...filters, status: status as LeadStatus | 'all' });
@@ -63,6 +65,37 @@ export default function InboxPage() {
 
     prevSelectedLeadIdRef.current = currentLeadId;
   }, [selectedLead, windowWidth, closeSidebar]);
+
+  useEffect(() => {
+    if (!selectedLead || windowWidth >= 768) {
+      return;
+    }
+
+    if (prevScrolledLeadIdRef.current === selectedLead.id) {
+      return;
+    }
+
+    const viewport =
+      scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') ?? null;
+    const detailElement = selectedDetailRef.current;
+
+    if (!detailElement) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      if (viewport instanceof HTMLElement) {
+        const viewportRect = viewport.getBoundingClientRect();
+        const detailRect = detailElement.getBoundingClientRect();
+        const offset = detailRect.top - viewportRect.top + viewport.scrollTop;
+        viewport.scrollTo({ top: offset, behavior: 'smooth' });
+      } else {
+        detailElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    prevScrolledLeadIdRef.current = selectedLead.id;
+  }, [selectedLead, windowWidth]);
 
   useEffect(() => {
     if (!hasNextPage || isLoading || isLoadingMore) {
@@ -217,7 +250,7 @@ export default function InboxPage() {
                         />
                         {/* Show lead details below selected lead on mobile */}
                         {selectedLead?.id === lead.id && (
-                          <div className="md:hidden mt-2">
+                          <div className="md:hidden mt-2" ref={selectedDetailRef}>
                             <LeadDetail />
                           </div>
                         )}
