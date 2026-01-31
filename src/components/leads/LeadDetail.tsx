@@ -153,13 +153,12 @@ export function LeadDetail() {
           </div>
         </div>
 
-        <div className="absolute top-4 right-4">
-          <PlatformBadge platform={selectedLead.platform} />
-        </div>
-
         {/* Post Details */}
-        <Card>
+        <Card className="relative">
           <CardContent className="p-4">
+            <div className="absolute top-4 right-4">
+              <PlatformBadge platform={selectedLead.platform} />
+            </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <span className="font-medium text-foreground">{selectedLead.authorHandle}</span>
               <span>•</span>
