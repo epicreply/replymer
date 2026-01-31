@@ -1,145 +1,85 @@
 
-
-# Magic Link Callback Handler
+# Plan: Add Notification Icon and Page
 
 ## Overview
-Create a new page to handle magic link authentication callbacks. When users click the magic link in their email, they'll be directed to `/auth/magic-link?token=...&email=...`. This page will verify the token with the API, store the access token, and redirect to the main app.
+Add a notification bell icon to the top-right of the main content area header, styled consistently with the existing sidebar toggle button. Clicking the icon navigates to a new dedicated notifications page.
 
----
+## Changes Required
 
-## 1. Create MagicLinkCallback Page
+### 1. Fix Existing Build Errors
+Before implementing the notification feature, two existing bugs need to be fixed:
 
-**File:** `src/pages/MagicLinkCallback.tsx`
+**File: `src/components/admin/MainSidebar.tsx`**
+- Line 298: Change `class` to `className` (React JSX syntax)
 
-This page will:
-- Extract `token` and `email` from URL query parameters
-- Display a loading spinner while verifying
-- Call the confirm API endpoint
-- Handle success and error states
+**File: `src/context/SidebarContext.tsx`**
+- Update `setDesktopSidebarOpen` type to accept a function updater pattern (like React's setState)
 
-**UI States:**
-```text
-+------------------------------------------+
-|                                          |
-|              [Spinner]                   |
-|         Verifying your login...          |
-|                                          |
-+------------------------------------------+
+**File: `src/layouts/MainLayout.tsx`**  
+- Adjust toggle handler to work with the corrected context type
 
-On Error:
-+------------------------------------------+
-|                                          |
-|           [Error Icon]                   |
-|     Link expired or invalid              |
-|         [Back to Login]                  |
-|                                          |
-+------------------------------------------+
-```
+### 2. Add Notification Icon to Header
+**File: `src/layouts/MainLayout.tsx`**
 
-**API Call:**
-```typescript
-const response = await fetch('https://internal-api.autoreply.ing/v1.0/signin/confirm', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, token }),
-});
-```
+- Import `Bell` icon from lucide-react
+- Import `useNavigate` (already imported)
+- Add Bell icon button to the desktop header (right side), matching the existing PanelLeft button style:
+  - Size: `h-9 w-9`
+  - Border radius: `rounded-lg`
+  - Border and background: `border border-border bg-card/80 hover:bg-card`
+  - Position: far right of header using `ml-auto`
+- Add same icon button to mobile header for consistency
+- OnClick: navigate to `/notifications`
 
----
+### 3. Create Notifications Page
+**New file: `src/pages/NotificationsPage.tsx`**
 
-## 2. Update AuthContext
+Create a page component following the existing page patterns:
+- Empty state with Bell icon and placeholder message
+- Title: "Notifications"
+- Consistent styling with other pages
+- Future-ready structure for displaying notification items
 
-**File:** `src/context/AuthContext.tsx`
+### 4. Register Route
+**File: `src/App.tsx`**
 
-Enhance the context to:
-- Store the access token in localStorage
-- Store user data (id, name, email, team_member_status)
-- Update the login function signature to accept the full API response
+- Import `NotificationsPage`
+- Add route `/notifications` within the MainLayout routes
 
-**New Interface:**
-```typescript
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  team_member_status: string;
-}
+### 5. Add Page Metadata
+**File: `src/layouts/MainLayout.tsx`**
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: User | null;
-  accessToken: string | null;
-  login: (accessToken: string, user: User) => void;
-  logout: () => void;
-}
-```
+Add notifications case in `getPageMeta()`:
+- Title: "Notifications"
+- Subtitle: "Stay updated with your latest activity"
 
-**Storage Keys:**
-- `accessToken` - JWT token for API calls
-- `user` - JSON stringified user object
-- `isAuthenticated` - boolean flag
+## Visual Design
+The notification icon button will match the reference image style:
+- Rounded corners with subtle border
+- Ghost variant with card background
+- Muted icon color that changes on hover
+- Positioned symmetrically opposite to the sidebar toggle
 
----
-
-## 3. Add Route
-
-**File:** `src/App.tsx`
-
-Add the new route for the magic link callback:
-```typescript
-<Route path="/auth/magic-link" element={<MagicLinkCallback />} />
-```
-
----
-
-## Flow Diagram
+## Technical Details
 
 ```text
-User clicks magic link in email
-           |
-           v
-+---------------------------+
-| /auth/magic-link?         |
-| token=xxx&email=yyy       |
-+---------------------------+
-           |
-           v
-+---------------------------+
-| Extract params from URL   |
-| Show loading spinner      |
-+---------------------------+
-           |
-           v
-+---------------------------+
-| POST /v1.0/signin/confirm |
-| { email, token }          |
-+---------------------------+
-           |
-     +-----+-----+
-     |           |
-  Success      Error
-     |           |
-     v           v
-+----------+  +------------------+
-| Store:   |  | Show error msg   |
-| - token  |  | "Link expired"   |
-| - user   |  | [Back to Login]  |
-+----------+  +------------------+
-     |
-     v
-+---------------------------+
-| Update AuthContext        |
-| Redirect to /             |
-+---------------------------+
++--------------------------------------------------+
+|  [=]                                      [Bell] |  <- Desktop Header
+|                                                  |
+|              Main Content Area                   |
+|                                                  |
++--------------------------------------------------+
 ```
 
----
+The notification icon will appear:
+- **Desktop**: In the header row, pushed to the far right with `ml-auto`
+- **Mobile**: In the mobile header, after the page title, aligned to the right
 
-## Files to Create
-1. `src/pages/MagicLinkCallback.tsx` - Callback handler page
+Files to create:
+- `src/pages/NotificationsPage.tsx`
 
-## Files to Modify
-1. `src/context/AuthContext.tsx` - Enhanced to store token and user data
-2. `src/App.tsx` - Add route for `/auth/magic-link`
-
+Files to modify:
+- `src/layouts/MainLayout.tsx`
+- `src/App.tsx`
+- `src/context/SidebarContext.tsx`
+- `src/components/admin/MainSidebar.tsx`
