@@ -36,6 +36,7 @@ interface LeadsApiResponse {
   data?: LeadsApiLead[];
   items?: LeadsApiLead[];
   next_cursor?: string | null;
+  total?: number;
 }
 
 const mapApiLead = (lead: LeadsApiLead): Lead => {
@@ -123,6 +124,7 @@ export const fetchProjectLeads = async ({
   return {
     leads: leads.map(mapApiLead),
     nextCursor: data.next_cursor ?? null,
+    total: data.total ?? leads.length,
   };
 };
 
