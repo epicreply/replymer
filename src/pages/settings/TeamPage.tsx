@@ -52,13 +52,12 @@ export default function TeamPage() {
 
     fetchTeamMembers();
   }, [accessToken]);
+  // Determine current user's role from team members
+  const currentUserMember = members.find((m) => m.user_id === user?.id);
+  const currentUserRole = currentUserMember?.role || "member";
 
-  const handleInvite = () => {
-    toast({
-      title: "Invite members",
-      description: "This feature is coming soon!",
-    });
-  };
+  // Get projects from user object
+  const projects = user?.projects || [];
 
   // Transform API data to component format
   const formattedMembers = members.map((member) => ({
@@ -69,6 +68,32 @@ export default function TeamPage() {
     status: member.status,
     isCurrentUser: member.user_id === user?.id,
   }));
+
+  const handleInviteSuccess = () => {
+    // Refetch team members after successful invite
+    const fetchTeamMembers = async () => {
+      if (!accessToken) return;
+
+      try {
+        const response = await fetch("https://internal-api.autoreply.ing/v1.0/team_members", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch team members");
+        }
+
+        const data = await response.json();
+        setMembers(data.items || []);
+      } catch (error) {
+        console.error("Failed to refresh team members:", error);
+      }
+    };
+
+    fetchTeamMembers();
+  };
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -89,7 +114,10 @@ export default function TeamPage() {
       
             <MemberList
               members={formattedMembers}
-              onInvite={handleInvite}
+              currentUserRole={currentUserRole}
+              projects={projects}
+              accessToken={accessToken || ""}
+              onInviteSuccess={handleInviteSuccess}
             />
           </>
         )}
