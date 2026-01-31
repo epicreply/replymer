@@ -194,13 +194,7 @@ export default function MainLayout() {
               )}
             </div>
 
-            {!sidebarOpen && (
-              <div className="ml-auto">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card/80">
-                  <PanelLeft className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-            )}
+            <div className="ml-auto" />
           </header>
 
           {/* Page Content */}
