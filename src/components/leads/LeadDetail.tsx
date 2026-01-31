@@ -5,12 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useLeads } from '@/context/LeadsContext';
+import { useAuth } from '@/context/AuthContext';
 import { PlatformBadge } from './PlatformBadge';
 import { RelevancyBadge } from './RelevancyBadge';
 import { toast } from '@/hooks/use-toast';
+import { updateLeadStatus as updateLeadStatusApi } from '@/lib/api';
+import { useMemo } from 'react';
 
 export function LeadDetail() {
   const { selectedLead, setSelectedLead, updateLeadStatus, incrementUsage } = useLeads();
+  const { accessToken, user } = useAuth();
+
+  const selectedProjectId = useMemo(
+    () => user?.projects?.find((project) => project.is_selected)?.id ?? user?.default_project_id ?? null,
+    [user]
+  );
 
   if (!selectedLead) {
     return (
@@ -33,20 +42,68 @@ export function LeadDetail() {
     });
   };
 
-  const handleMarkComplete = () => {
-    updateLeadStatus(selectedLead.id, 'completed');
-    toast({
-      title: 'Lead completed',
-      description: 'The lead has been moved to Completed.',
-    });
+  const handleMarkComplete = async () => {
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: 'Error',
+        description: 'Missing authentication or project selection.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await updateLeadStatusApi({
+        accessToken,
+        projectId: selectedProjectId,
+        leadId: selectedLead.id,
+        status: 'completed',
+      });
+
+      updateLeadStatus(selectedLead.id, 'completed');
+      toast({
+        title: 'Lead completed',
+        description: 'The lead has been moved to Completed.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to update lead',
+        description: error instanceof Error ? error.message : 'An error occurred while updating the lead status.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleMarkNotRelevant = () => {
-    updateLeadStatus(selectedLead.id, 'discarded');
-    toast({
-      title: 'Lead discarded',
-      description: 'The lead has been moved to Discarded.',
-    });
+  const handleMarkNotRelevant = async () => {
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: 'Error',
+        description: 'Missing authentication or project selection.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await updateLeadStatusApi({
+        accessToken,
+        projectId: selectedProjectId,
+        leadId: selectedLead.id,
+        status: 'discarded',
+      });
+
+      updateLeadStatus(selectedLead.id, 'discarded');
+      toast({
+        title: 'Lead discarded',
+        description: 'The lead has been moved to Discarded.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to update lead',
+        description: error instanceof Error ? error.message : 'An error occurred while updating the lead status.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleRewrite = () => {

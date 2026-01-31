@@ -125,3 +125,43 @@ export const fetchProjectLeads = async ({
     nextCursor: data.next_cursor ?? null,
   };
 };
+
+interface UpdateLeadStatusResponse {
+  id: string;
+  status: LeadStatus;
+  user_reply: string | null;
+  replied_at: string;
+  comment_sent: boolean;
+  dm_sent: boolean;
+}
+
+export const updateLeadStatus = async ({
+  accessToken,
+  projectId,
+  leadId,
+  status,
+}: {
+  accessToken: string;
+  projectId: string;
+  leadId: string;
+  status: 'completed' | 'discarded';
+}) => {
+  const url = new URL(`/v1.0/projects/leads/${leadId}/status`, API_BASE_URL);
+
+  const response = await fetch(url.toString(), {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update lead status');
+  }
+
+  const data = (await response.json()) as UpdateLeadStatusResponse;
+  return data;
+};
