@@ -1,85 +1,120 @@
 
-# Plan: Add Notification Icon and Page
+# Plan: Invite Team Member Dialog
 
 ## Overview
-Add a notification bell icon to the top-right of the main content area header, styled consistently with the existing sidebar toggle button. Clicking the icon navigates to a new dedicated notifications page.
+Implement an invite team member dialog that opens when clicking "Invite members" button. The dialog includes email input, role selection dropdown, optional project selection, and role-based permission logic for which roles can be invited.
 
-## Changes Required
+## Bug Fixes Required First
+The AnalyticsPage has TypeScript errors where it accesses properties not defined in types:
 
-### 1. Fix Existing Build Errors
-Before implementing the notification feature, two existing bugs need to be fixed:
+**File: `src/lib/api.ts`**
+- Add `dms` and `avg_relevancy` to `AnalyticsPlatformPerformanceItem` interface
+- Add `community_name` as optional to `AnalyticsTopCommunityItem` interface
 
-**File: `src/components/admin/MainSidebar.tsx`**
-- Line 298: Change `class` to `className` (React JSX syntax)
+## Implementation Steps
 
-**File: `src/context/SidebarContext.tsx`**
-- Update `setDesktopSidebarOpen` type to accept a function updater pattern (like React's setState)
+### 1. Create Invite Member Dialog Component
+**New file: `src/components/admin/InviteMemberDialog.tsx`**
 
-**File: `src/layouts/MainLayout.tsx`**  
-- Adjust toggle handler to work with the corrected context type
+A dialog component with:
+- Email input field with validation (required, valid email format)
+- Role dropdown (Admin, Member, PromptEngineer)
+- Optional Project dropdown (populated from user's projects list)
+- Submit button with loading state
+- Cancel button
 
-### 2. Add Notification Icon to Header
-**File: `src/layouts/MainLayout.tsx`**
+Features:
+- Role options filtered based on current user's role (Owner sees all, Admin sees only Member and PromptEngineer)
+- Form validation using react-hook-form and zod
+- API integration with the invite endpoint
 
-- Import `Bell` icon from lucide-react
-- Import `useNavigate` (already imported)
-- Add Bell icon button to the desktop header (right side), matching the existing PanelLeft button style:
-  - Size: `h-9 w-9`
-  - Border radius: `rounded-lg`
-  - Border and background: `border border-border bg-card/80 hover:bg-card`
-  - Position: far right of header using `ml-auto`
-- Add same icon button to mobile header for consistency
-- OnClick: navigate to `/notifications`
+### 2. Determine Current User's Role
+**File: `src/pages/settings/TeamPage.tsx`**
 
-### 3. Create Notifications Page
-**New file: `src/pages/NotificationsPage.tsx`**
+- Find the current user's member entry from the fetched team members list
+- Pass the user's role to `MemberList` component
 
-Create a page component following the existing page patterns:
-- Empty state with Bell icon and placeholder message
-- Title: "Notifications"
-- Consistent styling with other pages
-- Future-ready structure for displaying notification items
+### 3. Update MemberList Component
+**File: `src/components/admin/MemberList.tsx`**
 
-### 4. Register Route
-**File: `src/App.tsx`**
+- Accept new props: `currentUserRole`, `projects`, `accessToken`
+- Manage dialog open state
+- Pass invite handler to dialog
 
-- Import `NotificationsPage`
-- Add route `/notifications` within the MainLayout routes
-
-### 5. Add Page Metadata
-**File: `src/layouts/MainLayout.tsx`**
-
-Add notifications case in `getPageMeta()`:
-- Title: "Notifications"
-- Subtitle: "Stay updated with your latest activity"
-
-## Visual Design
-The notification icon button will match the reference image style:
-- Rounded corners with subtle border
-- Ghost variant with card background
-- Muted icon color that changes on hover
-- Positioned symmetrically opposite to the sidebar toggle
+### 4. API Integration
+The invite endpoint will be called:
+```
+POST /v1.0/team_members/invite
+Headers: Authorization: Bearer jwt, Content-Type: application/json
+Body: { email, role, selected_project? }
+```
 
 ## Technical Details
 
+### Role Permissions Logic
 ```text
-+--------------------------------------------------+
-|  [=]                                      [Bell] |  <- Desktop Header
-|                                                  |
-|              Main Content Area                   |
-|                                                  |
-+--------------------------------------------------+
++----------------+--------------------------------+
+| User Role      | Can Invite                     |
++----------------+--------------------------------+
+| Owner          | Admin, Member, PromptEngineer  |
+| Admin          | Member, PromptEngineer         |
+| Member         | (no invite permission)         |
+| PromptEngineer | (no invite permission)         |
++----------------+--------------------------------+
 ```
 
-The notification icon will appear:
-- **Desktop**: In the header row, pushed to the far right with `ml-auto`
-- **Mobile**: In the mobile header, after the page title, aligned to the right
+### Dialog Form Fields
+1. **Email** (required)
+   - Type: email input
+   - Validation: required, valid email format using zod
+   - Max length: 255 characters
 
-Files to create:
-- `src/pages/NotificationsPage.tsx`
+2. **Role** (required)
+   - Type: Select dropdown
+   - Options: Admin, Member, PromptEngineer (filtered by user permissions)
+   - Default: Member
 
-Files to modify:
-- `src/layouts/MainLayout.tsx`
-- `src/App.tsx`
-- `src/context/SidebarContext.tsx`
-- `src/components/admin/MainSidebar.tsx`
+3. **Project** (optional)
+   - Type: Select dropdown
+   - Options: All projects from user's projects list
+   - Placeholder: "All projects"
+   - When selected: sends `selected_project` in API payload
+
+### Component Structure
+```text
+InviteMemberDialog
+├── Dialog (from ui/dialog)
+├── DialogContent
+│   ├── DialogHeader
+│   │   ├── DialogTitle: "Invite team member"
+│   │   └── DialogDescription: "Send an invitation..."
+│   └── Form
+│       ├── FormField (Email)
+│       │   └── Input type="email"
+│       ├── FormField (Role)
+│       │   └── Select
+│       ├── FormField (Project - optional)
+│       │   └── Select
+│       └── DialogFooter
+│           ├── Button "Cancel"
+│           └── Button "Send invitation"
+```
+
+## Files Summary
+
+**Create:**
+- `src/components/admin/InviteMemberDialog.tsx`
+
+**Modify:**
+- `src/lib/api.ts` - Fix type definitions for analytics
+- `src/pages/settings/TeamPage.tsx` - Determine current user role, pass projects/token
+- `src/components/admin/MemberList.tsx` - Accept new props, control dialog state
+
+## User Experience
+1. User clicks "Invite members" button
+2. Dialog opens with form fields
+3. User enters email, selects role, optionally selects project
+4. User clicks "Send invitation"
+5. Loading state shown on button
+6. On success: toast notification, dialog closes, member list refreshes
+7. On error: toast notification with error message
