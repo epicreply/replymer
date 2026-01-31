@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { FileText, Shield, Coins, Users, Sparkles, Zap, Check } from "lucide-react";
 
 const OnboardingPage = () => {
@@ -12,10 +13,9 @@ const OnboardingPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [agreed, setAgreed] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    companyName: "",
-    role: "",
+    productName: "",
+    websiteUrl: "",
+    productDescription: "",
   });
 
   const handleContinue = () => {
@@ -32,7 +32,7 @@ const OnboardingPage = () => {
 
   const canContinue = () => {
     if (currentStep === 1) return agreed;
-    if (currentStep === 2) return formData.firstName && formData.lastName;
+    if (currentStep === 2) return formData.productName && formData.websiteUrl;
     return true;
   };
 
@@ -110,47 +110,42 @@ const OnboardingPage = () => {
               <Card className="p-6 sm:p-8 lg:p-10 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First name</Label>
+                    <Label htmlFor="productName">Product Name</Label>
                     <Input
-                      id="firstName"
-                      placeholder="John"
-                      value={formData.firstName}
+                      id="productName"
+                      placeholder="Test Project"
+                      value={formData.productName}
                       onChange={(e) =>
-                        setFormData({ ...formData, firstName: e.target.value })
+                        setFormData({ ...formData, productName: e.target.value })
                       }
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last name</Label>
+                    <Label htmlFor="websiteUrl">Website URL</Label>
                     <Input
-                      id="lastName"
-                      placeholder="Smith"
-                      value={formData.lastName}
+                      id="websiteUrl"
+                      placeholder="autopreply.ing"
+                      value={formData.websiteUrl}
                       onChange={(e) =>
-                        setFormData({ ...formData, lastName: e.target.value })
+                        setFormData({ ...formData, websiteUrl: e.target.value })
                       }
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">Company name</Label>
-                  <Input
-                    id="companyName"
-                    placeholder="Company Inc."
-                    value={formData.companyName}
+                  <Label htmlFor="productDescription">Product Description</Label>
+                  <Textarea
+                    id="productDescription"
+                    placeholder="An AI-powered tool that helps businesses automate their social media outreach and lead generation."
+                    value={formData.productDescription}
                     onChange={(e) =>
-                      setFormData({ ...formData, companyName: e.target.value })
+                      setFormData({ ...formData, productDescription: e.target.value })
                     }
+                    className="min-h-[140px]"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Input
-                    id="role"
-                    placeholder="Creative Director"
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  />
+                  <p className="text-sm text-muted-foreground">
+                    Be specific about features and benefits. This helps generate more relevant responses.
+                  </p>
                 </div>
               </Card>
             </div>
