@@ -209,12 +209,19 @@ export default function InboxPage() {
                 ) : (
                   <>
                     {filteredLeads.map((lead) => (
-                      <LeadCard
-                        key={lead.id}
-                        lead={lead}
-                        isSelected={selectedLead?.id === lead.id}
-                        onClick={() => setSelectedLead(lead)}
-                      />
+                      <div key={lead.id}>
+                        <LeadCard
+                          lead={lead}
+                          isSelected={selectedLead?.id === lead.id}
+                          onClick={() => setSelectedLead(lead)}
+                        />
+                        {/* Show lead details below selected lead on mobile */}
+                        {selectedLead?.id === lead.id && (
+                          <div className="md:hidden mt-2">
+                            <LeadDetail />
+                          </div>
+                        )}
+                      </div>
                     ))}
                     <div ref={sentinelRef} className="h-4" />
                     {isLoadingMore ? (
