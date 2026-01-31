@@ -55,9 +55,11 @@ const AuthPage = () => {
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 lg:px-20 py-12 bg-background">
         <div className="max-w-md">
           {/* Logo */}
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-8">
-            <Zap className="w-6 h-6 text-primary-foreground" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="Autoreply logo"
+            className="h-8 object-cover"
+          />
 
           {/* Title */}
           <h1 className="text-3xl font-bold text-foreground mb-3">Welcome back</h1>
