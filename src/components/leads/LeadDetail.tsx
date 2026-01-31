@@ -124,7 +124,7 @@ export function LeadDetail() {
     <ScrollArea className="h-full">
       <div className="md:p-4 space-y-4 relative">
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <RelevancyBadge score={selectedLead.relevancyScore} size="sm" />
           </div>
