@@ -43,7 +43,7 @@ const MagicLinkCallback = () => {
         }
 
         const data = await response.json();
-        
+
         // Fetch user details
         const userResponse = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
           headers: {
@@ -56,7 +56,7 @@ const MagicLinkCallback = () => {
         }
 
         const userData = await userResponse.json();
-        
+
         // Store auth data and update context
         login(data.access_token, {
           id: data.user.id,
@@ -68,10 +68,15 @@ const MagicLinkCallback = () => {
           default_project_id: userData.default_project_id,
           team_member_status: data.user.team_member_status,
           projects: userData.projects,
+          onboarding_completed: userData.onboarding_completed,
         });
-        
-        // Redirect to home
-        navigate("/", { replace: true });
+
+        // Redirect to home or onboarding
+        if (userData.onboarding_completed === false) {
+          navigate("/onboarding", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
       } catch (err) {
         setError("This link has expired or is invalid. Please request a new one.");
         setIsVerifying(false);

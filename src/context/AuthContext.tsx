@@ -16,6 +16,7 @@ interface User {
   default_project_id?: string;
   team_member_status: string;
   projects?: Project[];
+  onboarding_completed: boolean;
 }
 
 interface AuthContextType {
@@ -67,6 +68,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const userData = await response.json();
+
+        if (userData.onboarding_completed === false && window.location.pathname !== "/onboarding") {
+          window.location.href = "/onboarding";
+          return;
+        }
+
         const mergedUser = {
           ...parsedUser,
           ...userData,
@@ -75,6 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           first_name: userData.first_name ?? parsedUser.first_name,
           last_name: userData.last_name ?? parsedUser.last_name,
           theme: userData.theme ?? parsedUser.theme,
+          onboarding_completed: userData.onboarding_completed ?? parsedUser.onboarding_completed,
         };
 
         localStorage.setItem("user", JSON.stringify(mergedUser));
@@ -110,6 +118,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAccessToken(token);
     setUser(userData);
     setIsAuthenticated(true);
+
+    if (userData.onboarding_completed === false && window.location.pathname !== "/onboarding") {
+      window.location.href = "/onboarding";
+    }
   };
 
   const logout = () => {

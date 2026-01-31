@@ -28,29 +28,29 @@ function ProfilePageSkeleton() {
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6">
         <Skeleton className="h-7 w-24" />
-        
+
         <div className="admin-card animate-fade-in">
           <div className="admin-card-section flex items-center gap-4">
             <Skeleton className="h-16 w-16 rounded-full" />
             <Skeleton className="h-5 w-32" />
           </div>
-  
+
           <div className="admin-card-section flex items-center justify-between gap-4">
             <Skeleton className="h-4 w-20" />
             <Skeleton className="h-10 w-[250px] rounded-lg" />
           </div>
-  
+
           <div className="admin-card-section flex items-center justify-between gap-4">
             <Skeleton className="h-4 w-16" />
             <Skeleton className="h-10 w-[250px] rounded-lg" />
           </div>
-  
+
           <div className="admin-card-section flex items-center justify-between gap-4">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-10 w-48 rounded-full" />
           </div>
         </div>
-  
+
         <div className="admin-card animate-fade-in">
           <div className="admin-card-section flex items-center justify-between gap-4">
             <Skeleton className="h-4 w-28" />
@@ -72,7 +72,7 @@ export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
-  
+
   // Track original values for comparison
   const originalFirstName = useRef("");
   const originalLastName = useRef("");
@@ -119,9 +119,9 @@ export default function ProfilePage() {
 
   const handleThemeChange = useCallback(async (newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme);
-    
+
     if (!accessToken) return;
-    
+
     try {
       const response = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
         method: "PATCH",
@@ -160,7 +160,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!accessToken) return;
-      
+
       try {
         const response = await fetch("https://internal-api.autoreply.ing/v1.0/users/me", {
           headers: {
@@ -173,6 +173,12 @@ export default function ProfilePage() {
         }
 
         const data = await response.json();
+
+        if (data.onboarding_completed === false) {
+          window.location.href = "/onboarding";
+          return;
+        }
+
         setProfile(data);
         setFirstName(data.first_name || "");
         setLastName(data.last_name || "");
@@ -188,7 +194,7 @@ export default function ProfilePage() {
     fetchProfile();
   }, [accessToken]);
 
-  const displayName = firstName || lastName 
+  const displayName = firstName || lastName
     ? `${firstName} ${lastName}`.trim()
     : profile?.email || "";
 
@@ -209,7 +215,7 @@ export default function ProfilePage() {
         <div className="hidden md:block">
           <h1 className="text-xl font-semibold text-foreground">Profile</h1>
         </div>
-  
+
         <div className="admin-card animate-fade-in">
           <div className="admin-card-section flex items-center gap-4">
             <MemberAvatar name={displayName} className="h-16 w-16 text-xl" />
@@ -217,7 +223,7 @@ export default function ProfilePage() {
               <p className="text-base font-medium text-foreground">{displayName}</p>
             </div>
           </div>
-  
+
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">First Name</span>
             <Input
@@ -237,14 +243,14 @@ export default function ProfilePage() {
               className="max-w-[250px] rounded-lg border-border bg-card text-right text-sm"
             />
           </div>
-  
+
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">Email</span>
             <div className="flex h-10 w-full max-w-[250px] items-center justify-end rounded-lg bg-card px-3 text-sm text-foreground">
               {profile?.email}
             </div>
           </div>
-  
+
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">Appearance</span>
             <div className="flex rounded-full bg-muted p-1">
@@ -252,11 +258,10 @@ export default function ProfilePage() {
                 <button
                   key={mode}
                   onClick={() => handleThemeChange(mode)}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all capitalize ${
-                    theme === mode
+                  className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all capitalize ${theme === mode
                       ? "bg-card text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   {mode}
                 </button>
@@ -264,7 +269,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-  
+
         <div className="admin-card animate-fade-in">
           <div className="admin-card-section flex items-center justify-between gap-4">
             <span className="text-sm font-medium text-foreground">Delete account</span>
@@ -277,13 +282,13 @@ export default function ProfilePage() {
             </Button>
           </div>
         </div>
-  
+
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md rounded-2xl">
             <DialogHeader>
               <DialogTitle>Delete your account?</DialogTitle>
               <DialogDescription className="text-muted-foreground">
-                All the videos and projects made by this account will also be deleted. 
+                All the videos and projects made by this account will also be deleted.
                 This cannot be undone, and you will no longer be able to create an account with this email.
               </DialogDescription>
             </DialogHeader>
