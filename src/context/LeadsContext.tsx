@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from 'react';
 import {
   Lead,
   LeadStatus,
@@ -89,6 +97,9 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const inFlightRequestKeyRef = useRef<string | null>(null);
+  const isRequestInFlightRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Filters state
   const [filters, setFilters] = useState<LeadsFilters>(defaultFilters);
@@ -172,13 +183,14 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     async ({
       cursor,
       append,
-      signal,
     }: {
       cursor?: string | null;
       append?: boolean;
-      signal?: AbortSignal;
     } = {}) => {
       if (!accessToken || !selectedProjectId) {
+        abortControllerRef.current?.abort();
+        inFlightRequestKeyRef.current = null;
+        isRequestInFlightRef.current = false;
         setError('Missing authentication or project selection.');
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -201,10 +213,34 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         setIsLoadingMore(true);
       }
 
+      const selectedCommunityIds = filters.communities
+        .map((communityName) => communities.find((community) => community.name === communityName)?.id)
+        .filter((communityId): communityId is string => Boolean(communityId));
+      const requestKey = JSON.stringify({
+        projectId: selectedProjectId,
+        cursor: cursor ?? null,
+        append: Boolean(append),
+        filters: {
+          status: filters.status === 'all' ? undefined : filters.status,
+          platforms: filters.platforms.length ? filters.platforms : undefined,
+          communityIds: selectedCommunityIds.length ? selectedCommunityIds : undefined,
+          minRelevancy: filters.relevancyRange[0],
+          maxRelevancy: filters.relevancyRange[1],
+          search: filters.searchQuery || undefined,
+        },
+      });
+
+      if (isRequestInFlightRef.current && inFlightRequestKeyRef.current === requestKey) {
+        return;
+      }
+
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      isRequestInFlightRef.current = true;
+      inFlightRequestKeyRef.current = requestKey;
+
       try {
-        const selectedCommunityIds = filters.communities
-          .map((communityName) => communities.find((community) => community.name === communityName)?.id)
-          .filter((communityId): communityId is string => Boolean(communityId));
         const response = await fetchProjectLeads({
           accessToken,
           projectId: selectedProjectId,
@@ -218,7 +254,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
             cursor,
             limit: 25,
           },
-          signal,
+          signal: controller.signal,
         });
 
         setLeads((prev) => (append ? [...prev, ...response.leads] : response.leads));
@@ -229,6 +265,10 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         }
         setError(fetchError instanceof Error ? fetchError.message : 'Failed to load leads');
       } finally {
+        if (inFlightRequestKeyRef.current === requestKey) {
+          inFlightRequestKeyRef.current = null;
+          isRequestInFlightRef.current = false;
+        }
         if (append) {
           setIsLoadingMore(false);
         } else {
@@ -249,9 +289,8 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
   const hasNextPage = Boolean(nextCursor);
 
   useEffect(() => {
-    const controller = new AbortController();
-    void loadLeads({ cursor: null, append: false, signal: controller.signal });
-    return () => controller.abort();
+    void loadLeads({ cursor: null, append: false });
+    return () => abortControllerRef.current?.abort();
   }, [loadLeads]);
 
   // Filter leads
