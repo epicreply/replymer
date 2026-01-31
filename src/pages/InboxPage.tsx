@@ -182,7 +182,7 @@ export default function InboxPage() {
         {/* Three Panel Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Filters (hidden on mobile) */}
-          <aside className="hidden lg:block w-64 border-r border-border bg-card/50">
+          <aside className="hidden lg:block w-64 border-r border-border bg-card/50 rounded-bl-lg">
             <FilterPanel />
           </aside>
   
