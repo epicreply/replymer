@@ -17,7 +17,7 @@ export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left p-4 rounded-xl border transition-all duration-200',
+        'w-full text-left p-4 rounded-xl border transition-all duration-200 relative',
         'hover:bg-accent/50 hover:border-accent',
         isSelected
           ? 'bg-accent border-primary/30 shadow-sm'
@@ -28,7 +28,6 @@ export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
       <div className="flex items-start gap-3">
         <div className="flex flex-col items-center gap-2">
           <RelevancyBadge score={lead.relevancyScore} size="sm" />
-          <PlatformBadge platform={lead.platform} />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -73,6 +72,10 @@ export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
         {isUnread && (
           <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1" />
         )}
+      </div>
+
+      <div className="absolute top-4 right-4">
+        <PlatformBadge platform={lead.platform} />
       </div>
     </button>
   );
