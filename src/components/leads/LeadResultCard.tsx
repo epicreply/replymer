@@ -40,7 +40,7 @@ export function LeadResultCard({
               <span>•</span>
               <span>{lead.authorHandle}</span>
               <span>•</span>
-              <span>{timeLabel}</span>
+              <span className="hidden sm:inline">{timeLabel}</span>
             </div>
             <h4 className="font-medium text-foreground mb-2 line-clamp-1">
               {lead.title}
@@ -52,9 +52,37 @@ export function LeadResultCard({
                 <p className="text-sm text-foreground">{lead.reply}</p>
               </div>
             )}
+            <div className="mt-3 flex items-center justify-between gap-3 sm:hidden">
+              <span className="text-xs text-muted-foreground">{timeLabel}</span>
+              {showRestore ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onRestore?.(lead.id)}
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    Restore
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={lead.url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      View
+                    </a>
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={lead.url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    View
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
           {showRestore ? (
-            <div className="flex flex-col gap-2">
+            <div className="hidden flex-col gap-2 sm:flex">
               <Button
                 variant="outline"
                 size="sm"
@@ -71,7 +99,7 @@ export function LeadResultCard({
               </Button>
             </div>
           ) : (
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
               <a href={lead.url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-3 w-3 mr-1" />
                 View
