@@ -290,7 +290,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         }
       }
     },
-    [accessToken, selectedProjectId, filters, communities, isLoading, isLoadingMore]
+    [accessToken, selectedProjectId, filters, communities]
   );
 
   const loadMoreLeads = useCallback(() => {
