@@ -281,7 +281,7 @@ export const fetchAnalyticsSummary = async ({
   limit,
   signal,
 }: AnalyticsQueryParams): Promise<AnalyticsSummaryResponse> => {
-  const url = new URL('/analytics/summary', API_BASE_URL);
+  const url = new URL('/v1.0/analytics/summary', API_BASE_URL);
   url.search = buildAnalyticsQueryParams({
     startDate,
     endDate,
@@ -316,7 +316,7 @@ export const fetchAnalyticsLeadsOverTime = async ({
   limit,
   signal,
 }: AnalyticsQueryParams): Promise<AnalyticsLeadsOverTimeItem[]> => {
-  const url = new URL('/analytics/leads-over-time', API_BASE_URL);
+  const url = new URL('/v1.0/analytics/leads-over-time', API_BASE_URL);
   url.search = buildAnalyticsQueryParams({
     startDate,
     endDate,
@@ -357,7 +357,7 @@ export const fetchAnalyticsPlatformPerformance = async ({
   limit,
   signal,
 }: AnalyticsQueryParams): Promise<AnalyticsPlatformPerformanceItem[]> => {
-  const url = new URL('/analytics/platform-performance', API_BASE_URL);
+  const url = new URL('/v1.0/analytics/platform-performance', API_BASE_URL);
   url.search = buildAnalyticsQueryParams({
     startDate,
     endDate,
@@ -398,7 +398,7 @@ export const fetchAnalyticsTopCommunities = async ({
   limit,
   signal,
 }: AnalyticsQueryParams): Promise<AnalyticsTopCommunityItem[]> => {
-  const url = new URL('/analytics/top-communities', API_BASE_URL);
+  const url = new URL('/v1.0/analytics/top-communities', API_BASE_URL);
   url.search = buildAnalyticsQueryParams({
     startDate,
     endDate,
