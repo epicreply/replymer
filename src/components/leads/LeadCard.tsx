@@ -33,10 +33,6 @@ export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs text-muted-foreground">{lead.community}</span>
-            <span className="text-xs text-muted-foreground">•</span>
-            <span className="text-xs text-muted-foreground">
-              {formatDistanceToNow(lead.createdAt, { addSuffix: true })}
-            </span>
           </div>
 
           <h4
@@ -76,6 +72,9 @@ export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
 
       <div className="absolute top-4 right-4">
         <PlatformBadge platform={lead.platform} />
+      </div>
+      <div className="absolute bottom-4 right-4 text-xs text-muted-foreground">
+        {formatDistanceToNow(lead.createdAt, { addSuffix: true })}
       </div>
     </button>
   );
