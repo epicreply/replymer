@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { LeadsProvider } from "./context/LeadsContext";
 import { AuthProvider } from "./context/AuthContext";
+import { SidebarProvider } from "./context/SidebarContext";
 import MainLayout from "./layouts/MainLayout";
 import InboxPage from "./pages/InboxPage";
 import CompletedPage from "./pages/CompletedPage";
@@ -29,7 +30,8 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <AuthProvider>
         <LeadsProvider>
-          <TooltipProvider>
+          <SidebarProvider>
+            <TooltipProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -60,7 +62,8 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
-          </TooltipProvider>
+            </TooltipProvider>
+          </SidebarProvider>
         </LeadsProvider>
       </AuthProvider>
     </ThemeProvider>

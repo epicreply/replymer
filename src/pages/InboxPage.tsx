@@ -1,4 +1,5 @@
 import { useLeads } from '@/context/LeadsContext';
+import { useSidebar } from '@/context/SidebarContext';
 import { FilterPanel } from '@/components/leads/FilterPanel';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { LeadDetail } from '@/components/leads/LeadDetail';
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search } from 'lucide-react';
 import { LeadStatus } from '@/data/mockLeads';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function InboxPage() {
   const {
@@ -26,6 +27,8 @@ export default function InboxPage() {
     isLoadingMore,
     hasNextPage,
   } = useLeads();
+  const { closeSidebar } = useSidebar();
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -37,6 +40,23 @@ export default function InboxPage() {
   const handleSearch = (query: string) => {
     setFilters({ ...filters, searchQuery: query });
   };
+
+  // Track window width for responsive sidebar behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Close sidebar when lead is selected on screens < 1300px
+  useEffect(() => {
+    if (selectedLead && windowWidth < 1300) {
+      closeSidebar();
+    }
+  }, [selectedLead, windowWidth, closeSidebar]);
 
   useEffect(() => {
     if (!hasNextPage || isLoading || isLoadingMore) {
@@ -205,9 +225,11 @@ export default function InboxPage() {
           </div>
   
           {/* Right Panel - Lead Detail */}
-          <aside className="hidden md:block w-[400px] lg:w-[450px] bg-card/50">
-            <LeadDetail />
-          </aside>
+          {selectedLead && (
+            <aside className="hidden md:block w-[400px] lg:w-[450px] bg-card/50">
+              <LeadDetail />
+            </aside>
+          )}
         </div>
       </div>
     </div>
