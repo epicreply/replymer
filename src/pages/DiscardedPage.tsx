@@ -2,6 +2,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ExternalLink, Filter, RotateCcw, Trash2 } from 'lucide-react';
 import { useLeads } from '@/context/LeadsContext';
 import { PlatformBadge } from '@/components/leads/PlatformBadge';
+import { LeadCardSkeleton } from '@/components/leads/LeadCardSkeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,21 +14,66 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform } from '@/data/mockLeads';
+import { useStatusLeads } from '@/hooks/useStatusLeads';
 
 export default function DiscardedPage() {
-  const { leads, restoreLead } = useLeads();
+  const { restoreLead: restoreLeadInContext } = useLeads();
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const discardedLeads = leads.filter((lead) => {
-    if (lead.status !== 'discarded') return false;
-    if (platformFilter !== 'all' && lead.platform !== platformFilter) return false;
-    return true;
+  const {
+    leads: discardedLeads,
+    isLoading,
+    isLoadingMore,
+    error,
+    hasNextPage,
+    loadMoreLeads,
+    total,
+    removeLead,
+  } = useStatusLeads({
+    status: 'discarded',
+    platform: platformFilter,
+    limit: 20,
   });
 
+  useEffect(() => {
+    if (!hasNextPage || isLoading || isLoadingMore) {
+      return;
+    }
+
+    const sentinel = sentinelRef.current;
+    const root =
+      scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') ?? null;
+
+    if (!sentinel) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMoreLeads();
+        }
+      },
+      {
+        root,
+        rootMargin: '200px',
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasNextPage, isLoading, isLoadingMore, loadMoreLeads]);
+
   const handleRestore = (leadId: string) => {
-    restoreLead(leadId);
+    restoreLeadInContext(leadId);
+    removeLead(leadId);
     toast({
       title: 'Lead restored',
       description: 'The lead has been moved back to Inbox.',
@@ -48,7 +94,7 @@ export default function DiscardedPage() {
           <div className="hidden md:block">
             <h1 className="text-xl font-semibold text-foreground">Discarded</h1>
             <p className="text-sm text-muted-foreground">
-              Leads marked as not relevant ({discardedLeads.length})
+              Leads marked as not relevant ({total})
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -75,10 +121,23 @@ export default function DiscardedPage() {
             )}
           </div>
         </div>
-  
-        <ScrollArea className="h-[calc(100vh-280px)]">
+
+        <ScrollArea className="h-[calc(100vh-280px)]" ref={scrollAreaRef}>
           <div className="space-y-3">
-            {discardedLeads.length === 0 ? (
+            {error ? (
+              <Card>
+                <CardContent className="py-12 text-center text-destructive">
+                  <p>Unable to load leads.</p>
+                  <p className="text-sm">{error}</p>
+                </CardContent>
+              </Card>
+            ) : isLoading ? (
+              <>
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <LeadCardSkeleton key={`lead-skeleton-${index}`} />
+                ))}
+              </>
+            ) : discardedLeads.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
                   <p>No discarded leads</p>
@@ -86,48 +145,58 @@ export default function DiscardedPage() {
                 </CardContent>
               </Card>
             ) : (
-              discardedLeads.map((lead) => (
-                <Card key={lead.id} className="hover:shadow-sm transition-shadow opacity-75">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <PlatformBadge platform={lead.platform} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                          <span>{lead.community}</span>
-                          <span>•</span>
-                          <span>{lead.authorHandle}</span>
-                          <span>•</span>
-                          <span>
-                            {formatDistanceToNow(lead.createdAt, { addSuffix: true })}
-                          </span>
+              <>
+                {discardedLeads.map((lead) => (
+                  <Card key={lead.id} className="hover:shadow-sm transition-shadow opacity-75">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <PlatformBadge platform={lead.platform} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                            <span>{lead.community}</span>
+                            <span>•</span>
+                            <span>{lead.authorHandle}</span>
+                            <span>•</span>
+                            <span>
+                              {formatDistanceToNow(lead.createdAt, { addSuffix: true })}
+                            </span>
+                          </div>
+                          <h4 className="font-medium text-foreground mb-2 line-clamp-1">
+                            {lead.title}
+                          </h4>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {lead.content}
+                          </p>
                         </div>
-                        <h4 className="font-medium text-foreground mb-2 line-clamp-1">
-                          {lead.title}
-                        </h4>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {lead.content}
-                        </p>
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRestore(lead.id)}
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Restore
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={lead.url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              View
+                            </a>
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRestore(lead.id)}
-                        >
-                          <RotateCcw className="h-3 w-3 mr-1" />
-                          Restore
-                        </Button>
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={lead.url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            View
-                          </a>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardContent>
+                  </Card>
+                ))}
+                <div ref={sentinelRef} className="h-4" />
+                {isLoadingMore && (
+                  <>
+                    {Array.from({ length: 2 }).map((_, index) => (
+                      <LeadCardSkeleton key={`lead-skeleton-more-${index}`} />
+                    ))}
+                  </>
+                )}
+              </>
             )}
           </div>
         </ScrollArea>
