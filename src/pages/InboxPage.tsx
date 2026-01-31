@@ -2,6 +2,7 @@ import { useLeads } from '@/context/LeadsContext';
 import { FilterPanel } from '@/components/leads/FilterPanel';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { LeadDetail } from '@/components/leads/LeadDetail';
+import { LeadCardSkeleton } from '@/components/leads/LeadCardSkeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -169,9 +170,11 @@ export default function InboxPage() {
                     <p className="text-sm">{error}</p>
                   </div>
                 ) : isLoading ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <p>Loading leads...</p>
-                  </div>
+                  <>
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <LeadCardSkeleton key={`lead-skeleton-${index}`} />
+                    ))}
+                  </>
                 ) : filteredLeads.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <p>No leads found</p>
@@ -189,9 +192,11 @@ export default function InboxPage() {
                     ))}
                     <div ref={sentinelRef} className="h-4" />
                     {isLoadingMore ? (
-                      <div className="text-center py-4 text-xs text-muted-foreground">
-                        Loading more leads...
-                      </div>
+                      <>
+                        {Array.from({ length: 2 }).map((_, index) => (
+                          <LeadCardSkeleton key={`lead-skeleton-more-${index}`} />
+                        ))}
+                      </>
                     ) : null}
                   </>
                 )}
