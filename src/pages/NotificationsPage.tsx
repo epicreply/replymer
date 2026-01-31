@@ -1,7 +1,8 @@
 import { Bell } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { fetchNotifications, NotificationItem } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { fetchNotifications, markNotificationRead, NotificationItem } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 const SKELETON_ROWS = Array.from({ length: 5 });
@@ -15,6 +16,7 @@ export default function NotificationsPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [markingReadIds, setMarkingReadIds] = useState<Record<string, boolean>>({});
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isFetchingRef = useRef(false);
   const hasNotifiedReadRef = useRef(false);
@@ -41,6 +43,42 @@ export default function NotificationsPage() {
       }
     },
     [accessToken]
+  );
+
+  const handleMarkAsRead = useCallback(
+    async (notificationId: string) => {
+      if (!accessToken) return;
+      setMarkingReadIds((prev) => ({ ...prev, [notificationId]: true }));
+      try {
+        const response = await markNotificationRead({
+          accessToken,
+          notificationId,
+        });
+        setItems((prev) =>
+          prev.map((item) => {
+            if (item.id !== notificationId) return item;
+            return {
+              ...item,
+              is_read: response.is_read ?? response.isRead ?? true,
+              read_at:
+                response.read_at ??
+                response.readAt ??
+                item.read_at ??
+                item.readAt ??
+                new Date().toISOString(),
+            };
+          })
+        );
+        refreshNotificationsCount?.();
+      } finally {
+        setMarkingReadIds((prev) => {
+          const next = { ...prev };
+          delete next[notificationId];
+          return next;
+        });
+      }
+    },
+    [accessToken, refreshNotificationsCount]
   );
 
   useEffect(() => {
@@ -95,8 +133,20 @@ export default function NotificationsPage() {
         item.description ??
         (title === 'Notification' ? '' : title);
       const timestamp = formatTimestamp(item.created_at ?? item.createdAt);
+      const readTimestamp = formatTimestamp(item.read_at ?? item.readAt);
       const id = item.id ?? `${title}-${index}`;
-      return { id, title, message, timestamp };
+      const apiId = item.id;
+      const isRead = item.is_read ?? false;
+      return {
+        id,
+        apiId,
+        title,
+        message,
+        timestamp,
+        isRead,
+        readTimestamp,
+        canMarkRead: Boolean(apiId),
+      };
     });
   }, [formatTimestamp, items]);
 
@@ -132,17 +182,49 @@ export default function NotificationsPage() {
   return (
     <div className="space-y-4">
       {notifications.map((notification) => (
-        <div key={notification.id} className="rounded-lg border border-border bg-card p-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-start justify-between gap-4">
-              <h3 className="text-sm font-semibold text-foreground">{notification.title}</h3>
+        <div
+          key={notification.id}
+          className="rounded-lg border border-border bg-card p-4"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">{notification.title}</h3>
+                {!notification.isRead ? (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                    Unread
+                  </span>
+                ) : null}
+              </div>
+              {notification.message ? (
+                <p className="text-sm text-muted-foreground">{notification.message}</p>
+              ) : null}
+            </div>
+            <div className="flex flex-col items-start gap-2 sm:items-end">
               {notification.timestamp ? (
                 <span className="text-xs text-muted-foreground">{notification.timestamp}</span>
               ) : null}
+              {notification.isRead ? (
+                <span className="text-[11px] text-muted-foreground">
+                  Read{notification.readTimestamp ? ` · ${notification.readTimestamp}` : ''}
+                </span>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (notification.apiId ? handleMarkAsRead(notification.apiId) : null)}
+                  disabled={
+                    Boolean(notification.apiId && markingReadIds[notification.apiId]) ||
+                    !notification.canMarkRead
+                  }
+                >
+                  {notification.apiId && markingReadIds[notification.apiId]
+                    ? 'Marking...'
+                    : 'Mark as read'}
+                </Button>
+              )}
             </div>
-            {notification.message ? (
-              <p className="text-sm text-muted-foreground">{notification.message}</p>
-            ) : null}
           </div>
         </div>
       ))}

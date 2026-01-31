@@ -35,6 +35,9 @@ export interface NotificationItem {
   type?: string;
   created_at?: string;
   createdAt?: string;
+  is_read?: boolean;
+  read_at?: string;
+  readAt?: string;
   [key: string]: unknown;
 }
 
@@ -224,6 +227,45 @@ export const fetchNotifications = async ({
     items: data.items ?? data.data ?? data.notifications ?? [],
     nextCursor: data.next_cursor ?? null,
   };
+};
+
+export const markNotificationRead = async ({
+  accessToken,
+  notificationId,
+  signal,
+}: {
+  accessToken: string;
+  notificationId: string;
+  signal?: AbortSignal;
+}) => {
+  const url = new URL(`/v1.0/notifications/${notificationId}/read`, API_BASE_URL);
+  const response = await fetch(url.toString(), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to mark notification as read');
+  }
+
+  if (response.status === 204) {
+    return {} as Record<string, never>;
+  }
+
+  try {
+    return (await response.json()) as {
+      id?: string;
+      is_read?: boolean;
+      isRead?: boolean;
+      read_at?: string;
+      readAt?: string;
+    };
+  } catch {
+    return {} as Record<string, never>;
+  }
 };
 
 interface UpdateLeadStatusResponse {
