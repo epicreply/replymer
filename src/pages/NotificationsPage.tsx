@@ -4,7 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 import { fetchNotifications, markNotificationRead, NotificationItem } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
-const SKELETON_ROWS = Array.from({ length: 5 });
+const SKELETON_ROWS = Array.from({ length: 3 });
 
 export default function NotificationsPage() {
   const { accessToken } = useAuth();
@@ -157,18 +157,20 @@ export default function NotificationsPage() {
 
   if (isLoading && items.length === 0) {
     return (
-      <div className="space-y-4">
-        {SKELETON_ROWS.map((_, index) => (
-          <div key={index} className="rounded-lg border border-border bg-card p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-2">
-                <div className="h-4 w-1/3 rounded bg-muted" />
-                <div className="h-3 w-4/5 rounded bg-muted" />
+      <div className="mx-auto max-w-2xl">
+        <div className="space-y-4">
+          {SKELETON_ROWS.map((_, index) => (
+            <div key={index} className="rounded-lg border border-border bg-card p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-2">
+                  <div className="h-4 w-1/3 rounded bg-muted" />
+                  <div className="h-3 w-4/5 rounded bg-muted" />
+                </div>
+                <div className="h-3 w-28 rounded bg-muted sm:mt-1" />
               </div>
-              <div className="h-3 w-28 rounded bg-muted sm:mt-1" />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   }
