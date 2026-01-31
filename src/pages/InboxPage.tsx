@@ -228,7 +228,7 @@ export default function InboxPage() {
           </aside>
   
           {/* Center Panel - Lead List */}
-          <div className="flex-1 min-w-0 border-r border-border">
+          <div className="flex-1 min-w-0">
             <ScrollArea className="h-full" ref={scrollAreaRef}>
               <div className="p-3 space-y-2">
                 {error ? (
@@ -280,7 +280,7 @@ export default function InboxPage() {
   
           {/* Right Panel - Lead Detail */}
           {selectedLead && (
-            <aside className="hidden md:block w-[400px] lg:w-[450px] bg-card/50">
+            <aside className="hidden md:block w-[400px] lg:w-[450px] bg-card/50 border-l border-border">
               <LeadDetail />
             </aside>
           )}
