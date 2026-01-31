@@ -58,17 +58,17 @@ const AuthPage = () => {
           <img
             src="/logo.png"
             alt="Autoreply logo"
-            className="h-8 object-cover"
+            className="h-10 object-cover mb-10"
           />
 
           {/* Title */}
-          <h1 className="text-3xl font-bold text-foreground mb-3">Welcome back</h1>
+          <h1 className="text-xl font-bold text-foreground mb-3">Welcome back</h1>
           <p className="text-muted-foreground mb-8">
             Sign in to your account to continue managing your settings and preferences.
           </p>
 
           {/* Features */}
-          <ul className="space-y-3 mb-8">
+          <ul className="space-y-1 mb-8">
             <li className="flex items-center gap-2 text-muted-foreground">
               <span className="w-1.5 h-1.5 rounded-full bg-primary" />
               Secure magic link authentication
@@ -138,14 +138,7 @@ const AuthPage = () => {
             </svg>
             Continue with Google
           </Button>
-
-          {/* Sign up link */}
-          <p className="text-sm text-muted-foreground mt-6">
-            Don't have an account?{" "}
-            <button className="text-primary hover:underline font-medium">
-              Sign up
-            </button>
-          </p>
+          
         </div>
       </div>
 
