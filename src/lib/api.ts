@@ -34,6 +34,7 @@ interface LeadsApiLead {
 interface LeadsApiResponse {
   leads?: LeadsApiLead[];
   data?: LeadsApiLead[];
+  items?: LeadsApiLead[];
   next_cursor?: string | null;
 }
 
@@ -117,7 +118,7 @@ export const fetchProjectLeads = async ({
   }
 
   const data = (await response.json()) as LeadsApiResponse;
-  const leads = data.leads ?? data.data ?? [];
+  const leads = data.leads ?? data.data ?? data.items ?? [];
 
   return {
     leads: leads.map(mapApiLead),
