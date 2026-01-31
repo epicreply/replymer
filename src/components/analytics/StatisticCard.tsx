@@ -17,6 +17,7 @@ interface StatisticCardProps {
   children: (timeRange: TimeRange) => ReactNode;
   dialogContent: (timeRange: TimeRange) => ReactNode;
   defaultTimeRange?: TimeRange;
+  onTimeRangeChange?: (timeRange: TimeRange) => void;
 }
 
 export function StatisticCard({
@@ -24,9 +25,15 @@ export function StatisticCard({
   children,
   dialogContent,
   defaultTimeRange = 'week',
+  onTimeRangeChange,
 }: StatisticCardProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>(defaultTimeRange);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleTimeRangeChange = (range: TimeRange) => {
+    setTimeRange(range);
+    onTimeRangeChange?.(range);
+  };
 
   return (
     <>
@@ -51,7 +58,7 @@ export function StatisticCard({
         onOpenChange={setDialogOpen}
         title={title}
         timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
+        onTimeRangeChange={handleTimeRangeChange}
       >
         {dialogContent(timeRange)}
       </ChartDialog>
