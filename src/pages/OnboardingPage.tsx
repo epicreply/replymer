@@ -39,16 +39,63 @@ const OnboardingPage = () => {
     return withoutPrefix.replace(/\/+$/g, "");
   };
 
-  const addSubreddit = (value: string) => {
+  const addSubreddit = async (value: string) => {
     const normalized = normalizeSubreddit(value);
     if (!normalized) return;
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: "Unable to add subreddit",
+        description: "Missing authentication or project selection.",
+        variant: "destructive",
+      });
+      return;
+    }
     const exists = subreddits.some(
       (subreddit) => subreddit.toLowerCase() === normalized.toLowerCase(),
     );
-    if (!exists) {
-      setSubreddits((prev) => [...prev, normalized]);
+    if (exists) {
+      toast({
+        title: "Subreddit already exists for this project.",
+        variant: "destructive",
+      });
+      setSubredditInput("");
+      return;
     }
-    setSubredditInput("");
+    try {
+      const response = await fetch("https://internal-api.autoreply.ing/v1.0/communities", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          ...(selectedProjectId ? { "X-Project-ID": selectedProjectId } : {}),
+        },
+        body: JSON.stringify({ platform: "reddit", name: `r/${normalized}` }),
+      });
+
+      if (response.status === 409) {
+        toast({
+          title: "Subreddit already exists for this project.",
+          variant: "destructive",
+        });
+        setSubredditInput("");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to add subreddit");
+      }
+
+      await response.json();
+      setSubreddits((prev) => [...prev, normalized]);
+      setSubredditInput("");
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to add subreddit.",
+        variant: "destructive",
+      });
+    }
   };
 
   const buildProjectUpdatePayload = () => ({
