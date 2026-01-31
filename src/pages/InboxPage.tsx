@@ -98,7 +98,7 @@ export default function InboxPage() {
 
   return (
     <div className="mx-auto px-4">
-      <div className="h-[calc(100vh-120px)] flex flex-col -mx-4 md:-mx-8 -my-6 md:-my-8">
+      <div className="h-[calc(100vh-100px)] flex flex-col -mx-4 md:-mx-8 -my-6 md:-my-8">
         {/* Header */}
         <div className="px-4 md:px-6 py-4 border-b border-border">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
