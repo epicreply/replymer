@@ -1,5 +1,6 @@
 import { Bell } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { fetchNotifications, NotificationItem } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
@@ -7,12 +8,16 @@ const SKELETON_ROWS = Array.from({ length: 5 });
 
 export default function NotificationsPage() {
   const { accessToken } = useAuth();
+  const { refreshNotificationsCount } = useOutletContext<{
+    refreshNotificationsCount?: () => void;
+  }>();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isFetchingRef = useRef(false);
+  const hasNotifiedReadRef = useRef(false);
 
   const loadNotifications = useCallback(
     async (cursor?: string | null) => {
@@ -43,13 +48,21 @@ export default function NotificationsPage() {
       setItems([]);
       setNextCursor(null);
       setIsLoading(false);
+      hasNotifiedReadRef.current = false;
       return;
     }
     setItems([]);
     setNextCursor(null);
     setIsLoading(true);
+    hasNotifiedReadRef.current = false;
     loadNotifications(null);
   }, [accessToken, loadNotifications]);
+
+  useEffect(() => {
+    if (isLoading || !accessToken || hasNotifiedReadRef.current) return;
+    hasNotifiedReadRef.current = true;
+    refreshNotificationsCount?.();
+  }, [accessToken, isLoading, refreshNotificationsCount]);
 
   useEffect(() => {
     if (!nextCursor || !sentinelRef.current) return;
