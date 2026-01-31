@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Platform } from '@/data/mockLeads';
 import { getPlatformLabel } from './PlatformBadge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export function FilterPanel() {
   const { filters, setFilters, communities, stats } = useLeads();
@@ -14,11 +15,8 @@ export function FilterPanel() {
     setFilters({ ...filters, relevancyRange: [value[0], value[1]] });
   };
 
-  const handlePlatformToggle = (platform: Platform, checked: boolean) => {
-    const newPlatforms = checked
-      ? [...filters.platforms, platform]
-      : filters.platforms.filter((p) => p !== platform);
-    setFilters({ ...filters, platforms: newPlatforms });
+  const handlePlatformSelect = (platform: Platform) => {
+    setFilters({ ...filters, platforms: [platform] });
   };
 
   const handleCommunityToggle = (community: string, checked: boolean) => {
@@ -71,16 +69,14 @@ export function FilterPanel() {
           {/* Platform Filter */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Platforms</Label>
-            <div className="space-y-2">
+            <RadioGroup
+              value={filters.platforms[0]}
+              onValueChange={(value) => handlePlatformSelect(value as Platform)}
+              className="space-y-2"
+            >
               {platforms.map((platform) => (
                 <div key={platform} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`platform-${platform}`}
-                    checked={filters.platforms.includes(platform)}
-                    onCheckedChange={(checked) =>
-                      handlePlatformToggle(platform, checked as boolean)
-                    }
-                  />
+                  <RadioGroupItem value={platform} id={`platform-${platform}`} />
                   <Label
                     htmlFor={`platform-${platform}`}
                     className="text-sm font-normal cursor-pointer"
@@ -89,7 +85,7 @@ export function FilterPanel() {
                   </Label>
                 </div>
               ))}
-            </div>
+            </RadioGroup>
           </div>
 
           {/* Communities Filter */}
