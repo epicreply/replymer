@@ -100,6 +100,11 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
   const inFlightRequestKeyRef = useRef<string | null>(null);
   const isRequestInFlightRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const pendingRequestRef = useRef<{
+    cursor?: string | null;
+    append?: boolean;
+    requestKey: string;
+  } | null>(null);
 
   // Filters state
   const [filters, setFilters] = useState<LeadsFilters>(defaultFilters);
@@ -191,6 +196,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         abortControllerRef.current?.abort();
         inFlightRequestKeyRef.current = null;
         isRequestInFlightRef.current = false;
+        pendingRequestRef.current = null;
         setError('Missing authentication or project selection.');
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -230,11 +236,14 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      if (isRequestInFlightRef.current && inFlightRequestKeyRef.current === requestKey) {
+      if (isRequestInFlightRef.current) {
+        if (inFlightRequestKeyRef.current === requestKey) {
+          return;
+        }
+        pendingRequestRef.current = { cursor, append, requestKey };
         return;
       }
 
-      abortControllerRef.current?.abort();
       const controller = new AbortController();
       abortControllerRef.current = controller;
       isRequestInFlightRef.current = true;
@@ -273,6 +282,11 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
           setIsLoadingMore(false);
         } else {
           setIsLoading(false);
+        }
+        const pendingRequest = pendingRequestRef.current;
+        if (pendingRequest && pendingRequest.requestKey !== requestKey) {
+          pendingRequestRef.current = null;
+          void loadLeads({ cursor: pendingRequest.cursor, append: pendingRequest.append });
         }
       }
     },
