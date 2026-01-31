@@ -239,7 +239,7 @@ export default function ProductSetupPage() {
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="hidden md:block">
             <h1 className="text-xl font-semibold text-foreground">Product Setup</h1>
             <p className="text-sm text-muted-foreground">
               Configure your product information for AI-generated responses

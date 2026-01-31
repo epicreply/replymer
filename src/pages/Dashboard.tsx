@@ -2,7 +2,7 @@ const Dashboard = () => {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Welcome to your admin dashboard</p>
         </div>

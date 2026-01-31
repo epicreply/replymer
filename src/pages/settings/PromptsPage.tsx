@@ -226,7 +226,7 @@ export default function PromptsPage() {
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="hidden md:block">
             <h1 className="text-xl font-semibold text-foreground">Prompt Customization</h1>
             <p className="text-sm text-muted-foreground">
               Customize how the AI searches for and responds to leads

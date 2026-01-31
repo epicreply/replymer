@@ -45,7 +45,7 @@ export default function DiscardedPage() {
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
+          <div className="hidden md:block">
             <h1 className="text-xl font-semibold text-foreground">Discarded</h1>
             <p className="text-sm text-muted-foreground">
               Leads marked as not relevant ({discardedLeads.length})

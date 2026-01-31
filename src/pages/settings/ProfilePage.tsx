@@ -206,7 +206,9 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6">
-        <h1 className="text-xl font-semibold text-foreground">Profile</h1>
+        <div className="hidden md:block">
+          <h1 className="text-xl font-semibold text-foreground">Profile</h1>
+        </div>
   
         <div className="admin-card animate-fade-in">
           <div className="admin-card-section flex items-center gap-4">
