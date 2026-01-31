@@ -5,6 +5,7 @@ import { LeadDetail } from '@/components/leads/LeadDetail';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 import { LeadStatus } from '@/data/mockLeads';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ export default function InboxPage() {
                 Monitor and respond to relevant conversations
               </p>
             </div>
-            <div className="relative w-full sm:w-64">
+            <div className="relative hidden w-full sm:w-64 md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search leads..."
@@ -42,13 +43,38 @@ export default function InboxPage() {
                 className="pl-9"
               />
             </div>
+            <div className="w-full md:hidden">
+              <div className="flex w-full items-center overflow-hidden rounded-md border border-input bg-background">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search leads..."
+                    value={filters.searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="border-0 bg-transparent pl-9 pr-3 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+                <div className="h-10 w-px bg-border" />
+                <Select value={filters.status} onValueChange={handleStatusChange}>
+                  <SelectTrigger className="h-10 w-36 border-0 bg-transparent px-3 text-sm focus:ring-0 focus:ring-offset-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    <SelectItem value="all">All ({stats.total})</SelectItem>
+                    <SelectItem value="unread">Unread ({stats.unread})</SelectItem>
+                    <SelectItem value="completed">Completed ({stats.completed})</SelectItem>
+                    <SelectItem value="discarded">Discarded ({stats.discarded})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
   
           {/* Status Tabs */}
           <Tabs
             value={filters.status}
             onValueChange={handleStatusChange}
-            className="mt-4"
+            className="mt-4 hidden md:block"
           >
             <TabsList className="bg-muted/50">
               <TabsTrigger value="all" className="gap-2">
