@@ -392,7 +392,7 @@ export default function CommunitiesPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-xl font-semibold text-foreground">Communities & Keywords</h1>
           <p className="text-sm text-muted-foreground">
             Configure which platforms, communities, and keywords to monitor

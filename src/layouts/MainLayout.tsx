@@ -32,18 +32,103 @@ export default function MainLayout() {
     return null;
   }
 
-  // Get page title from path
-  const getPageTitle = () => {
+  const getPageMeta = () => {
     const path = location.pathname;
-    if (path === "/" || path === "/dashboard") return "Dashboard";
-    if (path.includes("team")) return "Team";
-    if (path.includes("profile")) return "Profile";
-    if (path.includes("billing")) return "Billing";
-    return "Settings";
+
+    if (path === "/" || path === "/dashboard") {
+      return {
+        title: "Dashboard",
+        subtitle: "Welcome to your admin dashboard",
+      };
+    }
+
+    if (path.startsWith("/inbox")) {
+      return {
+        title: "Inbox",
+        subtitle: "Monitor and respond to relevant conversations",
+      };
+    }
+
+    if (path.startsWith("/completed")) {
+      return {
+        title: "Completed",
+        subtitle: "Successfully replied conversations",
+      };
+    }
+
+    if (path.startsWith("/discarded")) {
+      return {
+        title: "Discarded",
+        subtitle: "Leads marked as not relevant",
+      };
+    }
+
+    if (path.startsWith("/analytics")) {
+      return {
+        title: "Analytics",
+        subtitle: "Track your outreach performance",
+      };
+    }
+
+    if (path.startsWith("/settings/product")) {
+      return {
+        title: "Product Setup",
+        subtitle: "Configure your product information for AI-generated responses",
+      };
+    }
+
+    if (path.startsWith("/settings/communities")) {
+      return {
+        title: "Communities & Keywords",
+        subtitle: "Configure which platforms, communities, and keywords to monitor",
+      };
+    }
+
+    if (path.startsWith("/settings/prompts")) {
+      return {
+        title: "Prompt Customization",
+        subtitle: "Customize how the AI searches for and responds to leads",
+      };
+    }
+
+    if (path.startsWith("/settings/team")) {
+      return {
+        title: "Team",
+        subtitle: "",
+      };
+    }
+
+    if (path.startsWith("/settings/profile")) {
+      return {
+        title: "Profile",
+        subtitle: "",
+      };
+    }
+
+    if (path.startsWith("/settings/billing")) {
+      return {
+        title: "Billing",
+        subtitle: "Manage your plan and usage",
+      };
+    }
+
+    if (path.startsWith("/settings")) {
+      return {
+        title: "Settings",
+        subtitle: "Manage your account preferences",
+      };
+    }
+
+    return {
+      title: "App",
+      subtitle: "",
+    };
   };
 
   const handleToggleDesktopSidebar = () =>
     setDesktopSidebarOpen((prev) => !prev);
+
+  const pageMeta = getPageMeta();
 
   return (
     <div className="flex min-h-screen w-full bg-card">
@@ -86,7 +171,7 @@ export default function MainLayout() {
           </header>
 
           {/* Mobile Header */}
-          <header className="flex items-center gap-3 border-b border-border/30 bg-transparent px-4 py-3 md:hidden">
+          <header className="flex items-start gap-3 border-b border-border/30 bg-transparent px-4 py-3 md:hidden">
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -102,7 +187,12 @@ export default function MainLayout() {
               </SheetContent>
             </Sheet>
 
-            <span className="text-base font-semibold text-foreground">{getPageTitle()}</span>
+            <div className="flex flex-col">
+              <h1 className="text-base font-semibold text-foreground">{pageMeta.title}</h1>
+              {pageMeta.subtitle && (
+                <p className="text-xs text-muted-foreground">{pageMeta.subtitle}</p>
+              )}
+            </div>
 
             {!sidebarOpen && (
               <div className="ml-auto">
