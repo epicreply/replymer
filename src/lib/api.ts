@@ -308,6 +308,41 @@ export const updateLeadStatus = async ({
   return data;
 };
 
+export const markLeadRead = async ({
+  accessToken,
+  projectId,
+  leadId,
+}: {
+  accessToken: string;
+  projectId: string;
+  leadId: string;
+}) => {
+  const url = new URL(`/v1.0/projects/leads/${leadId}/read`, API_BASE_URL);
+
+  const response = await fetch(url.toString(), {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to mark lead as read');
+  }
+
+  if (response.status === 204) {
+    return {} as Record<string, never>;
+  }
+
+  try {
+    return (await response.json()) as Record<string, unknown>;
+  } catch {
+    return {} as Record<string, never>;
+  }
+};
+
 interface DeleteDiscardedLeadsResponse {
   message: string;
   deleted_count: number;
