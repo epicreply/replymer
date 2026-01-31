@@ -1,11 +1,10 @@
-import { formatDistanceToNow } from 'date-fns';
-import { ExternalLink, Filter, RotateCcw, Trash2 } from 'lucide-react';
+import { Filter, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLeads } from '@/context/LeadsContext';
-import { PlatformBadge } from '@/components/leads/PlatformBadge';
 import { LeadCardSkeleton } from '@/components/leads/LeadCardSkeleton';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { LeadResultCard } from '@/components/leads/LeadResultCard';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -188,46 +187,13 @@ export default function DiscardedPage() {
             ) : (
               <>
                 {discardedLeads.map((lead) => (
-                  <Card key={lead.id} className="hover:shadow-sm transition-shadow opacity-75">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-4">
-                        <PlatformBadge platform={lead.platform} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                            <span>{lead.community}</span>
-                            <span>•</span>
-                            <span>{lead.authorHandle}</span>
-                            <span>•</span>
-                            <span>
-                              {formatDistanceToNow(lead.createdAt, { addSuffix: true })}
-                            </span>
-                          </div>
-                          <h4 className="font-medium text-foreground mb-2 line-clamp-1">
-                            {lead.title}
-                          </h4>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {lead.content}
-                          </p>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRestore(lead.id)}
-                          >
-                            <RotateCcw className="h-3 w-3 mr-1" />
-                            Restore
-                          </Button>
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={lead.url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              View
-                            </a>
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <LeadResultCard
+                    key={lead.id}
+                    lead={lead}
+                    variant="discarded"
+                    showRestore
+                    onRestore={handleRestore}
+                  />
                 ))}
                 <div ref={sentinelRef} className="h-4" />
                 {isLoadingMore && (
