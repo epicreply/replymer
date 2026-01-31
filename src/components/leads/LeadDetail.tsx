@@ -122,12 +122,11 @@ export function LeadDetail() {
 
   return (
     <ScrollArea className="h-full">
-      <div className="md:p-4 space-y-4">
+      <div className="md:p-4 space-y-4 relative">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <RelevancyBadge score={selectedLead.relevancyScore} size="lg" />
-            <PlatformBadge platform={selectedLead.platform} showLabel />
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -152,6 +151,10 @@ export function LeadDetail() {
               <X className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+
+        <div className="absolute top-4 right-4">
+          <PlatformBadge platform={selectedLead.platform} />
         </div>
 
         {/* Post Details */}
