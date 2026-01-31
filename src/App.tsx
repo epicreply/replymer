@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
 import MagicLinkCallback from "./pages/MagicLinkCallback";
 import OnboardingPage from "./pages/OnboardingPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
                   <Route path="/settings/team" element={<TeamPage />} />
                   <Route path="/settings/profile" element={<ProfilePage />} />
                   <Route path="/settings/billing" element={<BillingPage />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
                 </Route>
 
                 {/* Catch-all */}
