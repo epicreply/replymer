@@ -24,6 +24,20 @@ export interface AnalyticsQueryParams {
   signal?: AbortSignal;
 }
 
+export interface NotificationItem {
+  id?: string;
+  title?: string;
+  message?: string;
+  body?: string;
+  content?: string;
+  description?: string;
+  subject?: string;
+  type?: string;
+  created_at?: string;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
 interface LeadsApiLead {
   id: string;
   platform: Platform;
@@ -167,6 +181,48 @@ export const fetchProjectLeads = async ({
     leads: leads.map(mapApiLead),
     nextCursor: data.next_cursor ?? null,
     total: data.total ?? leads.length,
+  };
+};
+
+export const fetchNotifications = async ({
+  accessToken,
+  cursor,
+  limit,
+  signal,
+}: {
+  accessToken: string;
+  cursor?: string | null;
+  limit?: number;
+  signal?: AbortSignal;
+}) => {
+  const url = new URL('/v1.0/notifications', API_BASE_URL);
+  const params = new URLSearchParams();
+  appendQueryParam(params, 'cursor', cursor ?? undefined);
+  appendQueryParam(params, 'limit', limit ? String(limit) : undefined);
+  url.search = params.toString();
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch notifications');
+  }
+
+  const data = (await response.json()) as {
+    items?: NotificationItem[];
+    data?: NotificationItem[];
+    notifications?: NotificationItem[];
+    next_cursor?: string | null;
+  };
+
+  return {
+    items: data.items ?? data.data ?? data.notifications ?? [],
+    nextCursor: data.next_cursor ?? null,
   };
 };
 
