@@ -122,7 +122,7 @@ export default function DiscardedPage() {
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-280px)]" ref={scrollAreaRef}>
+        <ScrollArea className="h-[calc(100vh-60px)]" ref={scrollAreaRef}>
           <div className="space-y-3">
             {error ? (
               <Card>
