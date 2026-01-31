@@ -27,6 +27,7 @@ const OnboardingPage = () => {
   const [subredditInput, setSubredditInput] = useState("");
   const [subreddits, setSubreddits] = useState<string[]>([]);
   const [isUpdatingProject, setIsUpdatingProject] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
 
   const suggestedSubreddits = ["marketing", "startups", "growthhacking", "entrepreneur"];
 
@@ -155,8 +156,39 @@ const OnboardingPage = () => {
     }
   };
 
-  const handleSkip = () => {
-    navigate("/dashboard");
+  const handleSkip = async () => {
+    if (!accessToken) {
+      navigate("/dashboard");
+      return;
+    }
+
+    setIsSkipping(true);
+    try {
+      const response = await fetch(
+        "https://internal-api.autoreply.ing/v1.0/users/me/onboarding/complete",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to complete onboarding");
+      }
+
+      navigate("/dashboard");
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to complete onboarding",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSkipping(false);
+    }
   };
 
   const canContinue = () => {
@@ -476,10 +508,16 @@ const OnboardingPage = () => {
           </span>
           <Button
             onClick={currentStep === 4 ? handleSkip : handleContinue}
-            disabled={!canContinue()}
+            disabled={!canContinue() || isSkipping || isUpdatingProject}
             className="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50"
           >
-            {currentStep === 4 ? "Skip" : isUpdatingProject ? "Saving..." : "Next"}
+            {currentStep === 4
+              ? isSkipping
+                ? "Skipping..."
+                : "Skip"
+              : isUpdatingProject
+                ? "Saving..."
+                : "Next"}
           </Button>
         </div>
       </div>
