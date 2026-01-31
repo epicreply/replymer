@@ -1,11 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Lead,
   LeadStatus,
   Platform,
   ProductSettings,
   PromptSettings,
-  mockLeads,
   mockCommunities,
   defaultProductSettings,
   defaultPromptSettings,
@@ -13,6 +12,8 @@ import {
   mockBrands,
   Community,
 } from '@/data/mockLeads';
+import { fetchProjectLeads } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface LeadsFilters {
   relevancyRange: [number, number];
@@ -25,6 +26,9 @@ interface LeadsFilters {
 interface LeadsContextType {
   // Leads
   leads: Lead[];
+  isLoading: boolean;
+  error: string | null;
+  loadMoreLeads: () => void;
   selectedLead: Lead | null;
   setSelectedLead: (lead: Lead | null) => void;
   updateLeadStatus: (leadId: string, status: LeadStatus) => void;
@@ -75,8 +79,12 @@ const defaultFilters: LeadsFilters = {
 const LeadsContext = createContext<LeadsContextType | undefined>(undefined);
 
 export function LeadsProvider({ children }: { children: React.ReactNode }) {
+  const { accessToken, user } = useAuth();
   // Leads state
-  const [leads, setLeads] = useState<Lead[]>(mockLeads);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   // Filters state
@@ -96,6 +104,11 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
   const [brands, setBrands] = useState(mockBrands);
 
   const activeBrand = useMemo(() => brands.find((b) => b.isActive) || brands[0], [brands]);
+
+  const selectedProjectId = useMemo(
+    () => user?.projects?.find((project) => project.is_selected)?.id ?? user?.default_project_id ?? null,
+    [user]
+  );
 
   const setActiveBrand = useCallback((brandId: string) => {
     setBrands((prev) =>
@@ -152,6 +165,81 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     setUsageQuota((prev) => ({ ...prev, used: prev.used + 1 }));
   }, []);
 
+  const loadLeads = useCallback(
+    async ({
+      cursor,
+      append,
+      signal,
+    }: {
+      cursor?: string | null;
+      append?: boolean;
+      signal?: AbortSignal;
+    } = {}) => {
+      if (!accessToken || !selectedProjectId) {
+        setError('Missing authentication or project selection.');
+        setIsLoading(false);
+        setLeads([]);
+        setNextCursor(null);
+        return;
+      }
+
+      if (!append) {
+        setIsLoading(true);
+        setError(null);
+        setNextCursor(null);
+        setLeads([]);
+        setSelectedLead(null);
+      }
+
+      try {
+        const selectedCommunityIds = filters.communities
+          .map((communityName) => communities.find((community) => community.name === communityName)?.id)
+          .filter((communityId): communityId is string => Boolean(communityId));
+        const response = await fetchProjectLeads({
+          accessToken,
+          projectId: selectedProjectId,
+          filters: {
+            status: filters.status === 'all' ? undefined : filters.status,
+            platforms: filters.platforms.length ? filters.platforms : undefined,
+            communityIds: selectedCommunityIds.length ? selectedCommunityIds : undefined,
+            minRelevancy: filters.relevancyRange[0],
+            maxRelevancy: filters.relevancyRange[1],
+            search: filters.searchQuery || undefined,
+            cursor,
+            limit: 25,
+          },
+          signal,
+        });
+
+        setLeads((prev) => (append ? [...prev, ...response.leads] : response.leads));
+        setNextCursor(response.nextCursor);
+      } catch (fetchError) {
+        if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
+          return;
+        }
+        setError(fetchError instanceof Error ? fetchError.message : 'Failed to load leads');
+      } finally {
+        if (!append) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [accessToken, selectedProjectId, filters, communities]
+  );
+
+  const loadMoreLeads = useCallback(() => {
+    if (!nextCursor || isLoading) {
+      return;
+    }
+    void loadLeads({ cursor: nextCursor, append: true });
+  }, [nextCursor, loadLeads, isLoading]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadLeads({ cursor: null, append: false, signal: controller.signal });
+    return () => controller.abort();
+  }, [loadLeads]);
+
   // Filter leads
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
@@ -207,6 +295,9 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
 
   const value: LeadsContextType = {
     leads,
+    isLoading,
+    error,
+    loadMoreLeads,
     selectedLead,
     setSelectedLead,
     updateLeadStatus,

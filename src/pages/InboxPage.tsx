@@ -11,7 +11,7 @@ import { LeadStatus } from '@/data/mockLeads';
 import { Badge } from '@/components/ui/badge';
 
 export default function InboxPage() {
-  const { filteredLeads, selectedLead, setSelectedLead, filters, setFilters, stats } = useLeads();
+  const { filteredLeads, selectedLead, setSelectedLead, filters, setFilters, stats, isLoading, error } = useLeads();
 
   const handleStatusChange = (status: string) => {
     setFilters({ ...filters, status: status as LeadStatus | 'all' });
@@ -116,7 +116,16 @@ export default function InboxPage() {
           <div className="flex-1 min-w-0 border-r border-border">
             <ScrollArea className="h-full">
               <div className="p-3 space-y-2">
-                {filteredLeads.length === 0 ? (
+                {error ? (
+                  <div className="text-center py-12 text-destructive">
+                    <p>Unable to load leads.</p>
+                    <p className="text-sm">{error}</p>
+                  </div>
+                ) : isLoading ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>Loading leads...</p>
+                  </div>
+                ) : filteredLeads.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <p>No leads found</p>
                     <p className="text-sm">Try adjusting your filters</p>
