@@ -43,7 +43,7 @@ export function PlatformBadge({ platform, showLabel = false, className }: Platfo
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2 py-1',
+        'rounded-full py-1',
         config.color,
         className
       )}
