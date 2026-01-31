@@ -92,7 +92,7 @@ export function InviteMemberDialog({
     defaultValues: {
       email: "",
       role: "member",
-      selectedProject: "",
+      selectedProject: undefined,
     },
   });
 
@@ -222,7 +222,7 @@ export function InviteMemberDialog({
                   <FormLabel>Project (optional)</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={field.value ?? undefined}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -230,7 +230,6 @@ export function InviteMemberDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">All projects</SelectItem>
                       {projects.map((project) => (
                         <SelectItem key={project.id} value={project.id}>
                           {project.name}
