@@ -1,7 +1,6 @@
 import { Bell } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { fetchNotifications, markNotificationRead, NotificationItem } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
@@ -120,7 +119,15 @@ export default function NotificationsPage() {
     if (!value) return null;
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return null;
-    return date.toLocaleString();
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(date);
   }, []);
 
   const notifications = useMemo(() => {
@@ -133,7 +140,6 @@ export default function NotificationsPage() {
         item.description ??
         (title === 'Notification' ? '' : title);
       const timestamp = formatTimestamp(item.created_at ?? item.createdAt);
-      const readTimestamp = formatTimestamp(item.read_at ?? item.readAt);
       const id = item.id ?? `${title}-${index}`;
       const apiId = item.id;
       const isRead = item.is_read ?? false;
@@ -144,7 +150,6 @@ export default function NotificationsPage() {
         message,
         timestamp,
         isRead,
-        readTimestamp,
         canMarkRead: Boolean(apiId),
       };
     });
@@ -155,9 +160,12 @@ export default function NotificationsPage() {
       <div className="space-y-4">
         {SKELETON_ROWS.map((_, index) => (
           <div key={index} className="rounded-lg border border-border bg-card p-4">
-            <div className="space-y-2">
-              <div className="h-4 w-1/3 rounded bg-muted" />
-              <div className="h-3 w-4/5 rounded bg-muted" />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-2">
+                <div className="h-4 w-1/3 rounded bg-muted" />
+                <div className="h-3 w-4/5 rounded bg-muted" />
+              </div>
+              <div className="h-3 w-28 rounded bg-muted sm:mt-1" />
             </div>
           </div>
         ))}
@@ -187,7 +195,28 @@ export default function NotificationsPage() {
         {notifications.map((notification) => (
           <div
             key={notification.id}
-            className="rounded-lg border border-border bg-card p-4"
+            className={`rounded-lg border border-border bg-card p-4 ${
+              !notification.isRead && notification.canMarkRead
+                ? 'cursor-pointer transition hover:border-primary/60 hover:bg-primary/5'
+                : ''
+            }`}
+            role={!notification.isRead && notification.canMarkRead ? 'button' : undefined}
+            tabIndex={!notification.isRead && notification.canMarkRead ? 0 : undefined}
+            onClick={() =>
+              !notification.isRead && notification.apiId
+                ? handleMarkAsRead(notification.apiId)
+                : null
+            }
+            onKeyDown={(event) => {
+              if (
+                (event.key === 'Enter' || event.key === ' ') &&
+                !notification.isRead &&
+                notification.apiId
+              ) {
+                event.preventDefault();
+                handleMarkAsRead(notification.apiId);
+              }
+            }}
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-2">
@@ -207,26 +236,11 @@ export default function NotificationsPage() {
                 {notification.timestamp ? (
                   <span className="text-xs text-muted-foreground">{notification.timestamp}</span>
                 ) : null}
-                {notification.isRead ? (
-                  <span className="text-[11px] text-muted-foreground">
-                    Read{notification.readTimestamp ? ` · ${notification.readTimestamp}` : ''}
-                  </span>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => (notification.apiId ? handleMarkAsRead(notification.apiId) : null)}
-                    disabled={
-                      Boolean(notification.apiId && markingReadIds[notification.apiId]) ||
-                      !notification.canMarkRead
-                    }
-                  >
-                    {notification.apiId && markingReadIds[notification.apiId]
-                      ? 'Marking...'
-                      : 'Mark as read'}
-                  </Button>
-                )}
+                {!notification.isRead &&
+                notification.apiId &&
+                markingReadIds[notification.apiId] ? (
+                  <span className="text-[11px] text-muted-foreground">Marking...</span>
+                ) : null}
               </div>
             </div>
           </div>
