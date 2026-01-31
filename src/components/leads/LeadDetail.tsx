@@ -126,7 +126,7 @@ export function LeadDetail() {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <RelevancyBadge score={selectedLead.relevancyScore} size="lg" />
+            <RelevancyBadge score={selectedLead.relevancyScore} size="sm" />
           </div>
           <div className="flex items-center gap-2">
             <Button
