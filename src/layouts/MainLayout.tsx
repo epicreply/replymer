@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PanelLeft, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,11 @@ import { useSidebar } from "@/context/SidebarContext";
 
 export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
   const { desktopSidebarOpen, setDesktopSidebarOpen } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, accessToken } = useAuth();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -136,7 +137,46 @@ export default function MainLayout() {
   const handleToggleDesktopSidebar = () =>
     setDesktopSidebarOpen((prev) => !prev);
 
+  const fetchNotificationCount = useCallback(async () => {
+    if (!accessToken) {
+      setNotificationCount(0);
+      return;
+    }
+    try {
+      const url = new URL(
+        "https://internal-api.autoreply.ing/v1.0/notifications/count"
+      );
+      url.searchParams.set("is_read", "false");
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch notification count");
+      }
+      const data = (await response.json()) as
+        | { count?: number; total?: number; unread_count?: number }
+        | number;
+      if (typeof data === "number") {
+        setNotificationCount(data);
+        return;
+      }
+      const nextCount = data.count ?? data.total ?? data.unread_count ?? 0;
+      setNotificationCount(nextCount);
+    } catch {
+      setNotificationCount(0);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    fetchNotificationCount();
+  }, [fetchNotificationCount, location.pathname]);
+
   const pageMeta = getPageMeta();
+  const displayNotificationCount =
+    notificationCount > 99 ? "99+" : notificationCount.toString();
 
   return (
     <div className="flex min-h-screen w-full bg-card">
@@ -180,11 +220,16 @@ export default function MainLayout() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-lg border border-border bg-card/80 hover:bg-card"
+                className="relative h-9 w-9 rounded-lg border border-border bg-card/80 hover:bg-card"
                 onClick={() => navigate("/notifications")}
                 aria-label="Notifications"
               >
                 <Bell className="h-4 w-4 text-muted-foreground" />
+                {notificationCount > 0 ? (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-white">
+                    {displayNotificationCount}
+                  </span>
+                ) : null}
               </Button>
             </div>
           </header>
@@ -214,11 +259,16 @@ export default function MainLayout() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-lg border border-border bg-card/80 hover:bg-card"
+                className="relative h-9 w-9 rounded-lg border border-border bg-card/80 hover:bg-card"
                 onClick={() => navigate("/notifications")}
                 aria-label="Notifications"
               >
                 <Bell className="h-4 w-4 text-muted-foreground" />
+                {notificationCount > 0 ? (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-white">
+                    {displayNotificationCount}
+                  </span>
+                ) : null}
               </Button>
             </div>
           </header>
@@ -226,7 +276,7 @@ export default function MainLayout() {
           {/* Page Content */}
           <div className="flex flex-1 flex-col overflow-auto">
             <div className="flex-1 px-4 py-6 md:px-8 md:py-8">
-              <Outlet />
+              <Outlet context={{ refreshNotificationsCount: fetchNotificationCount }} />
             </div>
           </div>
         </div>
