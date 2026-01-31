@@ -1,15 +1,22 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
 import { FileText, Shield, Coins, Users, Sparkles, Zap, Check } from "lucide-react";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
+  const { accessToken, user } = useAuth();
+  const selectedProjectId = useMemo(
+    () => user?.projects?.find((project) => project.is_selected)?.id ?? null,
+    [user],
+  );
   const [currentStep, setCurrentStep] = useState(1);
   const [agreed, setAgreed] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,6 +26,7 @@ const OnboardingPage = () => {
   });
   const [subredditInput, setSubredditInput] = useState("");
   const [subreddits, setSubreddits] = useState<string[]>([]);
+  const [isUpdatingProject, setIsUpdatingProject] = useState(false);
 
   const suggestedSubreddits = ["marketing", "startups", "growthhacking", "entrepreneur"];
 
@@ -43,9 +51,58 @@ const OnboardingPage = () => {
     setSubredditInput("");
   };
 
-  const handleContinue = () => {
+  const buildProjectUpdatePayload = () => ({
+    name: formData.productName.trim() || null,
+    website_url: formData.websiteUrl.trim() || null,
+    description: formData.productDescription.trim() || null,
+  });
+
+  const handleContinue = async () => {
+    if (currentStep === 2) {
+      if (!accessToken || !selectedProjectId) {
+        toast({
+          title: "Unable to update project",
+          description: "Missing authentication or project selection.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsUpdatingProject(true);
+      try {
+        const response = await fetch(
+          `https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(buildProjectUpdatePayload()),
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to update project details");
+        }
+
+        await response.json();
+        setCurrentStep(3);
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Update failed",
+          description: "We couldn't save your project details. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsUpdatingProject(false);
+      }
+      return;
+    }
+
     if (currentStep < 4) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep((prev) => prev + 1);
     } else {
       navigate("/dashboard");
     }
@@ -57,7 +114,9 @@ const OnboardingPage = () => {
 
   const canContinue = () => {
     if (currentStep === 1) return agreed;
-    if (currentStep === 2) return formData.productName && formData.websiteUrl;
+    if (currentStep === 2) {
+      return formData.productName && formData.websiteUrl && !isUpdatingProject;
+    }
     if (currentStep === 3) return subreddits.length > 0;
     return true;
   };
@@ -373,7 +432,7 @@ const OnboardingPage = () => {
             disabled={!canContinue()}
             className="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50"
           >
-            {currentStep === 4 ? "Skip" : "Next"}
+            {currentStep === 4 ? "Skip" : isUpdatingProject ? "Saving..." : "Next"}
           </Button>
         </div>
       </div>
