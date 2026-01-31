@@ -295,7 +295,7 @@ export function MainSidebar({
 
       {/* Footer - Usage & Actions */}
       <div className="mt-auto">
-        <div class="px-4"><div class="h-px bg-border"></div></div>
+        <div className="px-4"><div className="h-px bg-border"></div></div>
         {/* Usage Quota */}
         <div className="px-4 py-3">
           <div className="flex items-center justify-between text-xs mb-2">

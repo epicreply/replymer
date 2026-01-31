@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { PanelLeft } from "lucide-react";
+import { PanelLeft, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MainSidebar } from "@/components/admin/MainSidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -120,6 +120,13 @@ export default function MainLayout() {
       };
     }
 
+    if (path.startsWith("/notifications")) {
+      return {
+        title: "Notifications",
+        subtitle: "Stay updated with your latest activity",
+      };
+    }
+
     return {
       title: "App",
       subtitle: "",
@@ -169,6 +176,17 @@ export default function MainLayout() {
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </Button>
             )}
+            <div className="ml-auto">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-lg border border-border bg-card/80 hover:bg-card"
+                onClick={() => navigate("/notifications")}
+                aria-label="Notifications"
+              >
+                <Bell className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </div>
           </header>
 
           {/* Mobile Header */}
@@ -192,7 +210,17 @@ export default function MainLayout() {
               <h1 className="text-base font-semibold text-foreground">{pageMeta.title}</h1>
             </div>
 
-            <div className="ml-auto" />
+            <div className="ml-auto">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-lg border border-border bg-card/80 hover:bg-card"
+                onClick={() => navigate("/notifications")}
+                aria-label="Notifications"
+              >
+                <Bell className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </div>
           </header>
 
           {/* Page Content */}

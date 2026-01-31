@@ -2,7 +2,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 
 interface SidebarContextType {
   desktopSidebarOpen: boolean;
-  setDesktopSidebarOpen: (open: boolean) => void;
+  setDesktopSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
   closeSidebar: () => void;
 }
 
