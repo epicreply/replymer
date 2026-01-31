@@ -294,7 +294,7 @@ const OnboardingPage = () => {
                     {suggestedSubreddits.map((subreddit) => (
                       <div
                         key={subreddit}
-                        className="flex items-center justify-between rounded-lg border border-border px-4 py-3"
+                        className="flex items-center justify-between rounded-lg border border-border pl-4 pr-1 py-1"
                       >
                         <span className="text-sm font-medium text-foreground">
                           r/{subreddit}
