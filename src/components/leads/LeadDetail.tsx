@@ -163,8 +163,7 @@ export function LeadDetail() {
               <span className="font-medium text-foreground">{selectedLead.authorHandle}</span>
               <span>•</span>
               <span>{selectedLead.community}</span>
-              <span>•</span>
-              <span>{formatDistanceToNow(selectedLead.createdAt, { addSuffix: true })}</span>
+
             </div>
             <h3 className="font-semibold text-foreground mb-3">{selectedLead.title}</h3>
             <p className="text-sm text-foreground/80 whitespace-pre-wrap">{selectedLead.content}</p>
@@ -187,6 +186,9 @@ export function LeadDetail() {
               </Button>
             </div>
           </CardContent>
+          <div className="absolute bottom-4 right-4 text-xs text-muted-foreground">
+            {formatDistanceToNow(selectedLead.createdAt, { addSuffix: true })}
+          </div>
         </Card>
 
         <Separator />
