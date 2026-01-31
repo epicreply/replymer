@@ -122,7 +122,7 @@ export function LeadDetail() {
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-4 space-y-4">
+      <div className="md:p-4 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -136,8 +136,8 @@ export function LeadDetail() {
               onClick={handleMarkNotRelevant}
               className="text-destructive hover:text-destructive"
             >
-              <ThumbsDown className="h-4 w-4 mr-1" />
-              Not Relevant
+              <ThumbsDown className="h-4 w-4 md:mr-1" />
+              <span className="hidden md:inline">Not Relevant</span>
             </Button>
             <Button variant="default" size="sm" onClick={handleMarkComplete}>
               <Check className="h-4 w-4 mr-1" />
@@ -203,11 +203,11 @@ export function LeadDetail() {
             </p>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={handleRewrite}>
-                <RefreshCw className="h-3 w-3 mr-1" />
+                <RefreshCw className="hidden md:inline-block h-3 w-3 md:mr-1" />
                 Rewrite
               </Button>
               <Button variant="outline" size="sm" onClick={handleEditPrompt}>
-                <Edit3 className="h-3 w-3 mr-1" />
+                <Edit3 className="hidden md:inline-block h-3 w-3 md:mr-1" />
                 Edit Prompt
               </Button>
               <Button
@@ -236,11 +236,11 @@ export function LeadDetail() {
             </p>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={handleRewrite}>
-                <RefreshCw className="h-3 w-3 mr-1" />
+                <RefreshCw className="hidden md:inline-block h-3 w-3 md:mr-1" />
                 Rewrite
               </Button>
               <Button variant="outline" size="sm" onClick={handleEditPrompt}>
-                <Edit3 className="h-3 w-3 mr-1" />
+                <Edit3 className="hidden md:inline-block h-3 w-3 md:mr-1" />
                 Edit Prompt
               </Button>
               <Button
