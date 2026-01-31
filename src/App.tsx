@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { Analytics } from "@vercel/analytics/react";
 import { LeadsProvider } from "./context/LeadsContext";
 import { AuthProvider } from "./context/AuthContext";
 import { SidebarProvider } from "./context/SidebarContext";
@@ -62,6 +63,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            <Analytics />
             </TooltipProvider>
           </SidebarProvider>
         </LeadsProvider>
