@@ -50,26 +50,26 @@ export default function InboxPage() {
             onValueChange={handleStatusChange}
             className="mt-4"
           >
-            <TabsList className="bg-muted/50">
-              <TabsTrigger value="all" className="gap-2">
+            <TabsList className="w-full justify-start overflow-x-auto bg-muted/50">
+              <TabsTrigger value="all" className="gap-2 shrink-0">
                 All
                 <Badge variant="secondary" className="text-xs">
                   {stats.total}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="unread" className="gap-2">
+              <TabsTrigger value="unread" className="gap-2 shrink-0">
                 Unread
                 <Badge variant="secondary" className="text-xs">
                   {stats.unread}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="completed" className="gap-2">
+              <TabsTrigger value="completed" className="gap-2 shrink-0">
                 Completed
                 <Badge variant="secondary" className="text-xs">
                   {stats.completed}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="discarded" className="gap-2">
+              <TabsTrigger value="discarded" className="gap-2 shrink-0">
                 Discarded
                 <Badge variant="secondary" className="text-xs">
                   {stats.discarded}
