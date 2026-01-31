@@ -1,3 +1,4 @@
+import { formatDistanceToNow } from 'date-fns';
 import { Bell } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
@@ -115,19 +116,12 @@ export default function NotificationsPage() {
     return () => observer.disconnect();
   }, [loadNotifications, nextCursor]);
 
+
   const formatTimestamp = useCallback((value?: string) => {
     if (!value) return null;
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return null;
-    return new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    }).format(date);
+    return formatDistanceToNow(date, { addSuffix: true });
   }, []);
 
   const notifications = useMemo(() => {
@@ -197,11 +191,10 @@ export default function NotificationsPage() {
         {notifications.map((notification) => (
           <div
             key={notification.id}
-            className={`rounded-lg border border-border bg-card p-4 ${
-              !notification.isRead && notification.canMarkRead
+            className={`rounded-lg border border-border bg-card p-4 ${!notification.isRead && notification.canMarkRead
                 ? 'cursor-pointer transition hover:border-primary/60 hover:bg-primary/5'
                 : ''
-            }`}
+              }`}
             role={!notification.isRead && notification.canMarkRead ? 'button' : undefined}
             tabIndex={!notification.isRead && notification.canMarkRead ? 0 : undefined}
             onClick={() =>
@@ -239,8 +232,8 @@ export default function NotificationsPage() {
                   <span className="text-xs text-muted-foreground">{notification.timestamp}</span>
                 ) : null}
                 {!notification.isRead &&
-                notification.apiId &&
-                markingReadIds[notification.apiId] ? (
+                  notification.apiId &&
+                  markingReadIds[notification.apiId] ? (
                   <span className="text-[11px] text-muted-foreground">Marking...</span>
                 ) : null}
               </div>
