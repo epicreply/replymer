@@ -189,9 +189,6 @@ export default function MainLayout() {
 
             <div className="flex flex-col">
               <h1 className="text-base font-semibold text-foreground">{pageMeta.title}</h1>
-              /* {pageMeta.subtitle && (
-                <p className="text-xs text-muted-foreground">{pageMeta.subtitle}</p>
-              )} */
             </div>
 
             <div className="ml-auto" />
