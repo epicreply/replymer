@@ -20,7 +20,7 @@ import {
   mockBrands,
   Community,
 } from '@/data/mockLeads';
-import { fetchProjectLeads } from '@/lib/api';
+import { fetchProjectLeads, markLeadRead } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 interface LeadsFilters {
@@ -43,6 +43,7 @@ interface LeadsContextType {
   setSelectedLead: (lead: Lead | null) => void;
   updateLeadStatus: (leadId: string, status: LeadStatus) => void;
   restoreLead: (leadId: string) => void;
+  markLeadRead: (leadId: string) => Promise<void>;
 
   // Filters
   filters: LeadsFilters;
@@ -160,6 +161,23 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
       )
     );
   }, []);
+
+  const markLeadReadHandler = useCallback(
+    async (leadId: string) => {
+      if (!accessToken || !selectedProjectId) {
+        return;
+      }
+
+      try {
+        await markLeadRead({ accessToken, projectId: selectedProjectId, leadId });
+      } catch (markReadError) {
+        console.error(
+          markReadError instanceof Error ? markReadError.message : 'Failed to mark lead as read'
+        );
+      }
+    },
+    [accessToken, selectedProjectId]
+  );
 
   // Add community
   const addCommunity = useCallback(
@@ -371,6 +389,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     setSelectedLead,
     updateLeadStatus,
     restoreLead,
+    markLeadRead: markLeadReadHandler,
     filters,
     setFilters,
     filteredLeads,

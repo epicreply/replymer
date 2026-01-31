@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
-import { LeadStatus } from '@/data/mockLeads';
+import { Lead, LeadStatus } from '@/data/mockLeads';
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useRef, useState } from 'react';
 
@@ -26,6 +26,7 @@ export default function InboxPage() {
     loadMoreLeads,
     isLoadingMore,
     hasNextPage,
+    markLeadRead,
   } = useLeads();
   const { closeSidebar } = useSidebar();
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -42,6 +43,13 @@ export default function InboxPage() {
 
   const handleSearch = (query: string) => {
     setFilters({ ...filters, searchQuery: query });
+  };
+
+  const handleLeadSelect = (lead: Lead) => {
+    if (lead.status === 'unread') {
+      void markLeadRead(lead.id);
+    }
+    setSelectedLead(lead);
   };
 
   // Track window width for responsive sidebar behavior
@@ -246,7 +254,7 @@ export default function InboxPage() {
                         <LeadCard
                           lead={lead}
                           isSelected={selectedLead?.id === lead.id}
-                          onClick={() => setSelectedLead(lead)}
+                          onClick={() => handleLeadSelect(lead)}
                         />
                         {/* Show lead details below selected lead on mobile */}
                         {selectedLead?.id === lead.id && (
