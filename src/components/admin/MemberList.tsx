@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MemberAvatar } from "./MemberAvatar";
+import { InviteMemberDialog } from "./InviteMemberDialog";
 
 interface Member {
   id: string;
@@ -12,25 +14,54 @@ interface Member {
   isCurrentUser?: boolean;
 }
 
-interface MemberListProps {
-  members: Member[];
-  onInvite?: () => void;
+interface Project {
+  id: string;
+  name: string;
+  is_selected?: boolean;
 }
 
-export function MemberList({ members, onInvite }: MemberListProps) {
+interface MemberListProps {
+  members: Member[];
+  currentUserRole: string;
+  projects: Project[];
+  accessToken: string;
+  onInviteSuccess?: () => void;
+}
+
+export function MemberList({
+  members,
+  currentUserRole,
+  projects,
+  accessToken,
+  onInviteSuccess,
+}: MemberListProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const canInvite = ["owner", "admin"].includes(currentUserRole.toLowerCase());
   return (
     <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-base font-medium text-foreground">People</h2>
-        <Button
-          onClick={onInvite}
-          className="gap-2 rounded-full px-5"
-        >
-          <Plus className="h-4 w-4" />
-          Invite members
-        </Button>
+        {canInvite && (
+          <Button
+            onClick={() => setIsDialogOpen(true)}
+            className="gap-2 rounded-full px-5"
+          >
+            <Plus className="h-4 w-4" />
+            Invite members
+          </Button>
+        )}
       </div>
+
+      <InviteMemberDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        currentUserRole={currentUserRole}
+        projects={projects}
+        accessToken={accessToken}
+        onSuccess={onInviteSuccess}
+      />
 
       {/* Members Card */}
       <div className="admin-card">

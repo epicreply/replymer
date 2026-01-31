@@ -259,10 +259,13 @@ interface AnalyticsPlatformPerformanceItem {
   leads: number;
   replies: number;
   reply_rate?: number;
+  dms?: number;
+  avg_relevancy?: number;
 }
 
 interface AnalyticsTopCommunityItem {
   name: string;
+  community_name?: string;
   leads: number;
   replies: number;
   reply_rate?: number;
