@@ -1,9 +1,7 @@
-import { formatDistanceToNow } from 'date-fns';
-import { ExternalLink, Filter } from 'lucide-react';
-import { PlatformBadge } from '@/components/leads/PlatformBadge';
+import { Filter } from 'lucide-react';
 import { LeadCardSkeleton } from '@/components/leads/LeadCardSkeleton';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { LeadResultCard } from '@/components/leads/LeadResultCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -121,42 +119,7 @@ export default function CompletedPage() {
             ) : (
               <>
                 {completedLeads.map((lead) => (
-                  <Card key={lead.id} className="hover:shadow-sm transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-4">
-                        <PlatformBadge platform={lead.platform} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                            <span>{lead.community}</span>
-                            <span>•</span>
-                            <span>{lead.authorHandle}</span>
-                            <span>•</span>
-                            <span>
-                              Replied {formatDistanceToNow(lead.repliedAt || lead.createdAt, { addSuffix: true })}
-                            </span>
-                          </div>
-                          <h4 className="font-medium text-foreground mb-2 line-clamp-1">
-                            {lead.title}
-                          </h4>
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                            {lead.content}
-                          </p>
-                          {lead.reply && (
-                            <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
-                              <p className="text-xs text-muted-foreground mb-1">Your reply:</p>
-                              <p className="text-sm text-foreground">{lead.reply}</p>
-                            </div>
-                          )}
-                        </div>
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={lead.url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            View
-                          </a>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <LeadResultCard key={lead.id} lead={lead} variant="completed" />
                 ))}
                 <div ref={sentinelRef} className="h-4" />
                 {isLoadingMore && (
