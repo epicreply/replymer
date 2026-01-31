@@ -167,76 +167,80 @@ export default function NotificationsPage() {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
-          <Bell className="h-8 w-8 text-muted-foreground" />
+      <div className="mx-auto max-w-2xl">
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
+            <Bell className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">No notifications yet</h2>
+          <p className="text-muted-foreground max-w-sm">
+            When you receive notifications about your leads and activity, they'll appear here.
+          </p>
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">No notifications yet</h2>
-        <p className="text-muted-foreground max-w-sm">
-          When you receive notifications about your leads and activity, they'll appear here.
-        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {notifications.map((notification) => (
-        <div
-          key={notification.id}
-          className="rounded-lg border border-border bg-card p-4"
-        >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">{notification.title}</h3>
-                {!notification.isRead ? (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                    Unread
-                  </span>
+    <div className="mx-auto max-w-2xl">
+      <div className="space-y-4">
+        {notifications.map((notification) => (
+          <div
+            key={notification.id}
+            className="rounded-lg border border-border bg-card p-4"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-foreground">{notification.title}</h3>
+                  {!notification.isRead ? (
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                      Unread
+                    </span>
+                  ) : null}
+                </div>
+                {notification.message ? (
+                  <p className="text-sm text-muted-foreground">{notification.message}</p>
                 ) : null}
               </div>
-              {notification.message ? (
-                <p className="text-sm text-muted-foreground">{notification.message}</p>
-              ) : null}
-            </div>
-            <div className="flex flex-col items-start gap-2 sm:items-end">
-              {notification.timestamp ? (
-                <span className="text-xs text-muted-foreground">{notification.timestamp}</span>
-              ) : null}
-              {notification.isRead ? (
-                <span className="text-[11px] text-muted-foreground">
-                  Read{notification.readTimestamp ? ` · ${notification.readTimestamp}` : ''}
-                </span>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => (notification.apiId ? handleMarkAsRead(notification.apiId) : null)}
-                  disabled={
-                    Boolean(notification.apiId && markingReadIds[notification.apiId]) ||
-                    !notification.canMarkRead
-                  }
-                >
-                  {notification.apiId && markingReadIds[notification.apiId]
-                    ? 'Marking...'
-                    : 'Mark as read'}
-                </Button>
-              )}
+              <div className="flex flex-col items-start gap-2 sm:items-end">
+                {notification.timestamp ? (
+                  <span className="text-xs text-muted-foreground">{notification.timestamp}</span>
+                ) : null}
+                {notification.isRead ? (
+                  <span className="text-[11px] text-muted-foreground">
+                    Read{notification.readTimestamp ? ` · ${notification.readTimestamp}` : ''}
+                  </span>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => (notification.apiId ? handleMarkAsRead(notification.apiId) : null)}
+                    disabled={
+                      Boolean(notification.apiId && markingReadIds[notification.apiId]) ||
+                      !notification.canMarkRead
+                    }
+                  >
+                    {notification.apiId && markingReadIds[notification.apiId]
+                      ? 'Marking...'
+                      : 'Mark as read'}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-      {isLoadingMore ? (
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="space-y-2">
-            <div className="h-4 w-1/4 rounded bg-muted" />
-            <div className="h-3 w-2/3 rounded bg-muted" />
+        ))}
+        {isLoadingMore ? (
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="space-y-2">
+              <div className="h-4 w-1/4 rounded bg-muted" />
+              <div className="h-3 w-2/3 rounded bg-muted" />
+            </div>
           </div>
-        </div>
-      ) : null}
-      <div ref={sentinelRef} />
+        ) : null}
+        <div ref={sentinelRef} />
+      </div>
     </div>
   );
 }
