@@ -17,9 +17,34 @@ const OnboardingPage = () => {
     websiteUrl: "",
     productDescription: "",
   });
+  const [subredditInput, setSubredditInput] = useState("");
+  const [subreddits, setSubreddits] = useState<string[]>([]);
+
+  const suggestedSubreddits = ["marketing", "startups", "growthhacking", "entrepreneur"];
+
+  const normalizeSubreddit = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    const withoutProtocol = trimmed.replace(/^https?:\/\/(www\.)?/i, "");
+    const withoutDomain = withoutProtocol.replace(/^reddit\.com\//i, "");
+    const withoutPrefix = withoutDomain.replace(/^r\//i, "");
+    return withoutPrefix.replace(/\/+$/g, "");
+  };
+
+  const addSubreddit = (value: string) => {
+    const normalized = normalizeSubreddit(value);
+    if (!normalized) return;
+    const exists = subreddits.some(
+      (subreddit) => subreddit.toLowerCase() === normalized.toLowerCase(),
+    );
+    if (!exists) {
+      setSubreddits((prev) => [...prev, normalized]);
+    }
+    setSubredditInput("");
+  };
 
   const handleContinue = () => {
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
       navigate("/dashboard");
@@ -33,6 +58,7 @@ const OnboardingPage = () => {
   const canContinue = () => {
     if (currentStep === 1) return agreed;
     if (currentStep === 2) return formData.productName && formData.websiteUrl;
+    if (currentStep === 3) return subreddits.length > 0;
     return true;
   };
 
@@ -151,8 +177,86 @@ const OnboardingPage = () => {
             </div>
           )}
 
-          {/* Step 3: Plan Selection */}
+          {/* Step 3: Subreddit Preferences */}
           {currentStep === 3 && (
+            <div className="space-y-6">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-foreground">
+                What subreddit do you want to search?
+              </h1>
+              <Card className="p-6 sm:p-8 lg:p-10 space-y-6">
+                <div className="space-y-2">
+                  <p className="text-sm sm:text-base text-muted-foreground">
+                    Add URL or name of subreddit you want to search. You can add more anytime.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Input
+                      placeholder="r/marketing"
+                      value={subredditInput}
+                      onChange={(e) => setSubredditInput(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => addSubreddit(subredditInput)}
+                      disabled={!subredditInput.trim()}
+                      className="bg-cyan-500 hover:bg-cyan-600 text-white"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h2 className="text-sm font-semibold text-muted-foreground">
+                    Added subreddits
+                  </h2>
+                  {subreddits.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No subreddits added yet.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {subreddits.map((subreddit) => (
+                        <span
+                          key={subreddit}
+                          className="rounded-full border border-border px-3 py-1 text-sm text-foreground"
+                        >
+                          r/{subreddit}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <h2 className="text-sm font-semibold text-muted-foreground">
+                    Suggested subreddits
+                  </h2>
+                  <div className="space-y-2">
+                    {suggestedSubreddits.map((subreddit) => (
+                      <div
+                        key={subreddit}
+                        className="flex items-center justify-between rounded-lg border border-border px-4 py-3"
+                      >
+                        <span className="text-sm font-medium text-foreground">
+                          r/{subreddit}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => addSubreddit(subreddit)}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Step 4: Plan Selection */}
+          {currentStep === 4 && (
             <div className="space-y-6">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-foreground">
                 Choose your plan
@@ -262,14 +366,14 @@ const OnboardingPage = () => {
       <div className="border-t border-border bg-background/80 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
-            {currentStep} of 3
+            {currentStep} of 4
           </span>
           <Button
-            onClick={currentStep === 3 ? handleSkip : handleContinue}
+            onClick={currentStep === 4 ? handleSkip : handleContinue}
             disabled={!canContinue()}
             className="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50"
           >
-            {currentStep === 3 ? "Skip" : "Continue"}
+            {currentStep === 4 ? "Skip" : "Next"}
           </Button>
         </div>
       </div>
