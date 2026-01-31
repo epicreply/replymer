@@ -9,9 +9,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search } from 'lucide-react';
 import { LeadStatus } from '@/data/mockLeads';
 import { Badge } from '@/components/ui/badge';
+import { useEffect, useRef } from 'react';
 
 export default function InboxPage() {
-  const { filteredLeads, selectedLead, setSelectedLead, filters, setFilters, stats, isLoading, error } = useLeads();
+  const {
+    filteredLeads,
+    selectedLead,
+    setSelectedLead,
+    filters,
+    setFilters,
+    stats,
+    isLoading,
+    error,
+    loadMoreLeads,
+    isLoadingMore,
+    hasNextPage,
+  } = useLeads();
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const handleStatusChange = (status: string) => {
     setFilters({ ...filters, status: status as LeadStatus | 'all' });
@@ -21,6 +36,38 @@ export default function InboxPage() {
   const handleSearch = (query: string) => {
     setFilters({ ...filters, searchQuery: query });
   };
+
+  useEffect(() => {
+    if (!hasNextPage || isLoading || isLoadingMore) {
+      return;
+    }
+
+    const sentinel = sentinelRef.current;
+    const root =
+      scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') ?? null;
+
+    if (!sentinel) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMoreLeads();
+        }
+      },
+      {
+        root,
+        rootMargin: '200px',
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasNextPage, isLoading, isLoadingMore, loadMoreLeads]);
 
   return (
     <div className="mx-auto px-4">
@@ -114,7 +161,7 @@ export default function InboxPage() {
   
           {/* Center Panel - Lead List */}
           <div className="flex-1 min-w-0 border-r border-border">
-            <ScrollArea className="h-full">
+            <ScrollArea className="h-full" ref={scrollAreaRef}>
               <div className="p-3 space-y-2">
                 {error ? (
                   <div className="text-center py-12 text-destructive">
@@ -131,14 +178,22 @@ export default function InboxPage() {
                     <p className="text-sm">Try adjusting your filters</p>
                   </div>
                 ) : (
-                  filteredLeads.map((lead) => (
-                    <LeadCard
-                      key={lead.id}
-                      lead={lead}
-                      isSelected={selectedLead?.id === lead.id}
-                      onClick={() => setSelectedLead(lead)}
-                    />
-                  ))
+                  <>
+                    {filteredLeads.map((lead) => (
+                      <LeadCard
+                        key={lead.id}
+                        lead={lead}
+                        isSelected={selectedLead?.id === lead.id}
+                        onClick={() => setSelectedLead(lead)}
+                      />
+                    ))}
+                    <div ref={sentinelRef} className="h-4" />
+                    {isLoadingMore ? (
+                      <div className="text-center py-4 text-xs text-muted-foreground">
+                        Loading more leads...
+                      </div>
+                    ) : null}
+                  </>
                 )}
               </div>
             </ScrollArea>

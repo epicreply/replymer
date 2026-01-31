@@ -27,8 +27,10 @@ interface LeadsContextType {
   // Leads
   leads: Lead[];
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
   loadMoreLeads: () => void;
+  hasNextPage: boolean;
   selectedLead: Lead | null;
   setSelectedLead: (lead: Lead | null) => void;
   updateLeadStatus: (leadId: string, status: LeadStatus) => void;
@@ -83,6 +85,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
   // Leads state
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -178,6 +181,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
       if (!accessToken || !selectedProjectId) {
         setError('Missing authentication or project selection.');
         setIsLoading(false);
+        setIsLoadingMore(false);
         setLeads([]);
         setNextCursor(null);
         return;
@@ -189,6 +193,12 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         setNextCursor(null);
         setLeads([]);
         setSelectedLead(null);
+        setIsLoadingMore(false);
+      } else {
+        if (!cursor || isLoading || isLoadingMore) {
+          return;
+        }
+        setIsLoadingMore(true);
       }
 
       try {
@@ -219,20 +229,24 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         }
         setError(fetchError instanceof Error ? fetchError.message : 'Failed to load leads');
       } finally {
-        if (!append) {
+        if (append) {
+          setIsLoadingMore(false);
+        } else {
           setIsLoading(false);
         }
       }
     },
-    [accessToken, selectedProjectId, filters, communities]
+    [accessToken, selectedProjectId, filters, communities, isLoading, isLoadingMore]
   );
 
   const loadMoreLeads = useCallback(() => {
-    if (!nextCursor || isLoading) {
+    if (!nextCursor || isLoading || isLoadingMore) {
       return;
     }
     void loadLeads({ cursor: nextCursor, append: true });
-  }, [nextCursor, loadLeads, isLoading]);
+  }, [nextCursor, loadLeads, isLoading, isLoadingMore]);
+
+  const hasNextPage = Boolean(nextCursor);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -296,8 +310,10 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
   const value: LeadsContextType = {
     leads,
     isLoading,
+    isLoadingMore,
     error,
     loadMoreLeads,
+    hasNextPage,
     selectedLead,
     setSelectedLead,
     updateLeadStatus,
