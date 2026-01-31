@@ -160,6 +160,11 @@ export default function MainLayout() {
 
   useEffect(() => {
     fetchNotificationCount();
+
+    // Poll for notifications every minute
+    const intervalId = setInterval(fetchNotificationCount, 60000);
+
+    return () => clearInterval(intervalId);
   }, [fetchNotificationCount, location.pathname]);
 
   if (isLoading) {
