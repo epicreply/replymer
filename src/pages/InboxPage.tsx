@@ -31,6 +31,7 @@ export default function InboxPage() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const prevSelectedLeadIdRef = useRef<string | null>(null);
 
   const handleStatusChange = (status: string) => {
     setFilters({ ...filters, status: status as LeadStatus | 'all' });
@@ -51,11 +52,16 @@ export default function InboxPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Close sidebar when lead is selected on screens < 1300px
+  // Close sidebar when lead is selected on screens < 1300px (only on lead change)
   useEffect(() => {
-    if (selectedLead && windowWidth < 1300) {
+    const currentLeadId = selectedLead?.id ?? null;
+    const hasLeadChanged = currentLeadId !== prevSelectedLeadIdRef.current;
+
+    if (selectedLead && windowWidth < 1300 && hasLeadChanged) {
       closeSidebar();
     }
+
+    prevSelectedLeadIdRef.current = currentLeadId;
   }, [selectedLead, windowWidth, closeSidebar]);
 
   useEffect(() => {
