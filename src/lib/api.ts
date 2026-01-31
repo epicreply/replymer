@@ -13,6 +13,17 @@ export interface LeadsQueryParams {
   limit?: number;
 }
 
+export interface AnalyticsQueryParams {
+  accessToken: string;
+  projectId: string;
+  startDate: string;
+  endDate: string;
+  platform?: string;
+  granularity?: string;
+  limit?: number;
+  signal?: AbortSignal;
+}
+
 interface LeadsApiLead {
   id: string;
   platform: Platform;
@@ -89,6 +100,37 @@ const buildLeadsQueryParams = (filters: LeadsQueryParams) => {
   appendQueryParam(params, 'limit', filters.limit ? String(filters.limit) : undefined);
 
   return params;
+};
+
+const buildAnalyticsQueryParams = ({
+  startDate,
+  endDate,
+  platform,
+  granularity,
+  limit,
+}: {
+  startDate: string;
+  endDate: string;
+  platform?: string;
+  granularity?: string;
+  limit?: number;
+}) => {
+  const params = new URLSearchParams();
+  params.set('start_date', startDate);
+  params.set('end_date', endDate);
+  appendQueryParam(params, 'platform', platform);
+  appendQueryParam(params, 'granularity', granularity);
+  appendQueryParam(params, 'limit', limit ? String(limit) : undefined);
+  return params;
+};
+
+const normalizeAnalyticsList = <T>(
+  payload: T[] | { data?: T[]; items?: T[]; results?: T[] }
+) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  return payload.data ?? payload.items ?? payload.results ?? [];
 };
 
 export const fetchProjectLeads = async ({
@@ -196,4 +238,190 @@ export const deleteDiscardedLeads = async ({
 
   const data = (await response.json()) as DeleteDiscardedLeadsResponse;
   return data;
+};
+
+interface AnalyticsSummaryResponse {
+  total_leads: number;
+  replies_sent: number;
+  dms_sent: number;
+  reply_rate: number;
+}
+
+interface AnalyticsLeadsOverTimeItem {
+  date: string;
+  leads: number;
+  replies: number;
+  dms: number;
+}
+
+interface AnalyticsPlatformPerformanceItem {
+  platform: string;
+  leads: number;
+  replies: number;
+  reply_rate?: number;
+}
+
+interface AnalyticsTopCommunityItem {
+  name: string;
+  leads: number;
+  replies: number;
+  reply_rate?: number;
+}
+
+export const fetchAnalyticsSummary = async ({
+  accessToken,
+  projectId,
+  startDate,
+  endDate,
+  platform,
+  granularity,
+  limit,
+  signal,
+}: AnalyticsQueryParams): Promise<AnalyticsSummaryResponse> => {
+  const url = new URL('/analytics/summary', API_BASE_URL);
+  url.search = buildAnalyticsQueryParams({
+    startDate,
+    endDate,
+    platform,
+    granularity,
+    limit,
+  }).toString();
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch analytics summary');
+  }
+
+  return (await response.json()) as AnalyticsSummaryResponse;
+};
+
+export const fetchAnalyticsLeadsOverTime = async ({
+  accessToken,
+  projectId,
+  startDate,
+  endDate,
+  platform,
+  granularity,
+  limit,
+  signal,
+}: AnalyticsQueryParams): Promise<AnalyticsLeadsOverTimeItem[]> => {
+  const url = new URL('/analytics/leads-over-time', API_BASE_URL);
+  url.search = buildAnalyticsQueryParams({
+    startDate,
+    endDate,
+    platform,
+    granularity,
+    limit,
+  }).toString();
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch leads over time');
+  }
+
+  const data = (await response.json()) as AnalyticsLeadsOverTimeItem[] | {
+    data?: AnalyticsLeadsOverTimeItem[];
+    items?: AnalyticsLeadsOverTimeItem[];
+    results?: AnalyticsLeadsOverTimeItem[];
+  };
+
+  return normalizeAnalyticsList<AnalyticsLeadsOverTimeItem>(data);
+};
+
+export const fetchAnalyticsPlatformPerformance = async ({
+  accessToken,
+  projectId,
+  startDate,
+  endDate,
+  platform,
+  granularity,
+  limit,
+  signal,
+}: AnalyticsQueryParams): Promise<AnalyticsPlatformPerformanceItem[]> => {
+  const url = new URL('/analytics/platform-performance', API_BASE_URL);
+  url.search = buildAnalyticsQueryParams({
+    startDate,
+    endDate,
+    platform,
+    granularity,
+    limit,
+  }).toString();
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch platform performance');
+  }
+
+  const data = (await response.json()) as AnalyticsPlatformPerformanceItem[] | {
+    data?: AnalyticsPlatformPerformanceItem[];
+    items?: AnalyticsPlatformPerformanceItem[];
+    results?: AnalyticsPlatformPerformanceItem[];
+  };
+
+  return normalizeAnalyticsList<AnalyticsPlatformPerformanceItem>(data);
+};
+
+export const fetchAnalyticsTopCommunities = async ({
+  accessToken,
+  projectId,
+  startDate,
+  endDate,
+  platform,
+  granularity,
+  limit,
+  signal,
+}: AnalyticsQueryParams): Promise<AnalyticsTopCommunityItem[]> => {
+  const url = new URL('/analytics/top-communities', API_BASE_URL);
+  url.search = buildAnalyticsQueryParams({
+    startDate,
+    endDate,
+    platform,
+    granularity,
+    limit,
+  }).toString();
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch top communities');
+  }
+
+  const data = (await response.json()) as AnalyticsTopCommunityItem[] | {
+    data?: AnalyticsTopCommunityItem[];
+    items?: AnalyticsTopCommunityItem[];
+    results?: AnalyticsTopCommunityItem[];
+  };
+
+  return normalizeAnalyticsList<AnalyticsTopCommunityItem>(data);
 };

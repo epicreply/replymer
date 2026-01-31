@@ -20,12 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { analyticsData } from '@/data/mockLeads';
-import { useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { StatisticCard, TimeRange } from '@/components/analytics/StatisticCard';
-
-type DataKey = 'leads' | 'replies' | 'dms';
+import {
+  fetchAnalyticsLeadsOverTime,
+  fetchAnalyticsPlatformPerformance,
+  fetchAnalyticsSummary,
+  fetchAnalyticsTopCommunities,
+} from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 const ClickableLegend = ({ 
   payload, 
@@ -65,39 +69,6 @@ const tooltipStyle = {
   borderRadius: '8px',
 };
 
-const getLeadsData = (timeRange: TimeRange) => {
-  switch (timeRange) {
-    case 'week':
-      return analyticsData.leadsOverTimeWeek;
-    case 'month':
-      return analyticsData.leadsOverTimeMonth;
-    case 'year':
-      return analyticsData.leadsOverTimeYear;
-  }
-};
-
-const getPlatformData = (timeRange: TimeRange) => {
-  switch (timeRange) {
-    case 'week':
-      return analyticsData.platformPerformanceWeek;
-    case 'month':
-      return analyticsData.platformPerformanceMonth;
-    case 'year':
-      return analyticsData.platformPerformanceYear;
-  }
-};
-
-const getCommunitiesData = (timeRange: TimeRange) => {
-  switch (timeRange) {
-    case 'week':
-      return analyticsData.topCommunitiesWeek;
-    case 'month':
-      return analyticsData.topCommunitiesMonth;
-    case 'year':
-      return analyticsData.topCommunitiesYear;
-  }
-};
-
 const formatDate = (value: string, timeRange: TimeRange) => {
   if (timeRange === 'year') {
     const [year, month] = value.split('-');
@@ -107,11 +78,32 @@ const formatDate = (value: string, timeRange: TimeRange) => {
 };
 
 export default function AnalyticsPage() {
+  const { accessToken, user } = useAuth();
   const [dateRange, setDateRange] = useState('7d');
   const [platform, setPlatform] = useState('all');
   const [hiddenLeadsKeys, setHiddenLeadsKeys] = useState<Set<string>>(new Set());
   const [hiddenPlatformKeys, setHiddenPlatformKeys] = useState<Set<string>>(new Set());
   const [hiddenCommunitiesKeys, setHiddenCommunitiesKeys] = useState<Set<string>>(new Set());
+  const [leadsTimeRange, setLeadsTimeRange] = useState<TimeRange>('week');
+  const [platformTimeRange, setPlatformTimeRange] = useState<TimeRange>('week');
+  const [communitiesTimeRange, setCommunitiesTimeRange] = useState<TimeRange>('week');
+  const [summary, setSummary] = useState({
+    total_leads: 0,
+    replies_sent: 0,
+    dms_sent: 0,
+    reply_rate: 0,
+  });
+  const [leadsOverTime, setLeadsOverTime] = useState<
+    Array<{ date: string; leads: number; replies: number; dms: number }>
+  >([]);
+  const [platformPerformance, setPlatformPerformance] = useState<
+    Array<{ platform: string; leads: number; replies: number }>
+  >([]);
+  const [topCommunities, setTopCommunities] = useState<
+    Array<{ name: string; leads: number; replies: number }>
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const toggleLeadsKey = useCallback((key: string) => {
     setHiddenLeadsKeys(prev => {
@@ -147,11 +139,148 @@ export default function AnalyticsPage() {
     });
   };
 
-  const { summary } = analyticsData;
+  const selectedProjectId =
+    user?.projects?.find((project) => project.is_selected)?.id ??
+    user?.default_project_id ??
+    null;
+
+  const { startDate, endDate } = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    const days = dateRange === '90d' ? 90 : dateRange === '30d' ? 30 : 7;
+    start.setDate(end.getDate() - days);
+    return {
+      startDate: start.toISOString().split('T')[0],
+      endDate: end.toISOString().split('T')[0],
+    };
+  }, [dateRange]);
+
+  useEffect(() => {
+    if (!accessToken || !selectedProjectId) {
+      setError('Missing authentication or project selection.');
+      setIsLoading(false);
+      setSummary({
+        total_leads: 0,
+        replies_sent: 0,
+        dms_sent: 0,
+        reply_rate: 0,
+      });
+      setLeadsOverTime([]);
+      setPlatformPerformance([]);
+      setTopCommunities([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const platformFilter = platform !== 'all' ? platform : undefined;
+    const granularityMap: Record<TimeRange, string> = {
+      week: 'day',
+      month: 'week',
+      year: 'month',
+    };
+
+    setIsLoading(true);
+    setError(null);
+    setSummary({
+      total_leads: 0,
+      replies_sent: 0,
+      dms_sent: 0,
+      reply_rate: 0,
+    });
+    setLeadsOverTime([]);
+    setPlatformPerformance([]);
+    setTopCommunities([]);
+
+    const loadAnalytics = async () => {
+      try {
+        const [summaryResponse, leadsResponse, platformResponse, communitiesResponse] =
+          await Promise.all([
+            fetchAnalyticsSummary({
+              accessToken,
+              projectId: selectedProjectId,
+              startDate,
+              endDate,
+              platform: platformFilter,
+              signal: controller.signal,
+            }),
+            fetchAnalyticsLeadsOverTime({
+              accessToken,
+              projectId: selectedProjectId,
+              startDate,
+              endDate,
+              platform: platformFilter,
+              granularity: granularityMap[leadsTimeRange],
+              signal: controller.signal,
+            }),
+            fetchAnalyticsPlatformPerformance({
+              accessToken,
+              projectId: selectedProjectId,
+              startDate,
+              endDate,
+              platform: platformFilter,
+              granularity: granularityMap[platformTimeRange],
+              signal: controller.signal,
+            }),
+            fetchAnalyticsTopCommunities({
+              accessToken,
+              projectId: selectedProjectId,
+              startDate,
+              endDate,
+              platform: platformFilter,
+              granularity: granularityMap[communitiesTimeRange],
+              limit: 5,
+              signal: controller.signal,
+            }),
+          ]);
+
+        setSummary(summaryResponse);
+        setLeadsOverTime(leadsResponse);
+        setPlatformPerformance(platformResponse);
+        setTopCommunities(communitiesResponse);
+      } catch (fetchError) {
+        if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
+          return;
+        }
+        const message =
+          fetchError instanceof Error ? fetchError.message : 'Failed to load analytics';
+        setError(message);
+        setSummary({
+          total_leads: 0,
+          replies_sent: 0,
+          dms_sent: 0,
+          reply_rate: 0,
+        });
+        setLeadsOverTime([]);
+        setPlatformPerformance([]);
+        setTopCommunities([]);
+        toast({
+          title: 'Failed to load analytics',
+          description: message,
+          variant: 'destructive',
+        });
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadAnalytics();
+    return () => controller.abort();
+  }, [
+    accessToken,
+    selectedProjectId,
+    startDate,
+    endDate,
+    platform,
+    leadsTimeRange,
+    platformTimeRange,
+    communitiesTimeRange,
+  ]);
 
   const renderLeadsChart = (timeRange: TimeRange, height: string = '100%') => (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={getLeadsData(timeRange)}>
+      <LineChart data={leadsOverTime}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis
           dataKey="date"
@@ -170,7 +299,7 @@ export default function AnalyticsPage() {
 
   const renderPlatformChart = (timeRange: TimeRange, height: string = '100%') => (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={getPlatformData(timeRange)}>
+      <BarChart data={platformPerformance}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="platform" className="text-xs" />
         <YAxis className="text-xs" />
@@ -184,7 +313,7 @@ export default function AnalyticsPage() {
 
   const renderCommunitiesChart = (timeRange: TimeRange, height: string = '100%') => (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={getCommunitiesData(timeRange)} layout="vertical">
+      <BarChart data={topCommunities} layout="vertical">
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis type="number" className="text-xs" />
         <YAxis dataKey="name" type="category" width={120} className="text-xs" />
@@ -195,6 +324,12 @@ export default function AnalyticsPage() {
       </BarChart>
     </ResponsiveContainer>
   );
+
+  const summaryPlaceholder = isLoading || Boolean(error);
+  const formatCount = (value: number) =>
+    summaryPlaceholder ? '—' : value.toLocaleString('en-US');
+  const formatReplyRate = (value: number) =>
+    summaryPlaceholder ? '—' : `${value}%`;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -242,25 +377,33 @@ export default function AnalyticsPage() {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total Leads</p>
-              <p className="text-2xl font-bold text-foreground">{summary.totalLeads}</p>
+              <p className="text-2xl font-bold text-foreground">
+                {formatCount(summary.total_leads)}
+              </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Replies Sent</p>
-              <p className="text-2xl font-bold text-foreground">{summary.repliesSent}</p>
+              <p className="text-2xl font-bold text-foreground">
+                {formatCount(summary.replies_sent)}
+              </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">DMs Sent</p>
-              <p className="text-2xl font-bold text-foreground">{summary.dmsSent}</p>
+              <p className="text-2xl font-bold text-foreground">
+                {formatCount(summary.dms_sent)}
+              </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Reply Rate</p>
-              <p className="text-2xl font-bold text-primary">{summary.replyRate}%</p>
+              <p className="text-2xl font-bold text-primary">
+                {formatReplyRate(summary.reply_rate)}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -271,12 +414,14 @@ export default function AnalyticsPage() {
             title="Leads & Replies Over Time"
             children={(timeRange) => renderLeadsChart(timeRange)}
             dialogContent={(timeRange) => renderLeadsChart(timeRange)}
+            onTimeRangeChange={setLeadsTimeRange}
           />
 
           <StatisticCard
             title="Performance by Platform"
             children={(timeRange) => renderPlatformChart(timeRange)}
             dialogContent={(timeRange) => renderPlatformChart(timeRange)}
+            onTimeRangeChange={setPlatformTimeRange}
           />
         </div>
 
@@ -285,6 +430,7 @@ export default function AnalyticsPage() {
           title="Top Performing Communities"
           children={(timeRange) => renderCommunitiesChart(timeRange)}
           dialogContent={(timeRange) => renderCommunitiesChart(timeRange)}
+          onTimeRangeChange={setCommunitiesTimeRange}
         />
       </div>
     </div>
