@@ -45,14 +45,7 @@ export function LeadResultCard({
             <h4 className="font-medium text-foreground mb-2 line-clamp-1">
               {lead.title}
             </h4>
-            <p
-              className={cn(
-                'text-sm text-muted-foreground line-clamp-2',
-                variant === 'completed' && 'mb-3'
-              )}
-            >
-              {lead.content}
-            </p>
+            <p className="text-sm text-muted-foreground line-clamp-2">{lead.content}</p>
             {variant === 'completed' && lead.reply && (
               <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
                 <p className="text-xs text-muted-foreground mb-1">Your reply:</p>
