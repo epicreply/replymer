@@ -117,7 +117,7 @@ const OnboardingPage = () => {
     if (currentStep === 2) {
       return formData.productName && formData.websiteUrl && !isUpdatingProject;
     }
-    if (currentStep === 3) return subreddits.length > 0;
+    if (currentStep === 3) return true;
     return true;
   };
 
