@@ -18,6 +18,7 @@ interface UseStatusLeadsReturn {
   loadMoreLeads: () => void;
   total: number;
   removeLead: (leadId: string) => void;
+  clearAllLeads: () => void;
 }
 
 export function useStatusLeads({
@@ -124,6 +125,12 @@ export function useStatusLeads({
     setTotal((prev) => Math.max(0, prev - 1));
   }, []);
 
+  const clearAllLeads = useCallback(() => {
+    setLeads([]);
+    setTotal(0);
+    setNextCursor(null);
+  }, []);
+
   return {
     leads,
     isLoading,
@@ -133,5 +140,6 @@ export function useStatusLeads({
     loadMoreLeads,
     total,
     removeLead,
+    clearAllLeads,
   };
 }

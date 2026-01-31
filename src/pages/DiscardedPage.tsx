@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import { ExternalLink, Filter, RotateCcw, Trash2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { useLeads } from '@/context/LeadsContext';
 import { PlatformBadge } from '@/components/leads/PlatformBadge';
 import { LeadCardSkeleton } from '@/components/leads/LeadCardSkeleton';
@@ -17,12 +18,20 @@ import { toast } from '@/hooks/use-toast';
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from '@/data/mockLeads';
 import { useStatusLeads } from '@/hooks/useStatusLeads';
+import { deleteDiscardedLeads } from '@/lib/api';
 
 export default function DiscardedPage() {
+  const { accessToken, user } = useAuth();
   const { restoreLead: restoreLeadInContext } = useLeads();
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
+  const [isDeleting, setIsDeleting] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const selectedProjectId =
+    user?.projects?.find((project) => project.is_selected)?.id ??
+    user?.default_project_id ??
+    null;
 
   const {
     leads: discardedLeads,
@@ -33,6 +42,7 @@ export default function DiscardedPage() {
     loadMoreLeads,
     total,
     removeLead,
+    clearAllLeads,
   } = useStatusLeads({
     status: 'discarded',
     platform: platformFilter,
@@ -80,11 +90,37 @@ export default function DiscardedPage() {
     });
   };
 
-  const handleBulkDelete = () => {
-    toast({
-      title: 'Delete all discarded',
-      description: 'This feature will be available soon.',
-    });
+  const handleBulkDelete = async () => {
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: 'Error',
+        description: 'Missing authentication or project selection.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await deleteDiscardedLeads({
+        accessToken,
+        projectId: selectedProjectId,
+      });
+
+      clearAllLeads();
+      toast({
+        title: 'Discarded leads deleted',
+        description: `Successfully deleted ${response.deleted_count} lead${response.deleted_count !== 1 ? 's' : ''}.`,
+      });
+    } catch {
+      toast({
+        title: 'Failed to delete leads',
+        description: 'An error occurred while deleting discarded leads.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -114,9 +150,14 @@ export default function DiscardedPage() {
               </SelectContent>
             </Select>
             {discardedLeads.length > 0 && (
-              <Button variant="outline" size="sm" onClick={handleBulkDelete}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+              >
                 <Trash2 className="h-4 w-4 mr-1" />
-                Delete All
+                {isDeleting ? 'Deleting...' : 'Delete All'}
               </Button>
             )}
           </div>

@@ -167,3 +167,33 @@ export const updateLeadStatus = async ({
   const data = (await response.json()) as UpdateLeadStatusResponse;
   return data;
 };
+
+interface DeleteDiscardedLeadsResponse {
+  message: string;
+  deleted_count: number;
+}
+
+export const deleteDiscardedLeads = async ({
+  accessToken,
+  projectId,
+}: {
+  accessToken: string;
+  projectId: string;
+}): Promise<DeleteDiscardedLeadsResponse> => {
+  const url = new URL('/v1.0/projects/leads/discarded', API_BASE_URL);
+
+  const response = await fetch(url.toString(), {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete discarded leads');
+  }
+
+  const data = (await response.json()) as DeleteDiscardedLeadsResponse;
+  return data;
+};
