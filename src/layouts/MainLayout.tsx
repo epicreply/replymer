@@ -171,7 +171,7 @@ export default function MainLayout() {
           </header>
 
           {/* Mobile Header */}
-          <header className="flex items-start gap-3 border-b border-border/30 bg-transparent px-4 py-3 md:hidden">
+          <header className="flex items-center gap-3 border-b border-border/30 bg-transparent px-4 py-3 md:hidden">
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
               <SheetTrigger asChild>
                 <Button
