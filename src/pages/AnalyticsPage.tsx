@@ -69,6 +69,12 @@ const tooltipStyle = {
   borderRadius: '8px',
 };
 
+const formatTooltipValue = (value: number | string | undefined | null) => {
+  if (value === null || value === undefined) return '—';
+  if (typeof value === 'number') return value;
+  return value;
+};
+
 const formatDate = (value: string, timeRange: TimeRange) => {
   if (timeRange === 'year') {
     const [year, month] = value.split('-');
@@ -97,7 +103,14 @@ export default function AnalyticsPage() {
     Array<{ date: string; leads: number; replies: number; dms: number }>
   >([]);
   const [platformPerformance, setPlatformPerformance] = useState<
-    Array<{ platform: string; leads: number; replies: number }>
+    Array<{
+      platform: string;
+      leads: number;
+      replies: number;
+      dms: number;
+      reply_rate: number;
+      avg_relevancy: number;
+    }>
   >([]);
   const [topCommunities, setTopCommunities] = useState<
     Array<{ name: string; leads: number; replies: number }>
@@ -234,9 +247,31 @@ export default function AnalyticsPage() {
           ]);
 
         setSummary(summaryResponse);
-        setLeadsOverTime(leadsResponse);
-        setPlatformPerformance(platformResponse);
-        setTopCommunities(communitiesResponse);
+        setLeadsOverTime(
+          leadsResponse.map((entry) => ({
+            date: entry.date,
+            leads: entry.leads ?? 0,
+            replies: entry.replies ?? 0,
+            dms: entry.dms ?? 0,
+          }))
+        );
+        setPlatformPerformance(
+          platformResponse.map((entry) => ({
+            platform: entry.platform,
+            leads: entry.leads ?? 0,
+            replies: entry.replies ?? 0,
+            dms: entry.dms ?? 0,
+            reply_rate: entry.reply_rate ?? 0,
+            avg_relevancy: entry.avg_relevancy ?? 0,
+          }))
+        );
+        setTopCommunities(
+          communitiesResponse.map((entry) => ({
+            name: entry.community_name ?? entry.name ?? 'Unknown',
+            leads: entry.leads ?? 0,
+            replies: entry.replies ?? 0,
+          }))
+        );
       } catch (fetchError) {
         if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
           return;
@@ -288,7 +323,7 @@ export default function AnalyticsPage() {
           className="text-xs"
         />
         <YAxis className="text-xs" />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} formatter={formatTooltipValue} />
         <Legend content={<ClickableLegend hiddenKeys={hiddenLeadsKeys} onToggle={toggleLeadsKey} />} />
         <Line type="monotone" dataKey="leads" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} hide={hiddenLeadsKeys.has('leads')} />
         <Line type="monotone" dataKey="replies" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} hide={hiddenLeadsKeys.has('replies')} />
@@ -303,7 +338,7 @@ export default function AnalyticsPage() {
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="platform" className="text-xs" />
         <YAxis className="text-xs" />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} formatter={formatTooltipValue} />
         <Legend content={<ClickableLegend hiddenKeys={hiddenPlatformKeys} onToggle={togglePlatformKey} />} />
         <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} hide={hiddenPlatformKeys.has('leads')} />
         <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} hide={hiddenPlatformKeys.has('replies')} />
@@ -317,7 +352,7 @@ export default function AnalyticsPage() {
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis type="number" className="text-xs" />
         <YAxis dataKey="name" type="category" width={120} className="text-xs" />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} formatter={formatTooltipValue} />
         <Legend content={<ClickableLegend hiddenKeys={hiddenCommunitiesKeys} onToggle={toggleCommunitiesKey} />} />
         <Bar dataKey="leads" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} hide={hiddenCommunitiesKeys.has('leads')} />
         <Bar dataKey="replies" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} hide={hiddenCommunitiesKeys.has('replies')} />
