@@ -15,7 +15,7 @@ const platformConfig = {
       </svg>
     ),
     label: 'Reddit',
-    color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+    color: 'text-orange-600 dark:text-orange-400',
   },
   twitter: {
     icon: (
@@ -24,7 +24,7 @@ const platformConfig = {
       </svg>
     ),
     label: 'X',
-    color: 'bg-foreground/10 text-foreground',
+    color: 'text-foreground',
   },
   linkedin: {
     icon: (
@@ -33,7 +33,7 @@ const platformConfig = {
       </svg>
     ),
     label: 'LinkedIn',
-    color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    color: 'text-blue-600 dark:text-blue-400',
   },
 };
 
