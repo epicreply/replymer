@@ -20,7 +20,7 @@ import {
   mockBrands,
   Community,
 } from '@/data/mockLeads';
-import { fetchProjectLeads, markLeadRead } from '@/lib/api';
+import { fetchProjectLeads, markLeadRead, restoreLead as restoreLeadApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 interface LeadsFilters {
@@ -42,7 +42,7 @@ interface LeadsContextType {
   selectedLead: Lead | null;
   setSelectedLead: (lead: Lead | null) => void;
   updateLeadStatus: (leadId: string, status: LeadStatus) => void;
-  restoreLead: (leadId: string) => void;
+  restoreLead: (leadId: string) => Promise<void>;
   markLeadRead: (leadId: string) => Promise<void>;
 
   // Filters
@@ -142,10 +142,10 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
       prev.map((lead) =>
         lead.id === leadId
           ? {
-              ...lead,
-              status,
-              ...(status === 'completed' ? { repliedAt: new Date() } : {}),
-            }
+            ...lead,
+            status,
+            ...(status === 'completed' ? { repliedAt: new Date() } : {}),
+          }
           : lead
       )
     );
@@ -154,13 +154,27 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Restore lead from discarded
-  const restoreLead = useCallback((leadId: string) => {
-    setLeads((prev) =>
-      prev.map((lead) =>
-        lead.id === leadId ? { ...lead, status: 'unread' as LeadStatus } : lead
-      )
-    );
-  }, []);
+  const restoreLead = useCallback(
+    async (leadId: string) => {
+      if (!accessToken || !selectedProjectId) {
+        return;
+      }
+
+      // Optimistic update
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId ? { ...lead, status: 'unread' as LeadStatus } : lead
+        )
+      );
+
+      try {
+        await restoreLeadApi({ accessToken, projectId: selectedProjectId, leadId });
+      } catch (error) {
+        console.error('Failed to restore lead:', error);
+      }
+    },
+    [accessToken, selectedProjectId]
+  );
 
   const markLeadReadHandler = useCallback(
     async (leadId: string) => {

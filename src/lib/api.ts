@@ -561,3 +561,29 @@ export const fetchAnalyticsTopCommunities = async ({
 
   return normalizeAnalyticsList<AnalyticsTopCommunityItem>(data);
 };
+
+export const restoreLead = async ({
+  accessToken,
+  projectId,
+  leadId,
+}: {
+  accessToken: string;
+  projectId: string;
+  leadId: string;
+}) => {
+  const url = new URL(`/v1.0/projects/leads/${leadId}/restore`, API_BASE_URL);
+
+  const response = await fetch(url.toString(), {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to restore lead');
+  }
+
+  return response.json();
+};
