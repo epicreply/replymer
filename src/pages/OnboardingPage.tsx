@@ -33,20 +33,10 @@ const OnboardingPage = () => {
   const trimmedProductName = formData.productName.trim();
   const trimmedWebsiteUrl = formData.websiteUrl.trim();
   const trimmedProductDescription = formData.productDescription.trim();
+  const websiteUrlRegex =
+    /^(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
   const isWebsiteUrlValid =
-    trimmedWebsiteUrl.length > 0 &&
-    (() => {
-      try {
-        if (/^https?:\/\//i.test(trimmedWebsiteUrl)) {
-          new URL(trimmedWebsiteUrl);
-        } else {
-          new URL(`https://${trimmedWebsiteUrl}`);
-        }
-        return true;
-      } catch {
-        return false;
-      }
-    })();
+    trimmedWebsiteUrl.length > 0 && websiteUrlRegex.test(trimmedWebsiteUrl);
 
   const suggestedSubreddits = ["marketing", "startups", "growthhacking", "entrepreneur"];
 
@@ -350,7 +340,7 @@ const OnboardingPage = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="productDescription">Product Description</Label>
-                    {trimmedProductName && trimmedWebsiteUrl && (
+                    {trimmedProductName && trimmedWebsiteUrl && isWebsiteUrlValid && (
                       <Button variant="outline" size="sm">
                         <WandSparkles className="h-4 w-4 mr-2" />
                         ✨ Generate Description
