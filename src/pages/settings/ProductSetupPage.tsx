@@ -526,7 +526,7 @@ export default function ProductSetupPage() {
                   onClick={handleGenerateDescription}
                   disabled={showWebsiteUrlError || isGeneratingDescription}
                 >
-                  <Sparkles className="mr-2 h-4 w-4" />
+                  <Sparkles className="mr-2 h-4 w-4 text-primary" />
                   {isGeneratingDescription ? 'Generating...' : 'Generate Description'}
                 </Button>
               </div>
@@ -564,7 +564,7 @@ export default function ProductSetupPage() {
                     onClick={handleGenerateTargetAudience}
                     disabled={showWebsiteUrlError || isGeneratingTargetAudience}
                   >
-                    <Sparkles className="mr-2 h-4 w-4" />
+                    <Sparkles className="mr-2 h-4 w-4 text-primary" />
                     {isGeneratingTargetAudience ? 'Generating...' : 'Generate Target Audience'}
                   </Button>
                 )}
@@ -590,7 +590,7 @@ export default function ProductSetupPage() {
                     onClick={handleGenerateValueProposition}
                     disabled={showWebsiteUrlError || isGeneratingValueProposition}
                   >
-                    <Sparkles className="mr-2 h-4 w-4" />
+                    <Sparkles className="mr-2 h-4 w-4 text-primary" />
                     {isGeneratingValueProposition
                       ? 'Generating...'
                       : 'Generate Value Proposition'}
