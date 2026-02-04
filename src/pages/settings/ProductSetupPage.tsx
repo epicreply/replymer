@@ -85,6 +85,8 @@ export default function ProductSetupPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const trimmedProductName = formData.name.trim();
   const trimmedWebsiteUrl = formData.websiteUrl.trim();
   const websiteUrlRegex =
     /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_.~#?&/=]*)$/;
