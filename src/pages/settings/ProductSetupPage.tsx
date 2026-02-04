@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Save, X } from 'lucide-react';
+import { Save, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -312,6 +312,7 @@ export default function ProductSetupPage() {
                   }
                   disabled={showWebsiteUrlError}
                 >
+                  <Sparkles className="mr-2 h-4 w-4" />
                   Generate Description
                 </Button>
               </div>
