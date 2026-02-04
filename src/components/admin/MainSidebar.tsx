@@ -78,7 +78,7 @@ export function MainSidebar({
 }: MainSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { stats, usageQuota } = useLeads();
+  const { inboxCounts, usageQuota } = useLeads();
   const { user, selectProject } = useAuth();
 
   const isInSettings = location.pathname.startsWith("/settings");
@@ -190,7 +190,7 @@ export function MainSidebar({
           {primaryNavItems.map((item) => {
             const isItemActive = isActive(item.path);
             const Icon = item.icon;
-            const badgeCount = item.path === "/inbox" ? stats.unread : undefined;
+            const badgeCount = item.path === "/inbox" ? inboxCounts.unread : undefined;
 
             return (
               <Button

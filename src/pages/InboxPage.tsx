@@ -20,7 +20,7 @@ export default function InboxPage() {
     setSelectedLead,
     filters,
     setFilters,
-    stats,
+    inboxCounts,
     isLoading,
     error,
     loadMoreLeads,
@@ -47,7 +47,9 @@ export default function InboxPage() {
 
   const handleLeadSelect = (lead: Lead) => {
     if (lead.status === 'unread') {
+      setSelectedLead({ ...lead, status: 'read' as LeadStatus });
       void markLeadRead(lead.id);
+      return;
     }
     setSelectedLead(lead);
   };
@@ -175,10 +177,18 @@ export default function InboxPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent align="end">
-                    <SelectItem value="all">All ({stats.total})</SelectItem>
-                    <SelectItem value="unread">Unread ({stats.unread})</SelectItem>
-                    <SelectItem value="completed">Completed ({stats.completed})</SelectItem>
-                    <SelectItem value="discarded">Discarded ({stats.discarded})</SelectItem>
+                    <SelectItem value="all">
+                      All ({inboxCounts.all})
+                    </SelectItem>
+                    <SelectItem value="unread">
+                      Unread ({inboxCounts.unread})
+                    </SelectItem>
+                    <SelectItem value="completed">
+                      Completed ({inboxCounts.completed})
+                    </SelectItem>
+                    <SelectItem value="discarded">
+                      Discarded ({inboxCounts.discarded})
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -195,25 +205,25 @@ export default function InboxPage() {
               <TabsTrigger value="all" className="gap-2">
                 All
                 <Badge variant="secondary" className="text-xs">
-                  {stats.total}
+                  {inboxCounts.all}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="unread" className="gap-2">
                 Unread
                 <Badge variant="secondary" className="text-xs">
-                  {stats.unread}
+                  {inboxCounts.unread}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="completed" className="gap-2">
                 Completed
                 <Badge variant="secondary" className="text-xs">
-                  {stats.completed}
+                  {inboxCounts.completed}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="discarded" className="gap-2">
                 Discarded
                 <Badge variant="secondary" className="text-xs">
-                  {stats.discarded}
+                  {inboxCounts.discarded}
                 </Badge>
               </TabsTrigger>
             </TabsList>

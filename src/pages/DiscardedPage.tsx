@@ -21,7 +21,7 @@ import { deleteDiscardedLeads } from '@/lib/api';
 
 export default function DiscardedPage() {
   const { accessToken, user } = useAuth();
-  const { restoreLead: restoreLeadInContext } = useLeads();
+  const { restoreLead: restoreLeadInContext, refreshInboxCounts } = useLeads();
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
   const [isDeleting, setIsDeleting] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
@@ -107,6 +107,7 @@ export default function DiscardedPage() {
       });
 
       clearAllLeads();
+      void refreshInboxCounts();
       toast({
         title: 'Discarded leads deleted',
         description: `Successfully deleted ${response.deleted_count} lead${response.deleted_count !== 1 ? 's' : ''}.`,

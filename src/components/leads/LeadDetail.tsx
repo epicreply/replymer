@@ -9,11 +9,10 @@ import { useAuth } from '@/context/AuthContext';
 import { PlatformBadge } from './PlatformBadge';
 import { RelevancyBadge } from './RelevancyBadge';
 import { toast } from '@/hooks/use-toast';
-import { updateLeadStatus as updateLeadStatusApi } from '@/lib/api';
 import { useMemo } from 'react';
 
 export function LeadDetail() {
-  const { selectedLead, setSelectedLead, updateLeadStatus, incrementUsage } = useLeads();
+  const { selectedLead, setSelectedLead, setLeadStatusRemote, incrementUsage } = useLeads();
   const { accessToken, user } = useAuth();
 
   const selectedProjectId = useMemo(
@@ -53,14 +52,7 @@ export function LeadDetail() {
     }
 
     try {
-      await updateLeadStatusApi({
-        accessToken,
-        projectId: selectedProjectId,
-        leadId: selectedLead.id,
-        status: 'completed',
-      });
-
-      updateLeadStatus(selectedLead.id, 'completed');
+      await setLeadStatusRemote(selectedLead.id, 'completed');
       toast({
         title: 'Lead completed',
         description: 'The lead has been moved to Completed.',
@@ -85,14 +77,7 @@ export function LeadDetail() {
     }
 
     try {
-      await updateLeadStatusApi({
-        accessToken,
-        projectId: selectedProjectId,
-        leadId: selectedLead.id,
-        status: 'discarded',
-      });
-
-      updateLeadStatus(selectedLead.id, 'discarded');
+      await setLeadStatusRemote(selectedLead.id, 'discarded');
       toast({
         title: 'Lead discarded',
         description: 'The lead has been moved to Discarded.',
