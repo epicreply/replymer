@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
-  const { accessToken, user } = useAuth();
+  const { accessToken, user, isAuthenticated, isLoading } = useAuth();
   const selectedProjectId = useMemo(
     () => user?.projects?.find((project) => project.is_selected)?.id ?? null,
     [user],
@@ -31,11 +31,21 @@ const OnboardingPage = () => {
   const [isSkipping, setIsSkipping] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/auth", { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  if (isLoading || !isAuthenticated) {
+    return null;
+  }
+
   const trimmedProductName = formData.productName.trim();
   const trimmedWebsiteUrl = formData.websiteUrl.trim();
   const trimmedProductDescription = formData.productDescription.trim();
   const websiteUrlRegex =
-    /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+    /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_.~#?&/=]*)$/;
     // /^(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
   const isWebsiteUrlValid =
     trimmedWebsiteUrl.length > 0 && websiteUrlRegex.test(trimmedWebsiteUrl);

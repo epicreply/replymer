@@ -87,7 +87,7 @@ export default function ProductSetupPage() {
   const trimmedProductName = formData.name.trim();
   const trimmedWebsiteUrl = formData.websiteUrl.trim();
   const websiteUrlRegex =
-    /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_+.~#?&\/=]*)$/;
+    /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_.~#?&/=]*)$/;
   const isWebsiteUrlValid =
     trimmedWebsiteUrl.length > 0 && websiteUrlRegex.test(trimmedWebsiteUrl);
   const showWebsiteUrlError = trimmedWebsiteUrl.length > 0 && !isWebsiteUrlValid;
