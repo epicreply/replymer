@@ -83,6 +83,12 @@ export default function ProductSetupPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const trimmedWebsiteUrl = formData.websiteUrl.trim();
+  const websiteUrlRegex =
+    /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_+.~#?&\/=]*)$/;
+  const isWebsiteUrlValid =
+    trimmedWebsiteUrl.length > 0 && websiteUrlRegex.test(trimmedWebsiteUrl);
+  const showWebsiteUrlError = trimmedWebsiteUrl.length > 0 && !isWebsiteUrlValid;
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
@@ -251,7 +257,7 @@ export default function ProductSetupPage() {
                 <X className="h-4 w-4 mr-1" />
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={isSaving}>
+              <Button size="sm" onClick={handleSave} disabled={isSaving || showWebsiteUrlError}>
                 <Save className="h-4 w-4 mr-1" />
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
@@ -286,11 +292,29 @@ export default function ProductSetupPage() {
                   onChange={(e) => handleChange('websiteUrl', e.target.value)}
                   placeholder="https://example.com"
                 />
+                {showWebsiteUrlError && (
+                  <p className="text-xs text-destructive">Please enter a valid website URL.</p>
+                )}
               </div>
             </div>
   
             <div className="space-y-2">
-              <Label htmlFor="description">Product Description</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="description">Product Description</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    toast({
+                      title: 'Description generation is coming soon.',
+                    })
+                  }
+                  disabled={showWebsiteUrlError}
+                >
+                  Generate Description
+                </Button>
+              </div>
               <Textarea
                 id="description"
                 value={formData.description}
