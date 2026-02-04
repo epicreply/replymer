@@ -2,6 +2,13 @@ import { Lead, LeadStatus, Platform } from '@/data/mockLeads';
 
 const API_BASE_URL = 'https://internal-api.autoreply.ing';
 
+export interface InboxCounts {
+  all: number;
+  unread: number;
+  completed: number;
+  discarded: number;
+}
+
 export interface LeadsQueryParams {
   status?: LeadStatus;
   platforms?: Platform[];
@@ -184,6 +191,40 @@ export const fetchProjectLeads = async ({
     leads: leads.map(mapApiLead),
     nextCursor: data.next_cursor ?? null,
     total: data.total ?? leads.length,
+  };
+};
+
+export const fetchInboxCounts = async ({
+  accessToken,
+  projectId,
+  signal,
+}: {
+  accessToken: string;
+  projectId: string;
+  signal?: AbortSignal;
+}): Promise<InboxCounts> => {
+  const url = new URL('/v1.0/projects/leads/inbox-counts', API_BASE_URL);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch inbox counts');
+  }
+
+  const data = (await response.json()) as Partial<InboxCounts> | null;
+
+  return {
+    all: data?.all ?? 0,
+    unread: data?.unread ?? 0,
+    completed: data?.completed ?? 0,
+    discarded: data?.discarded ?? 0,
   };
 };
 

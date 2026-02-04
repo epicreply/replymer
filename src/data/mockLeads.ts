@@ -1,5 +1,5 @@
 export type Platform = 'reddit' | 'twitter' | 'linkedin';
-export type LeadStatus = 'unread' | 'completed' | 'discarded';
+export type LeadStatus = 'unread' | 'read' | 'completed' | 'discarded';
 
 export interface Lead {
   id: string;
