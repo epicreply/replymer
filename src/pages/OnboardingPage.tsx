@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Shield, Coins, Users, Sparkles, Zap, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
@@ -28,6 +29,22 @@ const OnboardingPage = () => {
   const [subreddits, setSubreddits] = useState<string[]>([]);
   const [isUpdatingProject, setIsUpdatingProject] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
+
+  const trimmedProductName = formData.productName.trim();
+  const trimmedWebsiteUrl = formData.websiteUrl.trim();
+  const trimmedProductDescription = formData.productDescription.trim();
+  const hasWebsiteScheme = /^https?:\/\//i.test(trimmedWebsiteUrl);
+  const isWebsiteUrlValid =
+    trimmedWebsiteUrl.length > 0 &&
+    hasWebsiteScheme &&
+    (() => {
+      try {
+        new URL(trimmedWebsiteUrl);
+        return true;
+      } catch {
+        return false;
+      }
+    })();
 
   const suggestedSubreddits = ["marketing", "startups", "growthhacking", "entrepreneur"];
 
@@ -107,6 +124,22 @@ const OnboardingPage = () => {
 
   const handleContinue = async () => {
     if (currentStep === 2) {
+      if (!trimmedProductName || !trimmedWebsiteUrl || !trimmedProductDescription) {
+        toast({
+          title: "Missing required fields",
+          description: "Please fill out all required fields to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!isWebsiteUrlValid) {
+        toast({
+          title: "Invalid website URL",
+          description: "Please enter a valid Website URL starting with http:// or https://.",
+          variant: "destructive",
+        });
+        return;
+      }
       if (!accessToken || !selectedProjectId) {
         toast({
           title: "Unable to update project",
@@ -194,7 +227,13 @@ const OnboardingPage = () => {
   const canContinue = () => {
     if (currentStep === 1) return agreed;
     if (currentStep === 2) {
-      return formData.productName && formData.websiteUrl && !isUpdatingProject;
+      return (
+        trimmedProductName &&
+        trimmedWebsiteUrl &&
+        trimmedProductDescription &&
+        isWebsiteUrlValid &&
+        !isUpdatingProject
+      );
     }
     if (currentStep === 3) return true;
     return true;
@@ -288,16 +327,33 @@ const OnboardingPage = () => {
                     <Label htmlFor="websiteUrl">Website URL</Label>
                     <Input
                       id="websiteUrl"
+                      className={cn(
+                        trimmedWebsiteUrl && !isWebsiteUrlValid
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : null,
+                      )}
                       placeholder="autopreply.ing"
                       value={formData.websiteUrl}
                       onChange={(e) =>
                         setFormData({ ...formData, websiteUrl: e.target.value })
                       }
                     />
+                    {trimmedWebsiteUrl && !isWebsiteUrlValid && (
+                      <p className="text-sm text-red-500">
+                        Please enter a valid Website URL starting with http:// or https://.
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="productDescription">Product Description</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="productDescription">Product Description</Label>
+                    {trimmedProductName && trimmedWebsiteUrl && (
+                      <Button variant="outline" size="sm">
+                        AI Magic
+                      </Button>
+                    )}
+                  </div>
                   <Textarea
                     id="productDescription"
                     placeholder="An AI-powered tool that helps businesses automate their social media outreach and lead generation."
