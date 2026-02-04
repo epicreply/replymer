@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from '@/hooks/use-toast';
 import { useAutosizeTextarea } from '@/hooks/use-autosize-textarea';
 import { defaultProductSettings, type ProductSettings } from '@/data/mockLeads';
+import UnsavedChangesGuard from '@/components/UnsavedChangesGuard';
 
 function ProductSetupSkeleton() {
   return (
@@ -81,7 +82,6 @@ export default function ProductSetupPage() {
   );
   const [savedFormData, setSavedFormData] = useState<ProductSettings>(defaultProductSettings);
   const [formData, setFormData] = useState<ProductSettings>(defaultProductSettings);
-  const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -101,6 +101,18 @@ export default function ProductSetupPage() {
   const canGenerateAudienceAndValue =
     !!trimmedProductName && !!trimmedWebsiteUrl && !!trimmedProductDescription && isWebsiteUrlValid;
 
+  const isDirty = useMemo(() => {
+    const fields: Array<keyof ProductSettings> = [
+      'name',
+      'websiteUrl',
+      'description',
+      'targetAudience',
+      'valueProposition',
+    ];
+
+    return fields.some((field) => formData[field] !== savedFormData[field]);
+  }, [formData, savedFormData]);
+
   useAutosizeTextarea(descriptionRef, formData.description);
   useAutosizeTextarea(targetAudienceRef, formData.targetAudience);
   useAutosizeTextarea(valuePropositionRef, formData.valueProposition);
@@ -109,7 +121,6 @@ export default function ProductSetupPage() {
     if (!accessToken || !selectedProjectId) {
       setSavedFormData(defaultProductSettings);
       setFormData(defaultProductSettings);
-      setIsDirty(false);
       setIsLoading(false);
       return;
     }
@@ -144,7 +155,6 @@ export default function ProductSetupPage() {
 
         setSavedFormData(normalizedSettings);
         setFormData(normalizedSettings);
-        setIsDirty(false);
       } catch (error) {
         if (!controller.signal.aborted) {
           console.error(error);
@@ -165,7 +175,6 @@ export default function ProductSetupPage() {
 
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    setIsDirty(true);
   };
 
   const buildUpdatePayload = () => {
@@ -242,7 +251,6 @@ export default function ProductSetupPage() {
         ...prev,
         description: data.data?.text ?? prev.description,
       }));
-      setIsDirty(true);
     } catch (error) {
       console.error(error);
       toast({
@@ -403,7 +411,6 @@ export default function ProductSetupPage() {
 
     const payload = buildUpdatePayload();
     if (Object.keys(payload).length === 0) {
-      setIsDirty(false);
       return;
     }
 
@@ -433,7 +440,6 @@ export default function ProductSetupPage() {
 
       setSavedFormData(normalizedSettings);
       setFormData(normalizedSettings);
-      setIsDirty(false);
       toast({
         title: 'Settings saved',
         description: 'Your product information has been updated.',
@@ -452,7 +458,6 @@ export default function ProductSetupPage() {
 
   const handleCancel = () => {
     setFormData(savedFormData);
-    setIsDirty(false);
   };
 
   if (isLoading) {
@@ -461,6 +466,7 @@ export default function ProductSetupPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
+      <UnsavedChangesGuard when={isDirty} />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="hidden md:block">
