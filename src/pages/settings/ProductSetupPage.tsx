@@ -83,6 +83,8 @@ export default function ProductSetupPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const trimmedProductName = formData.name.trim();
   const trimmedWebsiteUrl = formData.websiteUrl.trim();
   const websiteUrlRegex =
     /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_+.~#?&\/=]*)$/;
@@ -171,6 +173,73 @@ export default function ProductSetupPage() {
     });
 
     return payload;
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: 'Unable to generate description',
+        description: 'Missing authentication or project selection.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!trimmedProductName || !trimmedWebsiteUrl || !isWebsiteUrlValid) {
+      toast({
+        title: 'Missing required fields',
+        description: 'Please enter a valid product name and website URL.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGeneratingDescription(true);
+    try {
+      const response = await fetch(
+        `https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}/projects-description`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            productName: trimmedProductName,
+            websiteUrl: trimmedWebsiteUrl,
+            tone: 'neutral',
+            mode: 'default',
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to generate description');
+      }
+
+      const data = (await response.json()) as {
+        success?: boolean;
+        data?: { text?: string };
+      };
+
+      if (!data?.data?.text) {
+        throw new Error('Missing generated description');
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        description: data.data?.text ?? prev.description,
+      }));
+      setIsDirty(true);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Generation failed',
+        description: "We couldn't generate a description. Please try again.",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingDescription(false);
+    }
   };
 
   const handleSave = async () => {
@@ -305,15 +374,11 @@ export default function ProductSetupPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    toast({
-                      title: 'Description generation is coming soon.',
-                    })
-                  }
-                  disabled={showWebsiteUrlError}
+                  onClick={handleGenerateDescription}
+                  disabled={showWebsiteUrlError || isGeneratingDescription}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Description
+                  {isGeneratingDescription ? 'Generating...' : 'Generate Description'}
                 </Button>
               </div>
               <Textarea
