@@ -85,16 +85,25 @@ export default function ProductSetupPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const targetAudienceRef = useRef<HTMLTextAreaElement>(null);
+  const valuePropositionRef = useRef<HTMLTextAreaElement>(null);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [isGeneratingTargetAudience, setIsGeneratingTargetAudience] = useState(false);
+  const [isGeneratingValueProposition, setIsGeneratingValueProposition] = useState(false);
   const trimmedProductName = formData.name.trim();
   const trimmedWebsiteUrl = formData.websiteUrl.trim();
+  const trimmedProductDescription = formData.description.trim();
   const websiteUrlRegex =
     /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_.~#?&/=]*)$/;
   const isWebsiteUrlValid =
     trimmedWebsiteUrl.length > 0 && websiteUrlRegex.test(trimmedWebsiteUrl);
   const showWebsiteUrlError = trimmedWebsiteUrl.length > 0 && !isWebsiteUrlValid;
+  const canGenerateAudienceAndValue =
+    !!trimmedProductName && !!trimmedWebsiteUrl && !!trimmedProductDescription && isWebsiteUrlValid;
 
   useAutosizeTextarea(descriptionRef, formData.description);
+  useAutosizeTextarea(targetAudienceRef, formData.targetAudience);
+  useAutosizeTextarea(valuePropositionRef, formData.valueProposition);
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
@@ -243,6 +252,142 @@ export default function ProductSetupPage() {
       });
     } finally {
       setIsGeneratingDescription(false);
+    }
+  };
+
+  const handleGenerateTargetAudience = async () => {
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: 'Unable to generate target audience',
+        description: 'Missing authentication or project selection.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!canGenerateAudienceAndValue) {
+      toast({
+        title: 'Missing required fields',
+        description: 'Please enter a valid product name, website URL, and product description.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGeneratingTargetAudience(true);
+    try {
+      const response = await fetch(
+        `https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}/target-audience`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            productName: trimmedProductName,
+            websiteUrl: trimmedWebsiteUrl,
+            productDescription: trimmedProductDescription,
+            tone: 'neutral',
+            mode: 'default',
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to generate target audience');
+      }
+
+      const data = (await response.json()) as {
+        success?: boolean;
+        data?: { text?: string };
+      };
+
+      if (!data?.data?.text) {
+        throw new Error('Missing generated target audience');
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        targetAudience: data.data?.text ?? prev.targetAudience,
+      }));
+      setIsDirty(true);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Generation failed',
+        description: "We couldn't generate a target audience. Please try again.",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingTargetAudience(false);
+    }
+  };
+
+  const handleGenerateValueProposition = async () => {
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: 'Unable to generate value proposition',
+        description: 'Missing authentication or project selection.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!canGenerateAudienceAndValue) {
+      toast({
+        title: 'Missing required fields',
+        description: 'Please enter a valid product name, website URL, and product description.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGeneratingValueProposition(true);
+    try {
+      const response = await fetch(
+        `https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}/value-proposition`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            productName: trimmedProductName,
+            websiteUrl: trimmedWebsiteUrl,
+            productDescription: trimmedProductDescription,
+            tone: 'neutral',
+            mode: 'default',
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to generate value proposition');
+      }
+
+      const data = (await response.json()) as {
+        success?: boolean;
+        data?: { text?: string };
+      };
+
+      if (!data?.data?.text) {
+        throw new Error('Missing generated value proposition');
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        valueProposition: data.data?.text ?? prev.valueProposition,
+      }));
+      setIsDirty(true);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Generation failed',
+        description: "We couldn't generate a value proposition. Please try again.",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingValueProposition(false);
     }
   };
 
@@ -409,24 +554,56 @@ export default function ProductSetupPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="targetAudience">Target Audience</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="targetAudience">Target Audience</Label>
+                {canGenerateAudienceAndValue && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateTargetAudience}
+                    disabled={showWebsiteUrlError || isGeneratingTargetAudience}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    {isGeneratingTargetAudience ? 'Generating...' : 'Generate Target Audience'}
+                  </Button>
+                )}
+              </div>
               <Textarea
                 id="targetAudience"
                 value={formData.targetAudience}
                 onChange={(e) => handleChange('targetAudience', e.target.value)}
                 placeholder="B2B SaaS founders, marketing teams, growth hackers..."
                 className="min-h-20"
+                ref={targetAudienceRef}
               />
             </div>
   
             <div className="space-y-2">
-              <Label htmlFor="valueProposition">Value Proposition</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="valueProposition">Value Proposition</Label>
+                {canGenerateAudienceAndValue && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateValueProposition}
+                    disabled={showWebsiteUrlError || isGeneratingValueProposition}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    {isGeneratingValueProposition
+                      ? 'Generating...'
+                      : 'Generate Value Proposition'}
+                  </Button>
+                )}
+              </div>
               <Textarea
                 id="valueProposition"
                 value={formData.valueProposition}
                 onChange={(e) => handleChange('valueProposition', e.target.value)}
                 placeholder="What unique value does your product provide? What problems does it solve?"
                 className="min-h-20"
+                ref={valuePropositionRef}
               />
             </div>
           </CardContent>
