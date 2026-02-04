@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Shield, Coins, Users, Sparkles, Zap, Check } from "lucide-react";
+import { FileText, Shield, Coins, Users, Sparkles, Zap, Check, WandSparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const OnboardingPage = () => {
@@ -33,13 +33,15 @@ const OnboardingPage = () => {
   const trimmedProductName = formData.productName.trim();
   const trimmedWebsiteUrl = formData.websiteUrl.trim();
   const trimmedProductDescription = formData.productDescription.trim();
-  const hasWebsiteScheme = /^https?:\/\//i.test(trimmedWebsiteUrl);
   const isWebsiteUrlValid =
     trimmedWebsiteUrl.length > 0 &&
-    hasWebsiteScheme &&
     (() => {
       try {
-        new URL(trimmedWebsiteUrl);
+        if (/^https?:\/\//i.test(trimmedWebsiteUrl)) {
+          new URL(trimmedWebsiteUrl);
+        } else {
+          new URL(`https://${trimmedWebsiteUrl}`);
+        }
         return true;
       } catch {
         return false;
@@ -135,7 +137,7 @@ const OnboardingPage = () => {
       if (!isWebsiteUrlValid) {
         toast({
           title: "Invalid website URL",
-          description: "Please enter a valid Website URL starting with http:// or https://.",
+          description: "Please enter a valid Website URL.",
           variant: "destructive",
         });
         return;
@@ -340,7 +342,7 @@ const OnboardingPage = () => {
                     />
                     {trimmedWebsiteUrl && !isWebsiteUrlValid && (
                       <p className="text-sm text-red-500">
-                        Please enter a valid Website URL starting with http:// or https://.
+                        Please enter a valid Website URL.
                       </p>
                     )}
                   </div>
@@ -350,7 +352,8 @@ const OnboardingPage = () => {
                     <Label htmlFor="productDescription">Product Description</Label>
                     {trimmedProductName && trimmedWebsiteUrl && (
                       <Button variant="outline" size="sm">
-                        AI Magic
+                        <WandSparkles className="h-4 w-4 mr-2" />
+                        ✨ Generate Description
                       </Button>
                     )}
                   </div>
