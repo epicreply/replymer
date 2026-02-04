@@ -130,7 +130,7 @@ function TeamPageSkeleton() {
   return (
     <div className="space-y-6">
       {/* Team Card Skeleton */}
-      <div className="admin-card">
+      {/* <div className="admin-card">
         <div className="admin-card-section space-y-3">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-10 w-full" />
@@ -138,7 +138,7 @@ function TeamPageSkeleton() {
         <div className="admin-card-section">
           <Skeleton className="h-4 w-32" />
         </div>
-      </div>
+      </div> */}
 
       {/* Members List Skeleton */}
       <div className="space-y-4">
