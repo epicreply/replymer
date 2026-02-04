@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Save, Sparkles, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
+import { useAutosizeTextarea } from '@/hooks/use-autosize-textarea';
 import { defaultProductSettings, type ProductSettings } from '@/data/mockLeads';
 
 function ProductSetupSkeleton() {
@@ -83,12 +84,15 @@ export default function ProductSetupPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const trimmedWebsiteUrl = formData.websiteUrl.trim();
   const websiteUrlRegex =
     /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_+.~#?&\/=]*)$/;
   const isWebsiteUrlValid =
     trimmedWebsiteUrl.length > 0 && websiteUrlRegex.test(trimmedWebsiteUrl);
   const showWebsiteUrlError = trimmedWebsiteUrl.length > 0 && !isWebsiteUrlValid;
+
+  useAutosizeTextarea(descriptionRef, formData.description);
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
@@ -322,6 +326,7 @@ export default function ProductSetupPage() {
                 onChange={(e) => handleChange('description', e.target.value)}
                 placeholder="Describe what your product does and how it helps users..."
                 className="min-h-24"
+                ref={descriptionRef}
               />
               <p className="text-xs text-muted-foreground">
                 Be specific about features and benefits. This helps generate more relevant responses.
