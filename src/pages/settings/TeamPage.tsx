@@ -106,11 +106,11 @@ export default function TeamPage() {
           <TeamPageSkeleton />
         ) : (
           <>
-            <TeamCard
+            {/* <TeamCard
               teamName={teamName}
               memberCount={members.length}
               onNameChange={setTeamName}
-            />
+            /> */}
       
             <MemberList
               members={formattedMembers}
