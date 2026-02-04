@@ -37,22 +37,22 @@ const plans = [
     current: true,
     popular: true,
   },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    period: "",
-    description: "For large organizations",
-    features: [
-      "Unlimited replies",
-      "All platforms",
-      "White-label options",
-      "Dedicated support",
-      "API access",
-      "Custom integrations",
-    ],
-    icon: Building,
-    current: false,
-  },
+  // {
+  //   name: "Enterprise",
+  //   price: "Custom",
+  //   period: "",
+  //   description: "For large organizations",
+  //   features: [
+  //     "Unlimited replies",
+  //     "All platforms",
+  //     "White-label options",
+  //     "Dedicated support",
+  //     "API access",
+  //     "Custom integrations",
+  //   ],
+  //   icon: Building,
+  //   current: false,
+  // },
 ];
 
 const billingHistory = [
@@ -114,7 +114,7 @@ export default function BillingPage() {
         {/* Plan Comparison */}
         <div>
           <h2 className="text-base font-medium text-foreground mb-4">Available Plans</h2>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {plans.map((plan) => (
               <Card
                 key={plan.name}
