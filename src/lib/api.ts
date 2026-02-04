@@ -2,6 +2,13 @@ import { Lead, LeadStatus, Platform } from '@/data/mockLeads';
 
 const API_BASE_URL = 'https://internal-api.autoreply.ing';
 
+export interface InboxCounts {
+  all: number;
+  unread: number;
+  completed: number;
+  discarded: number;
+}
+
 export interface LeadsQueryParams {
   status?: LeadStatus;
   platforms?: Platform[];

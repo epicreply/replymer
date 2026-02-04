@@ -9,7 +9,6 @@ import { useAuth } from '@/context/AuthContext';
 import { PlatformBadge } from './PlatformBadge';
 import { RelevancyBadge } from './RelevancyBadge';
 import { toast } from '@/hooks/use-toast';
-import { updateLeadStatus as updateLeadStatusApi } from '@/lib/api';
 import { useMemo } from 'react';
 
 export function LeadDetail() {

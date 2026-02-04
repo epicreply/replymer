@@ -9,7 +9,7 @@ import { getPlatformLabel } from './PlatformBadge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export function FilterPanel() {
-  const { filters, setFilters, communities, stats } = useLeads();
+  const { filters, setFilters, communities, inboxCounts } = useLeads();
 
   const handleRelevancyChange = (value: number[]) => {
     setFilters({ ...filters, relevancyRange: [value[0], value[1]] });
@@ -41,7 +41,7 @@ export function FilterPanel() {
       <div className="p-4 border-b border-border">
         <h3 className="font-semibold text-foreground mb-1">Filters</h3>
         <p className="text-xs text-muted-foreground">
-          {stats.unread} unread of {stats.total} total
+          {inboxCounts.unread} unread of {inboxCounts.all} total
         </p>
       </div>
 

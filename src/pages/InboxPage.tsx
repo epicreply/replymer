@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search } from 'lucide-react';
 import { Lead, LeadStatus } from '@/data/mockLeads';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function InboxPage() {
   const {
@@ -20,7 +20,7 @@ export default function InboxPage() {
     setSelectedLead,
     filters,
     setFilters,
-    stats,
+    inboxCounts,
     isLoading,
     error,
     loadMoreLeads,
@@ -35,19 +35,30 @@ export default function InboxPage() {
   const selectedDetailRef = useRef<HTMLDivElement | null>(null);
   const prevSelectedLeadIdRef = useRef<string | null>(null);
   const prevScrolledLeadIdRef = useRef<string | null>(null);
+  const [searchDraft, setSearchDraft] = useState(filters.searchQuery);
 
   const handleStatusChange = (status: string) => {
     setFilters({ ...filters, status: status as LeadStatus | 'all' });
     setSelectedLead(null);
   };
 
-  const handleSearch = (query: string) => {
-    setFilters({ ...filters, searchQuery: query });
-  };
+  useEffect(() => {
+    setSearchDraft(filters.searchQuery);
+  }, [filters.searchQuery]);
+
+  const commitSearch = useCallback(() => {
+    if (searchDraft === filters.searchQuery) {
+      return;
+    }
+    setFilters({ ...filters, searchQuery: searchDraft });
+    setSelectedLead(null);
+  }, [filters, searchDraft, setFilters, setSelectedLead]);
 
   const handleLeadSelect = (lead: Lead) => {
     if (lead.status === 'unread') {
+      setSelectedLead({ ...lead, status: 'read' as LeadStatus });
       void markLeadRead(lead.id);
+      return;
     }
     setSelectedLead(lead);
   };
@@ -153,8 +164,15 @@ export default function InboxPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search leads..."
-                value={filters.searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
+                value={searchDraft}
+                onChange={(e) => setSearchDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commitSearch();
+                  }
+                }}
+                onBlur={commitSearch}
                 className="pl-9"
               />
             </div>
@@ -164,8 +182,15 @@ export default function InboxPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search leads..."
-                    value={filters.searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    value={searchDraft}
+                    onChange={(e) => setSearchDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        commitSearch();
+                      }
+                    }}
+                    onBlur={commitSearch}
                     className="border-0 bg-transparent pl-9 pr-3 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
@@ -175,10 +200,18 @@ export default function InboxPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent align="end">
-                    <SelectItem value="all">All ({stats.total})</SelectItem>
-                    <SelectItem value="unread">Unread ({stats.unread})</SelectItem>
-                    <SelectItem value="completed">Completed ({stats.completed})</SelectItem>
-                    <SelectItem value="discarded">Discarded ({stats.discarded})</SelectItem>
+                    <SelectItem value="all">
+                      All ({inboxCounts.all})
+                    </SelectItem>
+                    <SelectItem value="unread">
+                      Unread ({inboxCounts.unread})
+                    </SelectItem>
+                    <SelectItem value="completed">
+                      Completed ({inboxCounts.completed})
+                    </SelectItem>
+                    <SelectItem value="discarded">
+                      Discarded ({inboxCounts.discarded})
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -195,25 +228,25 @@ export default function InboxPage() {
               <TabsTrigger value="all" className="gap-2">
                 All
                 <Badge variant="secondary" className="text-xs">
-                  {stats.total}
+                  {inboxCounts.all}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="unread" className="gap-2">
                 Unread
                 <Badge variant="secondary" className="text-xs">
-                  {stats.unread}
+                  {inboxCounts.unread}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="completed" className="gap-2">
                 Completed
                 <Badge variant="secondary" className="text-xs">
-                  {stats.completed}
+                  {inboxCounts.completed}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="discarded" className="gap-2">
                 Discarded
                 <Badge variant="secondary" className="text-xs">
-                  {stats.discarded}
+                  {inboxCounts.discarded}
                 </Badge>
               </TabsTrigger>
             </TabsList>

@@ -87,6 +87,14 @@ interface LeadsContextType {
     discarded: number;
     total: number;
   };
+
+  // Inbox counts (server-derived)
+  inboxCounts: InboxCounts;
+  isInboxCountsLoading: boolean;
+  refreshInboxCounts: () => Promise<void>;
+
+  // Status updates (server + local + counts)
+  setLeadStatusRemote: (leadId: string, status: 'completed' | 'discarded') => Promise<void>;
 }
 
 const defaultFilters: LeadsFilters = {
@@ -141,12 +149,77 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
   // Brands state
   const [brands, setBrands] = useState(mockBrands);
 
+  // Inbox counts state
+  const [inboxCounts, setInboxCounts] = useState<InboxCounts>({
+    all: 0,
+    unread: 0,
+    completed: 0,
+    discarded: 0,
+  });
+  const [isInboxCountsLoading, setIsInboxCountsLoading] = useState(false);
+  const inboxCountsAbortControllerRef = useRef<AbortController | null>(null);
+  const inboxCountsRequestKeyRef = useRef<string | null>(null);
+  const [hasInboxCountsLoaded, setHasInboxCountsLoaded] = useState(false);
+
   const activeBrand = useMemo(() => brands.find((b) => b.isActive) || brands[0], [brands]);
 
   const selectedProjectId = useMemo(
     () => user?.projects?.find((project) => project.is_selected)?.id ?? user?.default_project_id ?? null,
     [user]
   );
+
+  const refreshInboxCounts = useCallback(async () => {
+    if (!accessToken || !selectedProjectId) {
+      inboxCountsAbortControllerRef.current?.abort();
+      inboxCountsAbortControllerRef.current = null;
+      inboxCountsRequestKeyRef.current = null;
+      setHasInboxCountsLoaded(false);
+      setIsInboxCountsLoading(false);
+      setInboxCounts({
+        all: 0,
+        unread: 0,
+        completed: 0,
+        discarded: 0,
+      });
+      return;
+    }
+
+    const requestKey = `${selectedProjectId}:${accessToken}`;
+    if (inboxCountsRequestKeyRef.current === requestKey && isInboxCountsLoading) {
+      return;
+    }
+
+    inboxCountsAbortControllerRef.current?.abort();
+    const controller = new AbortController();
+    inboxCountsAbortControllerRef.current = controller;
+    inboxCountsRequestKeyRef.current = requestKey;
+    setIsInboxCountsLoading(true);
+
+    try {
+      const counts = await fetchInboxCounts({
+        accessToken,
+        projectId: selectedProjectId,
+        signal: controller.signal,
+      });
+      setInboxCounts(counts);
+      setHasInboxCountsLoaded(true);
+    } catch (countsError) {
+      if (countsError instanceof DOMException && countsError.name === 'AbortError') {
+        return;
+      }
+      setHasInboxCountsLoaded(false);
+      setInboxCounts({
+        all: 0,
+        unread: 0,
+        completed: 0,
+        discarded: 0,
+      });
+    } finally {
+      if (inboxCountsRequestKeyRef.current === requestKey) {
+        setIsInboxCountsLoading(false);
+      }
+    }
+  }, [accessToken, selectedProjectId, isInboxCountsLoading]);
 
   const setActiveBrand = useCallback((brandId: string) => {
     setBrands((prev) =>
@@ -265,10 +338,58 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      const leadFromList = leads.find((lead) => lead.id === leadId) ?? null;
+      const priorStatus =
+        (selectedLead?.id === leadId ? selectedLead.status : leadFromList?.status) ?? null;
+      const shouldOptimisticallyUpdate = priorStatus === 'unread';
+
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) {
+            return lead;
+          }
+          if (!shouldOptimisticallyUpdate || lead.status !== 'unread') {
+            return lead;
+          }
+          return { ...lead, status: 'read' as LeadStatus };
+        })
+      );
+      setSelectedLead((prev) => {
+        if (!prev || prev.id !== leadId) {
+          return prev;
+        }
+        if (!shouldOptimisticallyUpdate || prev.status !== 'unread') {
+          return prev;
+        }
+        return { ...prev, status: 'read' as LeadStatus };
+      });
+
       try {
         await markLeadRead({ accessToken, projectId: selectedProjectId, leadId });
         void refreshInboxCounts();
       } catch (markReadError) {
+        if (shouldOptimisticallyUpdate) {
+          setLeads((prev) =>
+            prev.map((lead) => {
+              if (lead.id !== leadId) {
+                return lead;
+              }
+              if (lead.status !== 'read') {
+                return lead;
+              }
+              return { ...lead, status: 'unread' as LeadStatus };
+            })
+          );
+          setSelectedLead((prev) => {
+            if (!prev || prev.id !== leadId) {
+              return prev;
+            }
+            if (prev.status !== 'read') {
+              return prev;
+            }
+            return { ...prev, status: 'unread' as LeadStatus };
+          });
+        }
         console.error(
           markReadError instanceof Error ? markReadError.message : 'Failed to mark lead as read'
         );
@@ -484,6 +605,20 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     };
   }, [leads, inboxCounts]);
 
+  useEffect(() => {
+    void refreshInboxCounts();
+    return () => inboxCountsAbortControllerRef.current?.abort();
+  }, [refreshInboxCounts]);
+
+  const resolvedInboxCounts = useMemo(() => {
+    return hasInboxCountsLoaded ? inboxCounts : {
+      all: stats.total,
+      unread: stats.unread,
+      completed: stats.completed,
+      discarded: stats.discarded,
+    };
+  }, [hasInboxCountsLoaded, inboxCounts, stats]);
+
   const value: LeadsContextType = {
     leads,
     isLoading,
@@ -516,6 +651,10 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     inboxCountsError,
     refreshInboxCounts,
     stats,
+    inboxCounts: resolvedInboxCounts,
+    isInboxCountsLoading,
+    refreshInboxCounts,
+    setLeadStatusRemote,
   };
 
   return <LeadsContext.Provider value={value}>{children}</LeadsContext.Provider>;
