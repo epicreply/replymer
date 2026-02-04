@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search } from 'lucide-react';
 import { Lead, LeadStatus } from '@/data/mockLeads';
 import { Badge } from '@/components/ui/badge';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function InboxPage() {
   const {
@@ -35,15 +35,24 @@ export default function InboxPage() {
   const selectedDetailRef = useRef<HTMLDivElement | null>(null);
   const prevSelectedLeadIdRef = useRef<string | null>(null);
   const prevScrolledLeadIdRef = useRef<string | null>(null);
+  const [searchDraft, setSearchDraft] = useState(filters.searchQuery);
 
   const handleStatusChange = (status: string) => {
     setFilters({ ...filters, status: status as LeadStatus | 'all' });
     setSelectedLead(null);
   };
 
-  const handleSearch = (query: string) => {
-    setFilters({ ...filters, searchQuery: query });
-  };
+  useEffect(() => {
+    setSearchDraft(filters.searchQuery);
+  }, [filters.searchQuery]);
+
+  const commitSearch = useCallback(() => {
+    if (searchDraft === filters.searchQuery) {
+      return;
+    }
+    setFilters({ ...filters, searchQuery: searchDraft });
+    setSelectedLead(null);
+  }, [filters, searchDraft, setFilters, setSelectedLead]);
 
   const handleLeadSelect = (lead: Lead) => {
     if (lead.status === 'unread') {
@@ -153,8 +162,15 @@ export default function InboxPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search leads..."
-                value={filters.searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
+                value={searchDraft}
+                onChange={(e) => setSearchDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commitSearch();
+                  }
+                }}
+                onBlur={commitSearch}
                 className="pl-9"
               />
             </div>
@@ -164,8 +180,15 @@ export default function InboxPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search leads..."
-                    value={filters.searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    value={searchDraft}
+                    onChange={(e) => setSearchDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        commitSearch();
+                      }
+                    }}
+                    onBlur={commitSearch}
                     className="border-0 bg-transparent pl-9 pr-3 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
