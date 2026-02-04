@@ -146,6 +146,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     discarded: 0,
   });
   const [isInboxCountsLoading, setIsInboxCountsLoading] = useState(false);
+  const inboxCountsLoadingRef = useRef(false);
   const inboxCountsAbortControllerRef = useRef<AbortController | null>(null);
   const inboxCountsRequestKeyRef = useRef<string | null>(null);
   const [hasInboxCountsLoaded, setHasInboxCountsLoaded] = useState(false);
@@ -157,13 +158,18 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     [user]
   );
 
+  const setInboxCountsLoading = useCallback((value: boolean) => {
+    inboxCountsLoadingRef.current = value;
+    setIsInboxCountsLoading(value);
+  }, []);
+
   const refreshInboxCounts = useCallback(async () => {
     if (!accessToken || !selectedProjectId) {
       inboxCountsAbortControllerRef.current?.abort();
       inboxCountsAbortControllerRef.current = null;
       inboxCountsRequestKeyRef.current = null;
       setHasInboxCountsLoaded(false);
-      setIsInboxCountsLoading(false);
+      setInboxCountsLoading(false);
       setInboxCounts({
         all: 0,
         unread: 0,
@@ -174,7 +180,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     }
 
     const requestKey = `${selectedProjectId}:${accessToken}`;
-    if (inboxCountsRequestKeyRef.current === requestKey && isInboxCountsLoading) {
+    if (inboxCountsRequestKeyRef.current === requestKey && inboxCountsLoadingRef.current) {
       return;
     }
 
@@ -182,7 +188,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     const controller = new AbortController();
     inboxCountsAbortControllerRef.current = controller;
     inboxCountsRequestKeyRef.current = requestKey;
-    setIsInboxCountsLoading(true);
+    setInboxCountsLoading(true);
 
     try {
       const counts = await fetchInboxCounts({
@@ -205,10 +211,10 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
       });
     } finally {
       if (inboxCountsRequestKeyRef.current === requestKey) {
-        setIsInboxCountsLoading(false);
+        setInboxCountsLoading(false);
       }
     }
-  }, [accessToken, selectedProjectId, isInboxCountsLoading]);
+  }, [accessToken, selectedProjectId, setInboxCountsLoading]);
 
   const setActiveBrand = useCallback((brandId: string) => {
     setBrands((prev) =>
