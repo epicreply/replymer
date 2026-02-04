@@ -13,7 +13,7 @@ import { updateLeadStatus as updateLeadStatusApi } from '@/lib/api';
 import { useMemo } from 'react';
 
 export function LeadDetail() {
-  const { selectedLead, setSelectedLead, updateLeadStatus, incrementUsage } = useLeads();
+  const { selectedLead, setSelectedLead, updateLeadStatus, incrementUsage, refreshInboxCounts } = useLeads();
   const { accessToken, user } = useAuth();
 
   const selectedProjectId = useMemo(
@@ -61,6 +61,7 @@ export function LeadDetail() {
       });
 
       updateLeadStatus(selectedLead.id, 'completed');
+      void refreshInboxCounts();
       toast({
         title: 'Lead completed',
         description: 'The lead has been moved to Completed.',
@@ -93,6 +94,7 @@ export function LeadDetail() {
       });
 
       updateLeadStatus(selectedLead.id, 'discarded');
+      void refreshInboxCounts();
       toast({
         title: 'Lead discarded',
         description: 'The lead has been moved to Discarded.',

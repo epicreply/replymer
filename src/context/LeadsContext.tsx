@@ -20,7 +20,13 @@ import {
   mockBrands,
   Community,
 } from '@/data/mockLeads';
-import { fetchProjectLeads, markLeadRead, restoreLead as restoreLeadApi } from '@/lib/api';
+import {
+  fetchInboxCounts,
+  fetchProjectLeads,
+  InboxCounts,
+  markLeadRead,
+  restoreLead as restoreLeadApi,
+} from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 interface LeadsFilters {
@@ -71,6 +77,10 @@ interface LeadsContextType {
   setActiveBrand: (brandId: string) => void;
 
   // Stats
+  inboxCounts: InboxCounts | null;
+  isInboxCountsLoading: boolean;
+  inboxCountsError: string | null;
+  refreshInboxCounts: () => Promise<void>;
   stats: {
     unread: number;
     completed: number;
@@ -106,6 +116,14 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     append?: boolean;
     requestKey: string;
   } | null>(null);
+
+  const [inboxCounts, setInboxCounts] = useState<InboxCounts | null>(null);
+  const [isInboxCountsLoading, setIsInboxCountsLoading] = useState(false);
+  const [inboxCountsError, setInboxCountsError] = useState<string | null>(null);
+  const isCountsRequestInFlightRef = useRef(false);
+  const inFlightCountsKeyRef = useRef<string | null>(null);
+  const pendingCountsRefreshRef = useRef(false);
+  const countsAbortControllerRef = useRef<AbortController | null>(null);
 
   // Filters state
   const [filters, setFilters] = useState<LeadsFilters>(defaultFilters);
@@ -153,6 +171,70 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     setSelectedLead((prev) => (prev?.id === leadId ? null : prev));
   }, []);
 
+  const refreshInboxCounts = useCallback(
+    async function refreshInboxCountsInner() {
+      if (!accessToken || !selectedProjectId) {
+        setInboxCounts(null);
+        setInboxCountsError(null);
+        setIsInboxCountsLoading(false);
+        inFlightCountsKeyRef.current = null;
+        isCountsRequestInFlightRef.current = false;
+        pendingCountsRefreshRef.current = false;
+        return;
+      }
+
+      const requestKey = JSON.stringify({
+        projectId: selectedProjectId,
+        hasToken: Boolean(accessToken),
+      });
+
+      if (isCountsRequestInFlightRef.current) {
+        pendingCountsRefreshRef.current = true;
+        return;
+      }
+
+      const controller = new AbortController();
+      countsAbortControllerRef.current = controller;
+      isCountsRequestInFlightRef.current = true;
+      inFlightCountsKeyRef.current = requestKey;
+      setIsInboxCountsLoading(true);
+      setInboxCountsError(null);
+
+      try {
+        const nextCounts = await fetchInboxCounts({
+          accessToken,
+          projectId: selectedProjectId,
+          signal: controller.signal,
+        });
+
+        if (inFlightCountsKeyRef.current === requestKey) {
+          setInboxCounts(nextCounts);
+        }
+      } catch (countsError) {
+        if (countsError instanceof DOMException && countsError.name === 'AbortError') {
+          return;
+        }
+        if (inFlightCountsKeyRef.current === requestKey) {
+          setInboxCountsError(
+            countsError instanceof Error ? countsError.message : 'Failed to load inbox counts'
+          );
+        }
+      } finally {
+        if (inFlightCountsKeyRef.current === requestKey) {
+          inFlightCountsKeyRef.current = null;
+          isCountsRequestInFlightRef.current = false;
+          setIsInboxCountsLoading(false);
+        }
+
+        if (pendingCountsRefreshRef.current) {
+          pendingCountsRefreshRef.current = false;
+          await refreshInboxCountsInner();
+        }
+      }
+    },
+    [accessToken, selectedProjectId]
+  );
+
   // Restore lead from discarded
   const restoreLead = useCallback(
     async (leadId: string) => {
@@ -169,11 +251,12 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await restoreLeadApi({ accessToken, projectId: selectedProjectId, leadId });
+        void refreshInboxCounts();
       } catch (error) {
         console.error('Failed to restore lead:', error);
       }
     },
-    [accessToken, selectedProjectId]
+    [accessToken, selectedProjectId, refreshInboxCounts]
   );
 
   const markLeadReadHandler = useCallback(
@@ -184,13 +267,14 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await markLeadRead({ accessToken, projectId: selectedProjectId, leadId });
+        void refreshInboxCounts();
       } catch (markReadError) {
         console.error(
           markReadError instanceof Error ? markReadError.message : 'Failed to mark lead as read'
         );
       }
     },
-    [accessToken, selectedProjectId]
+    [accessToken, selectedProjectId, refreshInboxCounts]
   );
 
   // Add community
@@ -339,6 +423,11 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     return () => abortControllerRef.current?.abort();
   }, [loadLeads]);
 
+  useEffect(() => {
+    void refreshInboxCounts();
+    return () => countsAbortControllerRef.current?.abort();
+  }, [refreshInboxCounts]);
+
   // Filter leads
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
@@ -384,13 +473,16 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
 
   // Stats
   const stats = useMemo(() => {
+    if (inboxCounts) {
+      return inboxCounts;
+    }
     return {
       unread: leads.filter((l) => l.status === 'unread').length,
       completed: leads.filter((l) => l.status === 'completed').length,
       discarded: leads.filter((l) => l.status === 'discarded').length,
       total: leads.length,
     };
-  }, [leads]);
+  }, [leads, inboxCounts]);
 
   const value: LeadsContextType = {
     leads,
@@ -419,6 +511,10 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     brands,
     activeBrand,
     setActiveBrand,
+    inboxCounts,
+    isInboxCountsLoading,
+    inboxCountsError,
+    refreshInboxCounts,
     stats,
   };
 

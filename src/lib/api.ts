@@ -187,6 +187,86 @@ export const fetchProjectLeads = async ({
   };
 };
 
+export interface InboxCounts {
+  unread: number;
+  completed: number;
+  discarded: number;
+  total: number;
+}
+
+const parseInboxCounts = (payload: unknown): InboxCounts => {
+  const candidate =
+    payload && typeof payload === 'object' && 'data' in payload
+      ? (payload as { data?: unknown }).data
+      : payload;
+
+  if (!candidate || typeof candidate !== 'object') {
+    throw new Error('Unexpected inbox counts response');
+  }
+
+  const record = candidate as Record<string, unknown>;
+
+  const toNumber = (value: unknown) => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
+      return Number(value);
+    }
+    return null;
+  };
+
+  const unread =
+    toNumber(record.unread) ??
+    toNumber(record.unread_count) ??
+    toNumber(record.unreadCount);
+  const completed =
+    toNumber(record.completed) ??
+    toNumber(record.completed_count) ??
+    toNumber(record.completedCount);
+  const discarded =
+    toNumber(record.discarded) ??
+    toNumber(record.discarded_count) ??
+    toNumber(record.discardedCount);
+  const total =
+    toNumber(record.total) ??
+    toNumber(record.total_count) ??
+    toNumber(record.totalCount);
+
+  if (unread === null || completed === null || discarded === null || total === null) {
+    throw new Error('Unexpected inbox counts response');
+  }
+
+  return { unread, completed, discarded, total };
+};
+
+export const fetchInboxCounts = async ({
+  accessToken,
+  projectId,
+  signal,
+}: {
+  accessToken: string;
+  projectId: string;
+  signal?: AbortSignal;
+}): Promise<InboxCounts> => {
+  const url = new URL('/v1.0/projects/leads/inbox-counts', API_BASE_URL);
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch inbox counts');
+  }
+
+  const data = (await response.json()) as unknown;
+  return parseInboxCounts(data);
+};
+
 export const fetchNotifications = async ({
   accessToken,
   cursor,
