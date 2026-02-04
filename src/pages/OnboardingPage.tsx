@@ -344,7 +344,7 @@ const OnboardingPage = () => {
                     {trimmedProductName && trimmedWebsiteUrl && isWebsiteUrlValid && (
                       <Button variant="outline" size="sm">
                         <WandSparkles className="h-4 w-4 mr-2" />
-                        ✨ Generate Description
+                        Generate Description
                       </Button>
                     )}
                   </div>
