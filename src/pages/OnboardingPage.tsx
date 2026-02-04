@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
-  const { accessToken, user } = useAuth();
+  const { accessToken, user, isAuthenticated, isLoading } = useAuth();
   const selectedProjectId = useMemo(
     () => user?.projects?.find((project) => project.is_selected)?.id ?? null,
     [user],
@@ -29,12 +29,23 @@ const OnboardingPage = () => {
   const [subreddits, setSubreddits] = useState<string[]>([]);
   const [isUpdatingProject, setIsUpdatingProject] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/auth", { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  if (isLoading || !isAuthenticated) {
+    return null;
+  }
 
   const trimmedProductName = formData.productName.trim();
   const trimmedWebsiteUrl = formData.websiteUrl.trim();
   const trimmedProductDescription = formData.productDescription.trim();
   const websiteUrlRegex =
-    /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+    /^(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{2,}\b([-a-zA-Z0-9()@:%_.~#?&/=]*)$/;
     // /^(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
   const isWebsiteUrlValid =
     trimmedWebsiteUrl.length > 0 && websiteUrlRegex.test(trimmedWebsiteUrl);
@@ -114,6 +125,72 @@ const OnboardingPage = () => {
     website_url: formData.websiteUrl.trim() || null,
     description: formData.productDescription.trim() || null,
   });
+
+  const handleGenerateDescription = async () => {
+    if (!accessToken || !selectedProjectId) {
+      toast({
+        title: "Unable to generate description",
+        description: "Missing authentication or project selection.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!trimmedProductName || !trimmedWebsiteUrl || !isWebsiteUrlValid) {
+      toast({
+        title: "Missing required fields",
+        description: "Please enter a valid product name and website URL.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingDescription(true);
+    try {
+      const response = await fetch(
+        `https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}/projects-description`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productName: trimmedProductName,
+            websiteUrl: trimmedWebsiteUrl,
+            tone: "neutral",
+            mode: "default",
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to generate description");
+      }
+
+      const data = (await response.json()) as {
+        success?: boolean;
+        data?: { text?: string };
+      };
+
+      if (!data?.data?.text) {
+        throw new Error("Missing generated description");
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        productDescription: data.data?.text ?? prev.productDescription,
+      }));
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Generation failed",
+        description: "We couldn't generate a description. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  };
 
   const handleContinue = async () => {
     if (currentStep === 2) {
@@ -342,9 +419,14 @@ const OnboardingPage = () => {
                   <div className="flex items-center justify-between">
                     <Label htmlFor="productDescription">Product Description</Label>
                     {trimmedProductName && trimmedWebsiteUrl && isWebsiteUrlValid && (
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateDescription}
+                        disabled={isGeneratingDescription}
+                      >
                         <WandSparkles className="h-4 w-4 mr-2" />
-                        Generate Description
+                        {isGeneratingDescription ? "Generating..." : "Generate Description"}
                       </Button>
                     )}
                   </div>
