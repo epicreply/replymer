@@ -12,6 +12,7 @@ import { Search } from 'lucide-react';
 import { Lead, LeadStatus } from '@/data/mockLeads';
 import { Badge } from '@/components/ui/badge';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function InboxPage() {
   const {
@@ -36,6 +37,7 @@ export default function InboxPage() {
   const prevSelectedLeadIdRef = useRef<string | null>(null);
   const prevScrolledLeadIdRef = useRef<string | null>(null);
   const [searchDraft, setSearchDraft] = useState(filters.searchQuery);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
   const handleStatusChange = (status: string) => {
     setFilters({ ...filters, status: status as LeadStatus | 'all' });
@@ -249,6 +251,19 @@ export default function InboxPage() {
                   {inboxCounts.discarded}
                 </Badge>
               </TabsTrigger>
+              <button
+                type="button"
+                onClick={() => setIsFilterPanelOpen((prev) => !prev)}
+                aria-pressed={isFilterPanelOpen}
+                className={cn(
+                  "hidden lg:inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                  isFilterPanelOpen
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                Filter
+              </button>
             </TabsList>
           </Tabs>
         </div>
@@ -256,8 +271,20 @@ export default function InboxPage() {
         {/* Three Panel Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Filters (hidden on mobile) */}
-          <aside className="hidden lg:block w-64 border-r border-border bg-card/50 rounded-bl-lg">
-            <FilterPanel />
+          <aside
+            className={cn(
+              "hidden lg:block overflow-hidden bg-card/50 transition-[width] duration-300 ease-in-out",
+              isFilterPanelOpen ? "w-64 border-r border-border rounded-bl-lg" : "w-0 border-r-0",
+            )}
+          >
+            <div
+              className={cn(
+                "h-full transition-opacity duration-200",
+                isFilterPanelOpen ? "opacity-100 delay-100" : "opacity-0 pointer-events-none",
+              )}
+            >
+              <FilterPanel />
+            </div>
           </aside>
   
           {/* Center Panel - Lead List */}
