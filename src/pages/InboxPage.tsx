@@ -157,7 +157,7 @@ export default function InboxPage() {
         <div className="px-3 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="hidden md:block">
-              <h1 className="text-xl font-semibold text-foreground">Inbox</h1>
+              <h1 className="text-xl font-semibold text-foreground">Leads</h1>
               <p className="text-sm text-muted-foreground">
                 Monitor and respond to relevant conversations
               </p>
