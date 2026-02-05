@@ -96,7 +96,7 @@ interface LeadsContextType {
 
 const defaultFilters: LeadsFilters = {
   relevancyRange: [0, 100],
-  platforms: ['reddit'],
+  platforms: ['reddit', 'twitter', 'linkedin'],
   communities: [],
   status: 'all',
   searchQuery: '',
