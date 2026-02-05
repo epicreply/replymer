@@ -1,6 +1,7 @@
 import { useState, ReactNode } from 'react';
 import { Maximize2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -18,6 +19,8 @@ interface StatisticCardProps {
   dialogContent: (timeRange: TimeRange) => ReactNode;
   defaultTimeRange?: TimeRange;
   onTimeRangeChange?: (timeRange: TimeRange) => void;
+  isLoading?: boolean;
+  skeleton?: (timeRange: TimeRange) => ReactNode;
 }
 
 export function StatisticCard({
@@ -26,6 +29,8 @@ export function StatisticCard({
   dialogContent,
   defaultTimeRange = 'week',
   onTimeRangeChange,
+  isLoading = false,
+  skeleton,
 }: StatisticCardProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>(defaultTimeRange);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -34,6 +39,19 @@ export function StatisticCard({
     setTimeRange(range);
     onTimeRangeChange?.(range);
   };
+
+  const renderSkeleton = () =>
+    skeleton ? (
+      skeleton(timeRange)
+    ) : (
+      <div className="flex h-64 w-full flex-col gap-3">
+        <Skeleton className="h-48 w-full" />
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+      </div>
+    );
 
   return (
     <>
@@ -49,7 +67,9 @@ export function StatisticCard({
           </button>
         </CardHeader>
         <CardContent>
-          <div className="h-64">{children(timeRange)}</div>
+          <div className="h-64">
+            {isLoading ? renderSkeleton() : children(timeRange)}
+          </div>
         </CardContent>
       </Card>
 
@@ -60,7 +80,7 @@ export function StatisticCard({
         timeRange={timeRange}
         onTimeRangeChange={handleTimeRangeChange}
       >
-        {dialogContent(timeRange)}
+        {isLoading ? renderSkeleton() : dialogContent(timeRange)}
       </ChartDialog>
     </>
   );

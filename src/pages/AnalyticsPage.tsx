@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -366,6 +367,13 @@ export default function AnalyticsPage() {
   const formatReplyRate = (value: number) =>
     summaryPlaceholder ? '—' : `${value}%`;
 
+  const renderSummarySkeleton = () => (
+    <>
+      <Skeleton className="h-4 w-24" />
+      <Skeleton className="mt-3 h-7 w-20" />
+    </>
+  );
+
   return (
     <div className="mx-auto max-w-4xl">
       <div className="space-y-6">
@@ -411,34 +419,58 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Total Leads</p>
-              <p className="text-2xl font-bold text-foreground">
-                {formatCount(summary.total_leads)}
-              </p>
+              {isLoading ? (
+                renderSummarySkeleton()
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">Total Leads</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {formatCount(summary.total_leads)}
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Replies Sent</p>
-              <p className="text-2xl font-bold text-foreground">
-                {formatCount(summary.replies_sent)}
-              </p>
+              {isLoading ? (
+                renderSummarySkeleton()
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">Replies Sent</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {formatCount(summary.replies_sent)}
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">DMs Sent</p>
-              <p className="text-2xl font-bold text-foreground">
-                {formatCount(summary.dms_sent)}
-              </p>
+              {isLoading ? (
+                renderSummarySkeleton()
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">DMs Sent</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {formatCount(summary.dms_sent)}
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">Reply Rate</p>
-              <p className="text-2xl font-bold text-primary">
-                {formatReplyRate(summary.reply_rate)}
-              </p>
+              {isLoading ? (
+                renderSummarySkeleton()
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">Reply Rate</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {formatReplyRate(summary.reply_rate)}
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -450,6 +482,7 @@ export default function AnalyticsPage() {
             children={(timeRange) => renderLeadsChart(timeRange)}
             dialogContent={(timeRange) => renderLeadsChart(timeRange)}
             onTimeRangeChange={setLeadsTimeRange}
+            isLoading={isLoading}
           />
 
           <StatisticCard
@@ -457,6 +490,7 @@ export default function AnalyticsPage() {
             children={(timeRange) => renderPlatformChart(timeRange)}
             dialogContent={(timeRange) => renderPlatformChart(timeRange)}
             onTimeRangeChange={setPlatformTimeRange}
+            isLoading={isLoading}
           />
         </div>
 
@@ -466,6 +500,7 @@ export default function AnalyticsPage() {
           children={(timeRange) => renderCommunitiesChart(timeRange)}
           dialogContent={(timeRange) => renderCommunitiesChart(timeRange)}
           onTimeRangeChange={setCommunitiesTimeRange}
+          isLoading={isLoading}
         />
       </div>
     </div>
