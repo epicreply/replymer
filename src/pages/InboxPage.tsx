@@ -251,7 +251,7 @@ export default function InboxPage() {
                   {inboxCounts.discarded}
                 </Badge>
               </TabsTrigger>
-              {/* <button
+              <button
                 type="button"
                 onClick={() => setIsFilterPanelOpen((prev) => !prev)}
                 aria-pressed={isFilterPanelOpen}
@@ -263,7 +263,7 @@ export default function InboxPage() {
                 )}
               >
                 Filter
-              </button> */}
+              </button>
             </TabsList>
           </Tabs>
         </div>
