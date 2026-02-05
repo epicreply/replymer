@@ -442,7 +442,6 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         append: Boolean(append),
         filters: {
           status: filters.status === 'all' ? undefined : filters.status,
-          platforms: filters.platforms.length ? filters.platforms : undefined,
           communityIds: selectedCommunityIds.length ? selectedCommunityIds : undefined,
           minRelevancy: filters.relevancyRange[0],
           maxRelevancy: filters.relevancyRange[1],
@@ -469,7 +468,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
           projectId: selectedProjectId,
           filters: {
             status: filters.status === 'all' ? undefined : filters.status,
-            platforms: filters.platforms.length ? filters.platforms : undefined,
+            // Temporary: omit platform filter from the API request on Inbox.
             communityIds: selectedCommunityIds.length ? selectedCommunityIds : undefined,
             minRelevancy: filters.relevancyRange[0],
             maxRelevancy: filters.relevancyRange[1],
