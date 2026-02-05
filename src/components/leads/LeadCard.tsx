@@ -100,16 +100,16 @@ export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
           )}
         </div>
 
-        {isUnread && (
-          <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1" />
-        )}
       </div>
 
       <div className="absolute top-4 right-4">
         <PlatformBadge platform={lead.platform} />
       </div>
-      <div className="absolute bottom-4 right-4 text-xs text-muted-foreground">
-        {formatDistanceToNow(lead.createdAt, { addSuffix: true })}
+      <div className="absolute bottom-4 right-4 flex items-center gap-2 text-xs text-muted-foreground">
+        <span>{formatDistanceToNow(lead.createdAt, { addSuffix: true })}</span>
+        {isUnread && (
+          <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+        )}
       </div>
     </button>
   );
