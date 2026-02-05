@@ -175,11 +175,11 @@ export default function InboxPage() {
                   }
                 }}
                 onBlur={commitSearch}
-                className="pl-9"
+                className="pl-9 transition-colors duration-200 ease-out focus:bg-card"
               />
             </div>
             <div className="w-full md:hidden">
-              <div className="flex w-full items-center overflow-hidden rounded-md border border-input bg-background">
+              <div className="flex w-full items-center overflow-hidden rounded-md border border-input bg-background transition-colors duration-200 ease-out focus-within:bg-card">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
