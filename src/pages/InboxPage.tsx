@@ -290,7 +290,7 @@ export default function InboxPage() {
           {/* Center Panel - Lead List */}
           <div className="flex-1 min-w-0">
             <ScrollArea className="h-full" ref={scrollAreaRef}>
-              <div className="p-3 space-y-2">
+              <div className="p-4 space-y-2">
                 {error ? (
                   <div className="text-center py-12 text-destructive">
                     <p>Unable to load leads.</p>
