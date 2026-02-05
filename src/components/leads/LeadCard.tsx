@@ -10,6 +10,39 @@ interface LeadCardProps {
   onClick?: () => void;
 }
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const highlightKeywords = (content: string, keywords: string[]) => {
+  if (!content || keywords.length === 0) {
+    return content;
+  }
+
+  const normalized = keywords
+    .map((keyword) => keyword.trim())
+    .filter((keyword) => keyword.length > 0 && content.toLowerCase().includes(keyword.toLowerCase()));
+
+  if (normalized.length === 0) {
+    return content;
+  }
+
+  const escaped = normalized
+    .map((keyword) => escapeRegExp(keyword))
+    .sort((a, b) => b.length - a.length);
+  const splitRegex = new RegExp(`(${escaped.join('|')})`, 'gi');
+  const tokenRegex = new RegExp(`^(${escaped.join('|')})$`, 'i');
+
+  return content.split(splitRegex).map((part, index) => {
+    if (tokenRegex.test(part)) {
+      return (
+        <strong key={`${part}-${index}`} className="font-semibold text-foreground/90">
+          {part}
+        </strong>
+      );
+    }
+    return part;
+  });
+};
+
 export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
   const isUnread = lead.status === 'unread';
 
@@ -44,7 +77,9 @@ export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
             {lead.title}
           </h4>
 
-          <p className="text-xs text-muted-foreground line-clamp-2">{lead.content}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {highlightKeywords(lead.content, lead.keywords)}
+          </p>
 
           {lead.keywords.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
