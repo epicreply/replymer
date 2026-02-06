@@ -40,8 +40,14 @@ const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthLoading, isAuthenticated, navigate]);
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
