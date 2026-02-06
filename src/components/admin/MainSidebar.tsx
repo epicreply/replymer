@@ -79,7 +79,7 @@ export function MainSidebar({
   const location = useLocation();
   const navigate = useNavigate();
   const { inboxCounts, usageQuota } = useLeads();
-  const { user, selectProject } = useAuth();
+  const { user, selectProject, logout } = useAuth();
 
   const isInSettings = location.pathname.startsWith("/settings");
   const [settingsOpen, setSettingsOpen] = useState(isInSettings);
@@ -106,7 +106,8 @@ export function MainSidebar({
   };
 
   const handleLogout = () => {
-    navigate("/auth");
+    logout();
+    navigate("/auth", { replace: true });
     onClose?.();
   };
 
