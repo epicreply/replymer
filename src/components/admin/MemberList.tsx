@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,8 @@ interface MemberListProps {
   onInviteSuccess?: () => void;
 }
 
+const TEAM_MEMBER_LIMIT = 10;
+
 export function MemberList({
   members,
   currentUserRole,
@@ -37,7 +39,16 @@ export function MemberList({
 }: MemberListProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const canInvite = ["owner", "admin"].includes(currentUserRole.toLowerCase());
+  const canInviteByRole = ["owner", "admin"].includes(currentUserRole.toLowerCase());
+  const hasInviteCapacity = members.length < TEAM_MEMBER_LIMIT;
+  const canInvite = canInviteByRole && hasInviteCapacity;
+
+  useEffect(() => {
+    if (!hasInviteCapacity && isDialogOpen) {
+      setIsDialogOpen(false);
+    }
+  }, [hasInviteCapacity, isDialogOpen]);
+
   return (
     <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
       {/* Header */}
