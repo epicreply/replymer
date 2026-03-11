@@ -317,7 +317,7 @@ const OnboardingPage = () => {
           {currentStep === 1 && (
             <div className="space-y-6">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-foreground">
-                Welcome to Our Platform
+                Welcome to Autoreply
               </h1>
               <Card className="p-6 sm:p-8 lg:p-10 space-y-6">
                 <div className="flex gap-4">
@@ -326,27 +326,24 @@ const OnboardingPage = () => {
                   </div>
                   <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                     Your use of this platform is subject to our{" "}
-                    <a href="#" className="text-foreground underline underline-offset-2">
-                      Terms of Service
-                    </a>
-                    , the{" "}
-                    <a href="#" className="text-foreground underline underline-offset-2">
-                      User Terms of Service
-                    </a>
-                    , the{" "}
-                    <a href="#" className="text-foreground underline underline-offset-2">
-                      Terms and Conditions
+                    <a
+                      href="https://autoreply.ing/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground underline underline-offset-2"
+                    >
+                      Terms
                     </a>
                     , and the{" "}
-                    <a href="#" className="text-foreground underline underline-offset-2">
+                    <a
+                      href="https://autoreply.ing/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground underline underline-offset-2"
+                    >
                       Privacy Policy
                     </a>
-                    . By using this platform, you agree to abide by these Terms and Policies,
-                    including the{" "}
-                    <a href="#" className="text-foreground underline underline-offset-2">
-                      Acceptable Use Policy
-                    </a>
-                    .
+                    . By using this platform, you agree to these policies.
                   </p>
                 </div>
                 <div className="flex gap-4">

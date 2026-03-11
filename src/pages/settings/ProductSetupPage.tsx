@@ -12,6 +12,72 @@ import { useAutosizeTextarea } from '@/hooks/use-autosize-textarea';
 import { defaultProductSettings, type ProductSettings } from '@/data/mockLeads';
 import UnsavedChangesGuard from '@/components/UnsavedChangesGuard';
 
+type GeneratorPayload = {
+  data?: { text?: unknown } | null;
+  text?: unknown;
+};
+
+type GeneratorParseSuccess = {
+  ok: true;
+  text: string;
+};
+
+type GeneratorParseFailure = {
+  ok: false;
+  status: number;
+  responseOk: boolean;
+  parseError: unknown;
+  bodyExcerpt: string;
+};
+
+const extractGeneratedText = (payload: unknown): string | null => {
+  if (!payload || typeof payload !== 'object') {
+    return null;
+  }
+
+  const typedPayload = payload as GeneratorPayload;
+  const nestedText = typedPayload.data?.text;
+  if (typeof nestedText === 'string' && nestedText.trim().length > 0) {
+    return nestedText;
+  }
+
+  const rootText = typedPayload.text;
+  if (typeof rootText === 'string' && rootText.trim().length > 0) {
+    return rootText;
+  }
+
+  return null;
+};
+
+const parseGeneratorResponse = async (
+  response: Response
+): Promise<GeneratorParseSuccess | GeneratorParseFailure> => {
+  const rawBody = await response.text();
+  let payload: unknown = null;
+  let parseError: unknown = null;
+
+  if (rawBody.trim().length > 0) {
+    try {
+      payload = JSON.parse(rawBody);
+    } catch (error) {
+      parseError = error;
+    }
+  }
+
+  const generatedText = extractGeneratedText(payload);
+  if (response.ok && generatedText) {
+    return { ok: true, text: generatedText };
+  }
+
+  return {
+    ok: false,
+    status: response.status,
+    responseOk: response.ok,
+    parseError,
+    bodyExcerpt: rawBody.slice(0, 500),
+  };
+};
+
 function ProductSetupSkeleton() {
   return (
     <div className="mx-auto max-w-2xl">
@@ -87,6 +153,9 @@ export default function ProductSetupPage() {
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const targetAudienceRef = useRef<HTMLTextAreaElement>(null);
   const valuePropositionRef = useRef<HTMLTextAreaElement>(null);
+  const descriptionRequestIdRef = useRef(0);
+  const targetAudienceRequestIdRef = useRef(0);
+  const valuePropositionRequestIdRef = useRef(0);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [isGeneratingTargetAudience, setIsGeneratingTargetAudience] = useState(false);
   const [isGeneratingValueProposition, setIsGeneratingValueProposition] = useState(false);
@@ -216,6 +285,7 @@ export default function ProductSetupPage() {
     }
 
     setIsGeneratingDescription(true);
+    const requestId = ++descriptionRequestIdRef.current;
     try {
       const response = await fetch(
         `https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}/projects-description`,
@@ -234,32 +304,39 @@ export default function ProductSetupPage() {
         }
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to generate description');
+      const result = await parseGeneratorResponse(response);
+      if (requestId !== descriptionRequestIdRef.current) {
+        return;
       }
 
-      const data = (await response.json()) as {
-        success?: boolean;
-        data?: { text?: string };
-      };
-
-      if (!data?.data?.text) {
-        throw new Error('Missing generated description');
+      if (!result.ok) {
+        console.error('Description generation failed', result);
+        toast({
+          title: 'Generation failed',
+          description: "We couldn't generate a description. Please try again.",
+          variant: 'destructive',
+        });
+        return;
       }
 
       setFormData((prev) => ({
         ...prev,
-        description: data.data?.text ?? prev.description,
+        description: result.text,
       }));
     } catch (error) {
-      console.error(error);
+      if (requestId !== descriptionRequestIdRef.current) {
+        return;
+      }
+      console.error('Description generation request failed', error);
       toast({
         title: 'Generation failed',
         description: "We couldn't generate a description. Please try again.",
         variant: 'destructive',
       });
     } finally {
-      setIsGeneratingDescription(false);
+      if (requestId === descriptionRequestIdRef.current) {
+        setIsGeneratingDescription(false);
+      }
     }
   };
 
@@ -282,6 +359,7 @@ export default function ProductSetupPage() {
     }
 
     setIsGeneratingTargetAudience(true);
+    const requestId = ++targetAudienceRequestIdRef.current;
     try {
       const response = await fetch(
         `https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}/target-audience`,
@@ -301,33 +379,39 @@ export default function ProductSetupPage() {
         }
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to generate target audience');
+      const result = await parseGeneratorResponse(response);
+      if (requestId !== targetAudienceRequestIdRef.current) {
+        return;
       }
 
-      const data = (await response.json()) as {
-        success?: boolean;
-        data?: { text?: string };
-      };
-
-      if (!data?.data?.text) {
-        throw new Error('Missing generated target audience');
+      if (!result.ok) {
+        console.error('Target audience generation failed', result);
+        toast({
+          title: 'Generation failed',
+          description: "We couldn't generate a target audience. Please try again.",
+          variant: 'destructive',
+        });
+        return;
       }
 
       setFormData((prev) => ({
         ...prev,
-        targetAudience: data.data?.text ?? prev.targetAudience,
+        targetAudience: result.text,
       }));
-      setIsDirty(true);
     } catch (error) {
-      console.error(error);
+      if (requestId !== targetAudienceRequestIdRef.current) {
+        return;
+      }
+      console.error('Target audience generation request failed', error);
       toast({
         title: 'Generation failed',
         description: "We couldn't generate a target audience. Please try again.",
         variant: 'destructive',
       });
     } finally {
-      setIsGeneratingTargetAudience(false);
+      if (requestId === targetAudienceRequestIdRef.current) {
+        setIsGeneratingTargetAudience(false);
+      }
     }
   };
 
@@ -350,6 +434,7 @@ export default function ProductSetupPage() {
     }
 
     setIsGeneratingValueProposition(true);
+    const requestId = ++valuePropositionRequestIdRef.current;
     try {
       const response = await fetch(
         `https://internal-api.autoreply.ing/v1.0/projects/${selectedProjectId}/value-proposition`,
@@ -369,33 +454,39 @@ export default function ProductSetupPage() {
         }
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to generate value proposition');
+      const result = await parseGeneratorResponse(response);
+      if (requestId !== valuePropositionRequestIdRef.current) {
+        return;
       }
 
-      const data = (await response.json()) as {
-        success?: boolean;
-        data?: { text?: string };
-      };
-
-      if (!data?.data?.text) {
-        throw new Error('Missing generated value proposition');
+      if (!result.ok) {
+        console.error('Value proposition generation failed', result);
+        toast({
+          title: 'Generation failed',
+          description: "We couldn't generate a value proposition. Please try again.",
+          variant: 'destructive',
+        });
+        return;
       }
 
       setFormData((prev) => ({
         ...prev,
-        valueProposition: data.data?.text ?? prev.valueProposition,
+        valueProposition: result.text,
       }));
-      setIsDirty(true);
     } catch (error) {
-      console.error(error);
+      if (requestId !== valuePropositionRequestIdRef.current) {
+        return;
+      }
+      console.error('Value proposition generation request failed', error);
       toast({
         title: 'Generation failed',
         description: "We couldn't generate a value proposition. Please try again.",
         variant: 'destructive',
       });
     } finally {
-      setIsGeneratingValueProposition(false);
+      if (requestId === valuePropositionRequestIdRef.current) {
+        setIsGeneratingValueProposition(false);
+      }
     }
   };
 
