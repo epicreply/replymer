@@ -8,7 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Shield, Coins, Users, Sparkles, Zap, Check, WandSparkles } from "lucide-react";
+import {
+  FileText,
+  Shield,
+  Coins,
+  Users,
+  Sparkles,
+  Zap,
+  Check,
+  WandSparkles,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const OnboardingPage = () => {
@@ -61,6 +71,12 @@ const OnboardingPage = () => {
     return withoutPrefix.replace(/\/+$/g, "");
   };
 
+  const isSubredditAdded = (value: string) => {
+    const normalized = normalizeSubreddit(value).toLowerCase();
+    if (!normalized) return false;
+    return subreddits.some((subreddit) => subreddit.toLowerCase() === normalized);
+  };
+
   const addSubreddit = async (value: string) => {
     const normalized = normalizeSubreddit(value);
     if (!normalized) return;
@@ -95,11 +111,12 @@ const OnboardingPage = () => {
       });
 
       if (response.status === 409) {
+        setSubreddits((prev) => [...prev, normalized]);
+        setSubredditInput("");
         toast({
           title: "Subreddit already exists for this project.",
-          variant: "destructive",
+          description: "Added to onboarding list.",
         });
-        setSubredditInput("");
         return;
       }
 
@@ -118,6 +135,14 @@ const OnboardingPage = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const removeSubreddit = (value: string) => {
+    const normalizedToRemove = normalizeSubreddit(value).toLowerCase();
+    if (!normalizedToRemove) return;
+    setSubreddits((prev) =>
+      prev.filter((subreddit) => subreddit.toLowerCase() !== normalizedToRemove),
+    );
   };
 
   const buildProjectUpdatePayload = () => ({
@@ -485,9 +510,19 @@ const OnboardingPage = () => {
                       {subreddits.map((subreddit) => (
                         <span
                           key={subreddit}
-                          className="rounded-full border border-border px-3 py-1 text-sm text-foreground"
+                          className="inline-flex items-center gap-2 rounded-full border border-border pl-3 pr-1 py-1 text-sm text-foreground"
                         >
                           r/{subreddit}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 rounded-full"
+                            onClick={() => removeSubreddit(subreddit)}
+                            aria-label={`Remove r/${subreddit}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
                         </span>
                       ))}
                     </div>
@@ -499,23 +534,35 @@ const OnboardingPage = () => {
                     Suggested subreddits
                   </h2>
                   <div className="space-y-2">
-                    {suggestedSubreddits.map((subreddit) => (
-                      <div
-                        key={subreddit}
-                        className="flex items-center justify-between rounded-lg border border-border pl-4 pr-1 py-1"
-                      >
-                        <span className="text-sm font-medium text-foreground">
-                          r/{subreddit}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => addSubreddit(subreddit)}
+                    {suggestedSubreddits.map((subreddit) => {
+                      const isAdded = isSubredditAdded(subreddit);
+                      return (
+                        <div
+                          key={subreddit}
+                          className={cn(
+                            "flex items-center justify-between rounded-lg border border-border pl-4 pr-1 py-1",
+                            isAdded && "bg-muted/30",
+                          )}
                         >
-                          Add
-                        </Button>
-                      </div>
-                    ))}
+                          <span
+                            className={cn(
+                              "text-sm font-medium text-foreground",
+                              isAdded && "text-muted-foreground line-through",
+                            )}
+                          >
+                            r/{subreddit}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => addSubreddit(subreddit)}
+                            disabled={isAdded}
+                          >
+                            {isAdded ? "Added" : "Add"}
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </Card>
