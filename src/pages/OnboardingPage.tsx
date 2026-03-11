@@ -421,7 +421,7 @@ const OnboardingPage = () => {
                       id="websiteUrl"
                       className={cn(
                         trimmedWebsiteUrl && !isWebsiteUrlValid
-                          ? "border-red-500 focus-visible:ring-red-500"
+                          ? "border-red-500 focus-visible:border-red-500"
                           : null,
                       )}
                       placeholder="autopreply.ing"
