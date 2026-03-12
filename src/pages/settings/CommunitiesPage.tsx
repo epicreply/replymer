@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { Platform } from '@/data/mockLeads';
 import { getPlatformLabel } from '@/components/leads/PlatformBadge';
 import { useAuth } from '@/context/AuthContext';
+import { cn } from '@/lib/utils';
 
 const suggestedCommunities = [
   { name: 'r/smallbusiness', platform: 'reddit' as Platform },
@@ -19,6 +20,7 @@ const suggestedCommunities = [
   { name: 'Tech Startups', platform: 'linkedin' as Platform },
 ];
 const platforms: Platform[] = ['reddit', 'twitter', 'linkedin'];
+const comingSoonPlatforms: Platform[] = ['twitter', 'linkedin'];
 
 interface PlatformConnection {
   platform: Platform;
@@ -51,6 +53,7 @@ export default function CommunitiesPage() {
   const [isPlatformsLoading, setIsPlatformsLoading] = useState(true);
   const [isCommunitiesLoading, setIsCommunitiesLoading] = useState(true);
   const [isKeywordsLoading, setIsKeywordsLoading] = useState(true);
+  const isComingSoonPlatform = (platform: Platform) => comingSoonPlatforms.includes(platform);
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
@@ -307,6 +310,7 @@ export default function CommunitiesPage() {
   };
 
   const handlePlatformToggle = async (platform: Platform, checked: boolean) => {
+    if (isComingSoonPlatform(platform)) return;
     if (!accessToken || !selectedProjectId) return;
 
     try {
@@ -423,13 +427,30 @@ export default function CommunitiesPage() {
                   <div key={platform} className="flex items-center gap-2">
                     <RadioToggle
                       id={`platform-${platform}`}
+                      disabled={isComingSoonPlatform(platform)}
                       checked={enabledPlatforms.includes(platform)}
                       onCheckedChange={(checked) =>
                         handlePlatformToggle(platform, checked as boolean)
                       }
                     />
-                    <Label htmlFor={`platform-${platform}`} className="cursor-pointer">
+                    <Label
+                      htmlFor={`platform-${platform}`}
+                      className={cn(
+                        'flex items-center gap-2',
+                        isComingSoonPlatform(platform)
+                          ? 'cursor-not-allowed text-muted-foreground'
+                          : 'cursor-pointer'
+                      )}
+                    >
                       {getPlatformLabel(platform)}
+                      {isComingSoonPlatform(platform) && (
+                        <Badge
+                          variant="outline"
+                          className="border-border px-2 py-0 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+                        >
+                          Soon
+                        </Badge>
+                      )}
                     </Label>
                   </div>
                 ))}
@@ -486,8 +507,8 @@ export default function CommunitiesPage() {
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                   >
                     {platforms.map((p) => (
-                      <option key={p} value={p}>
-                        {getPlatformLabel(p)}
+                      <option key={p} value={p} disabled={isComingSoonPlatform(p)}>
+                        {getPlatformLabel(p)}{isComingSoonPlatform(p) ? ' (Soon)' : ''}
                       </option>
                     ))}
                   </select>
