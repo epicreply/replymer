@@ -387,7 +387,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="flex items-center gap-3">
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="h-9 w-32">
                 <SelectValue placeholder="Date range" />
               </SelectTrigger>
               <SelectContent>
@@ -397,7 +397,7 @@ export default function AnalyticsPage() {
               </SelectContent>
             </Select>
             <Select value={platform} onValueChange={setPlatform}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="h-9 w-36">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Platform" />
               </SelectTrigger>
