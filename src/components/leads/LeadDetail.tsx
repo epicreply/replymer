@@ -127,8 +127,8 @@ export function LeadDetail() {
   };
 
   return (
-    <ScrollArea className="h-full">
-      <div className="md:p-4 space-y-4 relative">
+    <ScrollArea className="h-full w-full">
+      <div className="relative w-full min-w-0 max-w-full space-y-4 overflow-x-hidden md:p-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -200,12 +200,12 @@ export function LeadDetail() {
         <Separator />
 
         {reasoningText && (
-          <Card className="overflow-hidden">
+          <Card className="w-full max-w-full overflow-hidden">
             <Collapsible open={isReasoningOpen} onOpenChange={setIsReasoningOpen}>
               <CollapsibleTrigger asChild>
                 <button
                   type="button"
-                  className="flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden px-6 py-4 text-left"
+                  className="flex w-full min-w-0 max-w-full items-center justify-between gap-2 overflow-hidden px-6 py-4 text-left"
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-foreground">
                     <Sparkles className="h-4 w-4 shrink-0 text-primary" />
@@ -220,12 +220,12 @@ export function LeadDetail() {
               </CollapsibleTrigger>
               {!isReasoningOpen && (
                 <CardContent className="min-w-0 overflow-hidden pt-0">
-                  <p className="truncate break-words text-sm text-foreground/80">{reasoningText}</p>
+                  <p className="max-w-full truncate break-all text-sm text-foreground/80">{reasoningText}</p>
                 </CardContent>
               )}
               <CollapsibleContent>
                 <CardContent className="min-w-0 overflow-x-hidden pt-0">
-                  <p className="break-words whitespace-pre-wrap text-sm text-foreground/80">{reasoningText}</p>
+                  <p className="max-w-full break-all whitespace-pre-wrap text-sm text-foreground/80">{reasoningText}</p>
                 </CardContent>
               </CollapsibleContent>
             </Collapsible>
