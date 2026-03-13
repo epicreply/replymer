@@ -630,3 +630,42 @@ export const restoreLead = async ({
 
   return response.json();
 };
+
+export interface RewriteSuggestionResponse {
+  lead_id: string;
+  type: 'comment' | 'dm';
+  content: string;
+}
+
+export const rewriteLeadSuggestion = async ({
+  accessToken,
+  projectId,
+  leadId,
+  type,
+}: {
+  accessToken: string;
+  projectId: string;
+  leadId: string;
+  type: 'comment' | 'dm';
+}): Promise<RewriteSuggestionResponse> => {
+  const url = new URL(`/v1.0/projects/leads/${leadId}/rewrite`, API_BASE_URL);
+
+  const response = await fetch(url.toString(), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ type }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    throw new Error(
+      (errorBody as { detail?: string } | null)?.detail ?? 'Failed to rewrite suggestion'
+    );
+  }
+
+  return (await response.json()) as RewriteSuggestionResponse;
+};

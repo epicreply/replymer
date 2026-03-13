@@ -26,6 +26,7 @@ import {
   InboxCounts,
   markLeadRead,
   restoreLead as restoreLeadApi,
+  rewriteLeadSuggestion,
   updateLeadStatus as updateLeadStatusApi,
 } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
@@ -51,6 +52,7 @@ interface LeadsContextType {
   updateLeadStatus: (leadId: string, status: LeadStatus) => void;
   restoreLead: (leadId: string) => Promise<void>;
   markLeadRead: (leadId: string) => Promise<void>;
+  rewriteSuggestion: (leadId: string, type: 'comment' | 'dm') => Promise<void>;
 
   // Filters
   filters: LeadsFilters;
@@ -375,6 +377,33 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     [accessToken, selectedProjectId, leads, selectedLead, updateLeadStatus, refreshInboxCounts]
   );
 
+  const rewriteSuggestionHandler = useCallback(
+    async (leadId: string, type: 'comment' | 'dm') => {
+      if (!accessToken || !selectedProjectId) {
+        throw new Error('Missing authentication or project selection.');
+      }
+
+      const result = await rewriteLeadSuggestion({
+        accessToken,
+        projectId: selectedProjectId,
+        leadId,
+        type,
+      });
+
+      const fieldKey = type === 'comment' ? 'suggestedComment' : 'suggestedDM';
+
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId ? { ...lead, [fieldKey]: result.content } : lead
+        )
+      );
+      setSelectedLead((prev) =>
+        prev && prev.id === leadId ? { ...prev, [fieldKey]: result.content } : prev
+      );
+    },
+    [accessToken, selectedProjectId]
+  );
+
   // Add community
   const addCommunity = useCallback(
     (community: Omit<Community, 'id' | 'leadCount'>) => {
@@ -599,6 +628,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     updateLeadStatus,
     restoreLead,
     markLeadRead: markLeadReadHandler,
+    rewriteSuggestion: rewriteSuggestionHandler,
     filters,
     setFilters,
     filteredLeads,

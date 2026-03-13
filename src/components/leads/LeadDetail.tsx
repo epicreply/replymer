@@ -20,10 +20,10 @@ import { useAuth } from '@/context/AuthContext';
 import { PlatformBadge } from './PlatformBadge';
 import { RelevancyBadge } from './RelevancyBadge';
 import { toast } from '@/hooks/use-toast';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 export function LeadDetail() {
-  const { selectedLead, setSelectedLead, setLeadStatusRemote, incrementUsage } = useLeads();
+  const { selectedLead, setSelectedLead, setLeadStatusRemote, incrementUsage, rewriteSuggestion } = useLeads();
   const { accessToken, user } = useAuth();
 
   const selectedProjectId = useMemo(
@@ -104,11 +104,34 @@ export function LeadDetail() {
     }
   };
 
-  const handleRewrite = () => {
+  const [isRewritingComment, setIsRewritingComment] = useState(false);
+  const [isRewritingDM, setIsRewritingDM] = useState(false);
+
+  const handleRewrite = async (type: 'comment' | 'dm') => {
+    if (!selectedLead) return;
+
+    const setLoading = type === 'comment' ? setIsRewritingComment : setIsRewritingDM;
+    setLoading(true);
     toast({
       title: 'Regenerating...',
-      description: 'AI is generating a new response.',
+      description: `AI is generating a new ${type === 'comment' ? 'comment' : 'DM'}.`,
     });
+
+    try {
+      await rewriteSuggestion(selectedLead.id, type);
+      toast({
+        title: 'Rewrite complete',
+        description: `New ${type === 'comment' ? 'comment' : 'DM'} generated successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Rewrite failed',
+        description: error instanceof Error ? error.message : 'An error occurred while rewriting.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditPrompt = () => {
@@ -218,9 +241,9 @@ export function LeadDetail() {
               {selectedLead.suggestedComment}
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={handleRewrite}>
-                <RefreshCw className="hidden md:inline-block h-3 w-3 md:mr-1" />
-                Rewrite
+              <Button variant="outline" size="sm" onClick={() => handleRewrite('comment')} disabled={isRewritingComment}>
+                <RefreshCw className={`hidden md:inline-block h-3 w-3 md:mr-1 ${isRewritingComment ? 'animate-spin' : ''}`} />
+                {isRewritingComment ? 'Rewriting…' : 'Rewrite'}
               </Button>
               <Button variant="outline" size="sm" onClick={handleEditPrompt}>
                 <Edit3 className="hidden md:inline-block h-3 w-3 md:mr-1" />
@@ -251,9 +274,9 @@ export function LeadDetail() {
               {selectedLead.suggestedDM}
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={handleRewrite}>
-                <RefreshCw className="hidden md:inline-block h-3 w-3 md:mr-1" />
-                Rewrite
+              <Button variant="outline" size="sm" onClick={() => handleRewrite('dm')} disabled={isRewritingDM}>
+                <RefreshCw className={`hidden md:inline-block h-3 w-3 md:mr-1 ${isRewritingDM ? 'animate-spin' : ''}`} />
+                {isRewritingDM ? 'Rewriting…' : 'Rewrite'}
               </Button>
               <Button variant="outline" size="sm" onClick={handleEditPrompt}>
                 <Edit3 className="hidden md:inline-block h-3 w-3 md:mr-1" />
