@@ -162,7 +162,7 @@ export function MainSidebar({
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="w-full justify-between h-10 px-3"
+              className="h-10 w-full justify-between px-3 focus-visible:ring-0 focus-visible:ring-offset-0"
             >
               <span className="truncate font-medium">
                 {activeProject?.name || "My Product"}
