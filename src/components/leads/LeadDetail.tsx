@@ -54,6 +54,45 @@ export function LeadDetail() {
     });
   };
 
+  const getRedditUsername = (handle: string) => {
+    return handle
+      .trim()
+      .replace(/^\/?u\//i, '')
+      .replace(/^@/, '');
+  };
+
+  const handleCopyAndOpenDM = () => {
+    const message = selectedLead.suggestedDM;
+    navigator.clipboard.writeText(message);
+
+    const redditUsername =
+      selectedLead.platform === 'reddit'
+        ? getRedditUsername(selectedLead.authorHandle || selectedLead.author || '')
+        : '';
+
+    if (redditUsername) {
+      const params = new URLSearchParams({
+        to: redditUsername,
+        subject: 'Quick question',
+        message,
+      });
+      window.open(`https://www.reddit.com/message/compose/?${params.toString()}`, '_blank');
+      incrementUsage();
+      toast({
+        title: 'DM copied!',
+        description: 'Opening Reddit DM composer in a new tab.',
+      });
+      return;
+    }
+
+    window.open(selectedLead.url, '_blank');
+    incrementUsage();
+    toast({
+      title: 'DM copied!',
+      description: 'Opening the original post in a new tab.',
+    });
+  };
+
   const handleMarkComplete = async () => {
     if (!accessToken || !selectedProjectId) {
       toast({
@@ -285,10 +324,10 @@ export function LeadDetail() {
               <Button
                 variant="default"
                 size="sm"
-                onClick={() => handleCopyAndOpen(selectedLead.suggestedDM, 'dm')}
+                onClick={handleCopyAndOpenDM}
               >
                 <Copy className="h-3 w-3 mr-1" />
-                Copy & Open DMs
+                {selectedLead.platform === 'reddit' ? 'Open Reddit DM' : 'Copy & Open DMs'}
               </Button>
             </div>
           </CardContent>
