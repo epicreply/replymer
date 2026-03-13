@@ -200,32 +200,32 @@ export function LeadDetail() {
         <Separator />
 
         {reasoningText && (
-          <Card>
+          <Card className="overflow-hidden">
             <Collapsible open={isReasoningOpen} onOpenChange={setIsReasoningOpen}>
               <CollapsibleTrigger asChild>
                 <button
                   type="button"
-                  className="flex w-full items-center justify-between gap-2 px-6 py-4 text-left"
+                  className="flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden px-6 py-4 text-left"
                 >
-                  <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    Why AI marked this as a lead
+                  <span className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-foreground">
+                    <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="truncate">Why AI marked this as a lead</span>
                   </span>
                   {isReasoningOpen ? (
-                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
                   ) : (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                   )}
                 </button>
               </CollapsibleTrigger>
               {!isReasoningOpen && (
-                <CardContent className="pt-0">
-                  <p className="truncate text-sm text-foreground/80">{reasoningText}</p>
+                <CardContent className="min-w-0 overflow-hidden pt-0">
+                  <p className="truncate break-words text-sm text-foreground/80">{reasoningText}</p>
                 </CardContent>
               )}
               <CollapsibleContent>
-                <CardContent className="pt-0">
-                  <p className="text-sm text-foreground/80 whitespace-pre-wrap">{reasoningText}</p>
+                <CardContent className="min-w-0 overflow-x-hidden pt-0">
+                  <p className="break-words whitespace-pre-wrap text-sm text-foreground/80">{reasoningText}</p>
                 </CardContent>
               </CollapsibleContent>
             </Collapsible>
