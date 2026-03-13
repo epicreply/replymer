@@ -62,6 +62,7 @@ interface LeadsApiLead {
   status: LeadStatus;
   post_created_at: string;
   keywords: string[];
+  reasoning?: string | null;
   suggested_dm?: string;
   suggested_comment?: string;
 }
@@ -88,6 +89,7 @@ const mapApiLead = (lead: LeadsApiLead): Lead => {
     status: lead.status,
     createdAt: new Date(lead.post_created_at),
     keywords: lead.keywords ?? [],
+    reasoning: lead.reasoning ?? '',
     suggestedComment: lead.suggested_comment ?? '',
     suggestedDM: lead.suggested_dm ?? '',
   };

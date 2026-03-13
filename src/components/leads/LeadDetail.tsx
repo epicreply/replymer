@@ -1,24 +1,43 @@
 import { formatDistanceToNow } from 'date-fns';
-import { X, ThumbsDown, Check, Copy, ExternalLink, RefreshCw, Edit3, MessageSquare, Mail } from 'lucide-react';
+import {
+  X,
+  ThumbsDown,
+  Check,
+  Copy,
+  ExternalLink,
+  RefreshCw,
+  Edit3,
+  MessageSquare,
+  Mail,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useLeads } from '@/context/LeadsContext';
 import { useAuth } from '@/context/AuthContext';
 import { PlatformBadge } from './PlatformBadge';
 import { RelevancyBadge } from './RelevancyBadge';
 import { toast } from '@/hooks/use-toast';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export function LeadDetail() {
   const { selectedLead, setSelectedLead, setLeadStatusRemote, incrementUsage } = useLeads();
   const { accessToken, user } = useAuth();
+  const [isReasoningOpen, setIsReasoningOpen] = useState(false);
 
   const selectedProjectId = useMemo(
     () => user?.projects?.find((project) => project.is_selected)?.id ?? user?.default_project_id ?? null,
     [user]
   );
+
+  useEffect(() => {
+    setIsReasoningOpen(false);
+  }, [selectedLead?.id]);
 
   if (!selectedLead) {
     return (
@@ -30,6 +49,8 @@ export function LeadDetail() {
       </div>
     );
   }
+
+  const reasoningText = selectedLead.reasoning?.trim() ?? '';
 
   const handleCopyAndOpen = (text: string, type: 'comment' | 'dm') => {
     navigator.clipboard.writeText(text);
@@ -177,6 +198,39 @@ export function LeadDetail() {
         </Card>
 
         <Separator />
+
+        {reasoningText && (
+          <Card>
+            <Collapsible open={isReasoningOpen} onOpenChange={setIsReasoningOpen}>
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between gap-2 px-6 py-4 text-left"
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Why AI marked this as a lead
+                  </span>
+                  {isReasoningOpen ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+              </CollapsibleTrigger>
+              {!isReasoningOpen && (
+                <CardContent className="pt-0">
+                  <p className="truncate text-sm text-foreground/80">{reasoningText}</p>
+                </CardContent>
+              )}
+              <CollapsibleContent>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-foreground/80 whitespace-pre-wrap">{reasoningText}</p>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
 
         {/* Suggested Comment */}
         <Card>

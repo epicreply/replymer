@@ -14,6 +14,7 @@ export interface Lead {
   status: LeadStatus;
   createdAt: Date;
   keywords: string[];
+  reasoning?: string;
   suggestedComment: string;
   suggestedDM: string;
   reply?: string;
