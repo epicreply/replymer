@@ -340,7 +340,7 @@ export default function InboxPage() {
   
           {/* Right Panel - Lead Detail */}
           {selectedLead && (
-            <aside className="hidden w-[400px] min-w-0 overflow-hidden md:block lg:w-[450px]">
+            <aside className="hidden w-[600px] min-w-0 overflow-hidden md:block lg:w-[800px]">
               <LeadDetail />
             </aside>
           )}
