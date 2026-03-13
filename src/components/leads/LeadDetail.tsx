@@ -10,26 +10,34 @@ import {
   MessageSquare,
   Mail,
   Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useLeads } from '@/context/LeadsContext';
 import { useAuth } from '@/context/AuthContext';
 import { PlatformBadge } from './PlatformBadge';
 import { RelevancyBadge } from './RelevancyBadge';
 import { toast } from '@/hooks/use-toast';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export function LeadDetail() {
   const { selectedLead, setSelectedLead, setLeadStatusRemote, incrementUsage } = useLeads();
   const { accessToken, user } = useAuth();
+  const [isReasoningOpen, setIsReasoningOpen] = useState(false);
 
   const selectedProjectId = useMemo(
     () => user?.projects?.find((project) => project.is_selected)?.id ?? user?.default_project_id ?? null,
     [user]
   );
+
+  useEffect(() => {
+    setIsReasoningOpen(false);
+  }, [selectedLead?.id]);
 
   if (!selectedLead) {
     return (
@@ -193,15 +201,34 @@ export function LeadDetail() {
 
         {reasoningText && (
           <Card className="w-full max-w-full overflow-hidden">
-            <div className="flex w-full min-w-0 max-w-full items-center gap-2 overflow-hidden px-6 py-4 text-left">
-              <span className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-foreground">
-                <Sparkles className="h-4 w-4 shrink-0 text-primary" />
-                <span className="truncate">Why AI marked this as a lead</span>
-              </span>
-            </div>
-            <CardContent className="min-w-0 overflow-hidden pt-0">
-              <p className="max-w-full truncate break-all text-sm text-foreground/80">{reasoningText}</p>
-            </CardContent>
+            <Collapsible open={isReasoningOpen} onOpenChange={setIsReasoningOpen}>
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full min-w-0 max-w-full items-center justify-between gap-2 overflow-hidden px-6 py-4 text-left"
+                >
+                  <span className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-foreground">
+                    <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="truncate">Why AI marked this as a lead</span>
+                  </span>
+                  {isReasoningOpen ? (
+                    <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
+                </button>
+              </CollapsibleTrigger>
+              {!isReasoningOpen && (
+                <CardContent className="min-w-0 overflow-hidden pt-0">
+                  <p className="max-w-full truncate break-all text-sm text-foreground/80">{reasoningText}</p>
+                </CardContent>
+              )}
+              <CollapsibleContent>
+                <CardContent className="min-w-0 overflow-x-hidden pt-0">
+                  <p className="max-w-full break-all whitespace-pre-wrap text-sm text-foreground/80">{reasoningText}</p>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
         )}
 
