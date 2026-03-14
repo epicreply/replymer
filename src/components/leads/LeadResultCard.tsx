@@ -47,9 +47,9 @@ export function LeadResultCard({
             </h4>
             <p className="text-sm text-muted-foreground line-clamp-2">{lead.content}</p>
             {variant === 'completed' && lead.reply && (
-              <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
+              <div className="min-w-0 overflow-hidden rounded-lg border border-primary/10 bg-primary/5 p-3">
                 <p className="text-xs text-muted-foreground mb-1">Your reply:</p>
-                <p className="text-sm text-foreground">{lead.reply}</p>
+                <p className="break-words text-sm text-foreground">{lead.reply}</p>
               </div>
             )}
             <div className="mt-3 flex items-center justify-between gap-3 sm:hidden">
