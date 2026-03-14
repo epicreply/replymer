@@ -39,6 +39,7 @@ export function MemberList({
 }: MemberListProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const memberTitle = `${members.length} ${members.length === 1 ? "Member" : "Members"}`;
   const canInviteByRole = ["owner", "admin"].includes(currentUserRole.toLowerCase());
   const hasInviteCapacity = members.length < TEAM_MEMBER_LIMIT;
   const canInvite = canInviteByRole && hasInviteCapacity;
@@ -53,7 +54,7 @@ export function MemberList({
     <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-base font-medium text-foreground">People</h2>
+        <h2 className="text-base font-medium text-foreground">{memberTitle}</h2>
         {canInvite && (
           <Button
             onClick={() => setIsDialogOpen(true)}
@@ -76,14 +77,6 @@ export function MemberList({
 
       {/* Members Card */}
       <div className="admin-card">
-        {/* Member Count Header */}
-        <div className="admin-card-section flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {members.length} {members.length === 1 ? "Member" : "Members"}
-          </span>
-          <span className="text-sm text-muted-foreground">({members.length})</span>
-        </div>
-
         {/* Member Items */}
         {members.map((member) => (
           <div

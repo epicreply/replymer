@@ -147,9 +147,6 @@ function TeamPageSkeleton() {
           <Skeleton className="h-10 w-32 rounded-full" />
         </div>
         <div className="admin-card">
-          <div className="admin-card-section">
-            <Skeleton className="h-4 w-20" />
-          </div>
           {[1, 2, 3].map((i) => (
             <div key={i} className="admin-card-section flex items-center gap-3">
               <Skeleton className="h-9 w-9 rounded-full" />
