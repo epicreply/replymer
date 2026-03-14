@@ -151,10 +151,10 @@ export default function InboxPage() {
   }, [hasNextPage, isLoading, isLoadingMore, loadMoreLeads]);
 
   return (
-    <div className="mx-auto px-4">
-      <div className="h-[calc(100vh-120px)] flex flex-col -mx-4 md:-mx-8 -my-6 md:-my-8">
+    <div className="mx-auto">
+      <div className="h-[calc(100vh-120px)] flex flex-col -my-6 md:-my-8">
         {/* Header */}
-        <div className="px-3 py-4">
+        <div className="px-4 py-4 md:px-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="hidden md:block">
               <h1 className="text-xl font-semibold text-foreground">Leads</h1>
