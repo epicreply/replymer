@@ -280,7 +280,12 @@ export default function MainLayout() {
 
           {/* Page Content */}
           <div className="flex flex-1 flex-col overflow-auto">
-            <div className="flex-1 px-4 py-6 md:px-8 md:py-8">
+            <div
+              className={cn(
+                "flex-1 py-6 md:px-8 md:py-8",
+                location.pathname.startsWith("/inbox") ? "px-0" : "px-4",
+              )}
+            >
               <Outlet context={{ refreshNotificationsCount: fetchNotificationCount }} />
             </div>
           </div>
