@@ -262,7 +262,7 @@ export function LeadDetail() {
               </span>
             </div>
             <CardContent className="min-w-0 overflow-x-hidden pt-0">
-              <p className="max-w-full break-all whitespace-pre-wrap text-sm text-foreground/80">{reasoningText}</p>
+              <p className="max-w-full whitespace-pre-wrap text-sm text-foreground/80">{reasoningText}</p>
             </CardContent>
           </Card>
         )}
