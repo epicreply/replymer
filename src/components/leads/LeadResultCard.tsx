@@ -45,7 +45,9 @@ export function LeadResultCard({
             <h4 className="font-medium text-foreground mb-2 line-clamp-1">
               {lead.title}
             </h4>
-            <p className="text-sm text-muted-foreground line-clamp-2">{lead.content}</p>
+            <p className="text-sm text-muted-foreground line-clamp-2 [overflow-wrap:anywhere]">
+              {lead.content}
+            </p>
             {variant === 'completed' && lead.reply && (
               <div className="min-w-0 overflow-hidden rounded-lg border border-primary/10 bg-primary/5 p-3">
                 <p className="text-xs text-muted-foreground mb-1">Your reply:</p>
