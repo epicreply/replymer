@@ -69,7 +69,9 @@ export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
             <span aria-hidden="true">•</span>
             <span>{formatDistanceToNow(lead.repliedAt ?? lead.createdAt, { addSuffix: true })}</span>
             {isUnread && (
-              <span className="inline-flex w-2 h-2 rounded-full bg-primary shrink-0" />
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                New
+              </span>
             )}
           </div>
 
