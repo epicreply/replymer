@@ -71,17 +71,17 @@ export default function BillingPage() {
               return (
                 <Card
                   key={plan.key}
-                  className={plan.isPopular ? "border-primary shadow-md" : ""}
+                  className={plan.isPopular ? "border-[#ff5f3a] shadow-md" : ""}
                 >
                   {plan.isPopular && (
-                    <div className="rounded-t-lg bg-primary py-1 text-center text-xs font-medium text-primary-foreground">
-                      Most Popular
+                    <div className="rounded-t-lg bg-[#ff5f3a] py-1 text-center text-xs font-medium text-white">
+                      Most popular
                     </div>
                   )}
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-lg">{plan.name}</CardTitle>
+                      <Zap className="h-5 w-5 text-[#ff5f3a]" />
+                      <CardTitle className="text-lg uppercase tracking-wider">{plan.name}</CardTitle>
                     </div>
                     <CardDescription>{plan.description}</CardDescription>
                     <div className="pt-2">
@@ -93,13 +93,13 @@ export default function BillingPage() {
                     <ul className="space-y-2">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-center gap-2 text-sm">
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="h-4 w-4 text-emerald-500" />
                           {feature}
                         </li>
                       ))}
                     </ul>
                     <Button
-                      className="w-full"
+                      className={plan.isPopular ? "w-full bg-[#ff5f3a] text-white hover:bg-[#ff5630]" : "w-full"}
                       variant={isCurrentPlan ? "outline" : "default"}
                       disabled={isCurrentPlan}
                       onClick={() => handleUpgrade(plan.name)}

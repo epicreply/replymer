@@ -18,8 +18,7 @@ export const WEBSITE_PRICING_PLANS: PricingPlan[] = [
     periodLabel: "/mo",
     description: "For individuals and side projects getting started.",
     features: [
-      "100 leads per day",
-      "Unlimited subreddits",
+      "50 leads per day",
       "AI reply generation",
       "Reddit & X support",
     ],
@@ -33,6 +32,7 @@ export const WEBSITE_PRICING_PLANS: PricingPlan[] = [
     features: [
       "Unlimited leads",
       "Reddit, X & LinkedIn",
+      "Track unlimited subreddits",
       "Custom brand voice",
       "API + Webhooks access",
       "MCP / agent integrations",

@@ -580,17 +580,19 @@ const OnboardingPage = () => {
                   <Card
                     key={plan.key}
                     className={cn(
-                      "relative p-6 space-y-4 hover:shadow-lg transition-shadow",
-                      plan.isPopular && "border-primary/50",
+                      "relative p-6 space-y-4 rounded-[2.5rem] border border-border bg-white/80 hover:shadow-lg transition-shadow",
+                      plan.isPopular && "border-[#ff5f3a]",
                     )}
                   >
                     {plan.isPopular && (
-                      <span className="absolute -top-3 right-6 rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground">
+                      <span className="absolute -top-3 right-6 rounded-full bg-[#ff5f3a] px-4 py-1 text-xs font-semibold text-white">
                         Most popular
                       </span>
                     )}
                     <div>
-                      <h3 className="text-lg font-medium text-muted-foreground">{plan.name}</h3>
+                      <h3 className="text-lg font-semibold uppercase tracking-wider text-muted-foreground">
+                        {plan.name}
+                      </h3>
                       <p className="text-3xl font-bold text-foreground">
                         ${plan.monthlyPrice}
                         <span className="text-muted-foreground">{plan.periodLabel}</span>
@@ -607,10 +609,12 @@ const OnboardingPage = () => {
                     </div>
                     <Button
                       className={cn(
-                        "w-full",
-                        plan.isPopular && "bg-cyan-500 hover:bg-cyan-600 text-white",
+                        "w-full rounded-full text-base font-semibold",
+                        plan.isPopular
+                          ? "bg-[#ff5f3a] text-white hover:bg-[#ff5630]"
+                          : "bg-transparent text-foreground hover:bg-transparent",
                       )}
-                      variant={plan.isPopular ? "default" : "outline"}
+                      variant="default"
                     >
                       Start free trial
                     </Button>
