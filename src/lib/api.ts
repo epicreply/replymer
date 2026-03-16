@@ -689,6 +689,7 @@ export interface UsageSnapshot {
   replies_limit: number;
   replies_remaining: number;
   replies_usage_percent: number;
+  replies_unlimited: boolean;
   reset_at: string | null;
 }
 
@@ -701,6 +702,7 @@ export interface AvailablePlan {
   description: string;
   features: string[];
   replies_limit: number | null;
+  replies_unlimited: boolean;
   is_current: boolean;
 }
 
