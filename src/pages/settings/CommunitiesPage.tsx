@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,13 @@ interface MonitoredKeyword {
   keyword: string;
 }
 
+const BOUNCE_DURATION_MS = 800;
+
+const normalizeText = (value: string) => value.trim().toLowerCase();
+
+const buildCommunityBounceKey = (platform: Platform, name: string) =>
+  `${platform}:${normalizeText(name)}`;
+
 export default function CommunitiesPage() {
   const { accessToken, user } = useAuth();
   const selectedProjectId = useMemo(
@@ -53,7 +60,48 @@ export default function CommunitiesPage() {
   const [isPlatformsLoading, setIsPlatformsLoading] = useState(true);
   const [isCommunitiesLoading, setIsCommunitiesLoading] = useState(true);
   const [isKeywordsLoading, setIsKeywordsLoading] = useState(true);
+  const [activeCommunityBounceKey, setActiveCommunityBounceKey] = useState<string | null>(null);
+  const [activeKeywordBounceKey, setActiveKeywordBounceKey] = useState<string | null>(null);
+  const communityBounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keywordBounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isComingSoonPlatform = (platform: Platform) => comingSoonPlatforms.includes(platform);
+
+  const triggerCommunityBounce = (bounceKey: string) => {
+    if (communityBounceTimeoutRef.current) {
+      clearTimeout(communityBounceTimeoutRef.current);
+    }
+    setActiveCommunityBounceKey(null);
+    requestAnimationFrame(() => {
+      setActiveCommunityBounceKey(bounceKey);
+    });
+    communityBounceTimeoutRef.current = setTimeout(() => {
+      setActiveCommunityBounceKey((current) => (current === bounceKey ? null : current));
+    }, BOUNCE_DURATION_MS);
+  };
+
+  const triggerKeywordBounce = (bounceKey: string) => {
+    if (keywordBounceTimeoutRef.current) {
+      clearTimeout(keywordBounceTimeoutRef.current);
+    }
+    setActiveKeywordBounceKey(null);
+    requestAnimationFrame(() => {
+      setActiveKeywordBounceKey(bounceKey);
+    });
+    keywordBounceTimeoutRef.current = setTimeout(() => {
+      setActiveKeywordBounceKey((current) => (current === bounceKey ? null : current));
+    }, BOUNCE_DURATION_MS);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (communityBounceTimeoutRef.current) {
+        clearTimeout(communityBounceTimeoutRef.current);
+      }
+      if (keywordBounceTimeoutRef.current) {
+        clearTimeout(keywordBounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
@@ -162,7 +210,15 @@ export default function CommunitiesPage() {
   const handleAddCommunity = async (name: string, platform: Platform) => {
     const trimmedName = name.trim();
     if (!trimmedName || !accessToken || !selectedProjectId) return;
-    if (communities.some((community) => community.name === trimmedName)) {
+    const normalizedName = normalizeText(trimmedName);
+    const duplicateCommunity = communities.find(
+      (community) =>
+        community.platform === platform && normalizeText(community.name) === normalizedName
+    );
+    if (duplicateCommunity) {
+      triggerCommunityBounce(
+        buildCommunityBounceKey(duplicateCommunity.platform, duplicateCommunity.name)
+      );
       return;
     }
 
@@ -218,7 +274,14 @@ export default function CommunitiesPage() {
   const handleAddKeyword = async () => {
     const trimmedKeyword = newKeyword.trim();
     if (!trimmedKeyword || !accessToken || !selectedProjectId) return;
-    if (keywords.some((keyword) => keyword.keyword === trimmedKeyword)) return;
+    const normalizedKeyword = normalizeText(trimmedKeyword);
+    const duplicateKeyword = keywords.find(
+      (keyword) => normalizeText(keyword.keyword) === normalizedKeyword
+    );
+    if (duplicateKeyword) {
+      triggerKeywordBounce(normalizeText(duplicateKeyword.keyword));
+      return;
+    }
 
     try {
       const response = await fetch('https://internal-api.autoreply.ing/v1.0/keywords', {
@@ -533,7 +596,12 @@ export default function CommunitiesPage() {
                     <Badge
                       key={community.id}
                       variant="secondary"
-                      className="pl-3 pr-1 py-1.5 gap-2"
+                      className={cn(
+                        'pl-3 pr-1 py-1.5 gap-2 transition-colors',
+                        activeCommunityBounceKey ===
+                          buildCommunityBounceKey(community.platform, community.name) &&
+                          'animate-bounce bg-primary/15 ring-2 ring-primary/30'
+                      )}
                     >
                       <span>{community.name}</span>
                       <span className="text-muted-foreground text-xs">
@@ -559,7 +627,14 @@ export default function CommunitiesPage() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {suggestedCommunities
-                      .filter((s) => !communities.some((c) => c.name === s.name))
+                      .filter(
+                        (suggestion) =>
+                          !communities.some(
+                            (community) =>
+                              community.platform === suggestion.platform &&
+                              normalizeText(community.name) === normalizeText(suggestion.name)
+                          )
+                      )
                       .map((suggestion) => (
                         <Button
                           key={suggestion.name}
@@ -620,7 +695,11 @@ export default function CommunitiesPage() {
                     <Badge
                       key={keyword.id}
                       variant="secondary"
-                      className="pl-3 pr-1 py-1.5 gap-2"
+                      className={cn(
+                        'pl-3 pr-1 py-1.5 gap-2 transition-colors',
+                        activeKeywordBounceKey === normalizeText(keyword.keyword) &&
+                          'animate-bounce bg-primary/15 ring-2 ring-primary/30'
+                      )}
                     >
                       <span>{keyword.keyword}</span>
                       <Button
