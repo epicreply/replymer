@@ -71,7 +71,7 @@ export default function BillingPage() {
               return (
                 <Card
                   key={plan.key}
-                  className={plan.isPopular ? "border-[#ff5f3a] shadow-md" : ""}
+                  className={`h-full flex flex-col ${plan.isPopular ? "border-[#ff5f3a] shadow-md" : ""}`}
                 >
                   {plan.isPopular && (
                     <div className="rounded-t-lg bg-[#ff5f3a] py-1 text-center text-xs font-medium text-white">
@@ -89,7 +89,7 @@ export default function BillingPage() {
                       <span className="text-muted-foreground">{plan.periodLabel}</span>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="flex flex-1 flex-col space-y-4">
                     <ul className="space-y-2">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-center gap-2 text-sm">
@@ -99,7 +99,7 @@ export default function BillingPage() {
                       ))}
                     </ul>
                     <Button
-                      className={plan.isPopular ? "w-full bg-[#ff5f3a] text-white hover:bg-[#ff5630]" : "w-full"}
+                      className={plan.isPopular ? "mt-auto w-full bg-[#ff5f3a] text-white hover:bg-[#ff5630]" : "mt-auto w-full"}
                       variant={isCurrentPlan ? "outline" : "default"}
                       disabled={isCurrentPlan}
                       onClick={() => handleUpgrade(plan.name)}
