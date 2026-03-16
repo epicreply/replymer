@@ -43,6 +43,7 @@ export function LeadDetail() {
   }
 
   const reasoningText = selectedLead.reasoning?.trim() ?? '';
+  const isLeadCompleted = selectedLead.status === 'completed';
 
   const handleCopyAndOpen = (text: string, type: 'comment' | 'dm') => {
     navigator.clipboard.writeText(text);
@@ -94,6 +95,10 @@ export function LeadDetail() {
   };
 
   const handleMarkComplete = async () => {
+    if (isLeadCompleted) {
+      return;
+    }
+
     if (!accessToken || !selectedProjectId) {
       toast({
         title: 'Error',
@@ -198,10 +203,12 @@ export function LeadDetail() {
               <ThumbsDown className="h-4 w-4 md:mr-1" />
               <span className="hidden md:inline">Not Relevant</span>
             </Button>
-            <Button variant="default" size="sm" onClick={handleMarkComplete}>
-              <Check className="h-4 w-4 mr-1" />
-              Complete
-            </Button>
+            {!isLeadCompleted && (
+              <Button variant="default" size="sm" onClick={handleMarkComplete}>
+                <Check className="h-4 w-4 mr-1" />
+                Complete
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
