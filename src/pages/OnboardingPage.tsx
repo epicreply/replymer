@@ -580,7 +580,7 @@ const OnboardingPage = () => {
                   <Card
                     key={plan.key}
                     className={cn(
-                      "relative p-6 space-y-4 rounded-[2.5rem] border border-border bg-white/80 hover:shadow-lg transition-shadow",
+                      "relative flex h-full flex-col gap-4 rounded-[2.5rem] border border-border bg-white/80 p-6 hover:shadow-lg transition-shadow",
                       plan.isPopular && "border-[#ff5f3a]",
                     )}
                   >
@@ -589,27 +589,29 @@ const OnboardingPage = () => {
                         Most popular
                       </span>
                     )}
-                    <div>
-                      <h3 className="text-lg font-semibold uppercase tracking-wider text-muted-foreground">
-                        {plan.name}
-                      </h3>
-                      <p className="text-3xl font-bold text-foreground">
-                        ${plan.monthlyPrice}
-                        <span className="text-muted-foreground">{plan.periodLabel}</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground">{plan.description}</p>
-                    </div>
-                    <div className="space-y-3">
-                      {plan.features.map((feature) => (
-                        <div key={feature} className="flex items-center gap-3">
-                          <Check className="w-5 h-5 text-emerald-500" />
-                          <span className="text-sm">{feature}</span>
-                        </div>
-                      ))}
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold uppercase tracking-wider text-muted-foreground">
+                          {plan.name}
+                        </h3>
+                        <p className="text-3xl font-bold text-foreground">
+                          ${plan.monthlyPrice}
+                          <span className="text-muted-foreground">{plan.periodLabel}</span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">{plan.description}</p>
+                      </div>
+                      <div className="space-y-3">
+                        {plan.features.map((feature) => (
+                          <div key={feature} className="flex items-center gap-3">
+                            <Check className="w-5 h-5 text-emerald-500" />
+                            <span className="text-sm">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <Button
                       className={cn(
-                        "w-full rounded-full text-base font-semibold",
+                        "mt-auto w-full rounded-full text-base font-semibold",
                         plan.isPopular
                           ? "bg-[#ff5f3a] text-white hover:bg-[#ff5630]"
                           : "bg-transparent text-foreground hover:bg-transparent",
