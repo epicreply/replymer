@@ -44,6 +44,7 @@ export function LeadDetail() {
 
   const reasoningText = selectedLead.reasoning?.trim() ?? '';
   const isLeadCompleted = selectedLead.status === 'completed';
+  const isLeadDiscarded = selectedLead.status === 'discarded';
 
   const handleCopyAndOpen = (text: string, type: 'comment' | 'dm') => {
     navigator.clipboard.writeText(text);
@@ -124,6 +125,10 @@ export function LeadDetail() {
   };
 
   const handleMarkNotRelevant = async () => {
+    if (isLeadDiscarded) {
+      return;
+    }
+
     if (!accessToken || !selectedProjectId) {
       toast({
         title: 'Error',
@@ -194,15 +199,17 @@ export function LeadDetail() {
             <RelevancyBadge score={selectedLead.relevancyScore} size="sm" />
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleMarkNotRelevant}
-              className="text-destructive hover:text-destructive"
-            >
-              <ThumbsDown className="h-4 w-4 md:mr-1" />
-              <span className="hidden md:inline">Not Relevant</span>
-            </Button>
+            {!isLeadDiscarded && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleMarkNotRelevant}
+                className="text-destructive hover:text-destructive"
+              >
+                <ThumbsDown className="h-4 w-4 md:mr-1" />
+                <span className="hidden md:inline">Not Relevant</span>
+              </Button>
+            )}
             {!isLeadCompleted && (
               <Button variant="default" size="sm" onClick={handleMarkComplete}>
                 <Check className="h-4 w-4 mr-1" />
