@@ -1,74 +1,26 @@
-import { CreditCard, Check, Zap, Building } from "lucide-react";
+import { CreditCard, Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLeads } from "@/context/LeadsContext";
 import { toast } from "@/hooks/use-toast";
-
-const plans = [
-  {
-    name: "Starter",
-    price: "$29",
-    period: "/month",
-    description: "For individuals just getting started",
-    features: [
-      "50 replies/month",
-      "2 platforms",
-      "Basic analytics",
-      "Email support",
-    ],
-    icon: Zap,
-    current: false,
-  },
-  {
-    name: "Pro",
-    price: "$79",
-    period: "/month",
-    description: "For growing teams and businesses",
-    features: [
-      "200 replies/month",
-      "All platforms",
-      "Advanced analytics",
-      "Priority support",
-      "Custom prompts",
-      "Team collaboration",
-    ],
-    icon: Zap,
-    current: true,
-    popular: true,
-  },
-  // {
-  //   name: "Enterprise",
-  //   price: "Custom",
-  //   period: "",
-  //   description: "For large organizations",
-  //   features: [
-  //     "Unlimited replies",
-  //     "All platforms",
-  //     "White-label options",
-  //     "Dedicated support",
-  //     "API access",
-  //     "Custom integrations",
-  //   ],
-  //   icon: Building,
-  //   current: false,
-  // },
-];
+import { WEBSITE_PRICING_PLANS, getPlanByName } from "@/constants/pricingPlans";
 
 const billingHistory = [
-  { date: "Jan 1, 2024", description: "Pro Plan - Monthly", amount: "$79.00", status: "Paid" },
-  { date: "Dec 1, 2023", description: "Pro Plan - Monthly", amount: "$79.00", status: "Paid" },
-  { date: "Nov 1, 2023", description: "Pro Plan - Monthly", amount: "$79.00", status: "Paid" },
+  { date: "Jan 1, 2024", description: "Professional Plan - Monthly", amount: "$49.00", status: "Paid" },
+  { date: "Dec 1, 2023", description: "Professional Plan - Monthly", amount: "$49.00", status: "Paid" },
+  { date: "Nov 1, 2023", description: "Professional Plan - Monthly", amount: "$49.00", status: "Paid" },
 ];
 
 export default function BillingPage() {
   const { usageQuota } = useLeads();
   const usagePercent = (usageQuota.used / usageQuota.limit) * 100;
+  const currentPlan = getPlanByName(usageQuota.plan);
 
   const handleUpgrade = (planName: string) => {
     toast({
-      title: `Upgrade to ${planName}`,
-      description: "This feature will be available soon.",
+      title: `Start ${planName} free trial`,
+      description: "Checkout is coming soon.",
     });
   };
 
@@ -81,8 +33,7 @@ export default function BillingPage() {
             Manage your subscription and billing information
           </p>
         </div>
-  
-        {/* Current Plan & Usage */}
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Current Plan</CardTitle>
@@ -90,12 +41,12 @@ export default function BillingPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold text-foreground">{usageQuota.plan}</p>
-                <p className="text-sm text-muted-foreground">$79/month</p>
+                <p className="text-2xl font-bold text-foreground">{currentPlan?.name}</p>
+                <p className="text-sm text-muted-foreground">${currentPlan?.monthlyPrice}{currentPlan?.periodLabel}</p>
               </div>
               <Button variant="outline">Manage Subscription</Button>
             </div>
-  
+
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Reply quota used</span>
@@ -110,56 +61,58 @@ export default function BillingPage() {
             </div>
           </CardContent>
         </Card>
-  
-        {/* Plan Comparison */}
+
         <div>
-          <h2 className="text-base font-medium text-foreground mb-4">Available Plans</h2>
+          <h2 className="mb-4 text-base font-medium text-foreground">Available Plans</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            {plans.map((plan) => (
-              <Card
-                key={plan.name}
-                className={plan.popular ? "border-primary shadow-md" : ""}
-              >
-                {plan.popular && (
-                  <div className="bg-primary text-primary-foreground text-xs font-medium py-1 text-center rounded-t-lg">
-                    Most Popular
-                  </div>
-                )}
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <plan.icon className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">{plan.name}</CardTitle>
-                  </div>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="pt-2">
-                    <span className="text-3xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-primary" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className="w-full"
-                    variant={plan.current ? "outline" : "default"}
-                    disabled={plan.current}
-                    onClick={() => handleUpgrade(plan.name)}
-                  >
-                    {plan.current ? "Current Plan" : "Upgrade"}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+            {WEBSITE_PRICING_PLANS.map((plan) => {
+              const isCurrentPlan = plan.name === currentPlan?.name;
+
+              return (
+                <Card
+                  key={plan.key}
+                  className={plan.isPopular ? "border-primary shadow-md" : ""}
+                >
+                  {plan.isPopular && (
+                    <div className="rounded-t-lg bg-primary py-1 text-center text-xs font-medium text-primary-foreground">
+                      Most Popular
+                    </div>
+                  )}
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">{plan.name}</CardTitle>
+                    </div>
+                    <CardDescription>{plan.description}</CardDescription>
+                    <div className="pt-2">
+                      <span className="text-3xl font-bold">${plan.monthlyPrice}</span>
+                      <span className="text-muted-foreground">{plan.periodLabel}</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-2">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-center gap-2 text-sm">
+                          <Check className="h-4 w-4 text-primary" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      className="w-full"
+                      variant={isCurrentPlan ? "outline" : "default"}
+                      disabled={isCurrentPlan}
+                      onClick={() => handleUpgrade(plan.name)}
+                    >
+                      {isCurrentPlan ? "Current Plan" : "Start free trial"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
-  
-        {/* Payment Method */}
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Payment Method</CardTitle>
@@ -177,8 +130,7 @@ export default function BillingPage() {
             </div>
           </CardContent>
         </Card>
-  
-        {/* Billing History */}
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Billing History</CardTitle>
@@ -188,7 +140,7 @@ export default function BillingPage() {
               {billingHistory.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                  className="flex items-center justify-between border-b border-border py-2 last:border-0"
                 >
                   <div>
                     <p className="text-sm font-medium">{item.description}</p>

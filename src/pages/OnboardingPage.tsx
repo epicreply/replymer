@@ -11,15 +11,12 @@ import { toast } from "@/hooks/use-toast";
 import {
   FileText,
   Shield,
-  Coins,
-  Users,
-  Sparkles,
-  Zap,
   Check,
   WandSparkles,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WEBSITE_PRICING_PLANS } from "@/constants/pricingPlans";
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
@@ -573,103 +570,52 @@ const OnboardingPage = () => {
           {currentStep === 4 && (
             <div className="space-y-6">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-foreground">
-                Choose your plan
+                Start free. Scale when it works.
               </h1>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-                {/* Starter Plan */}
-                <Card className="p-6 space-y-4 hover:shadow-lg transition-shadow">
-                  <div>
-                    <h3 className="text-lg font-medium text-muted-foreground">Starter</h3>
-                    <p className="text-3xl font-bold text-foreground">$19.99</p>
-                    <p className="text-sm text-muted-foreground">Get started with basics.</p>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Coins className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">100 credits per month</span>
+              <p className="text-center text-base text-muted-foreground sm:text-lg">
+                No credit card required. Cancel anytime.
+              </p>
+              <div className="grid grid-cols-1 gap-4 lg:gap-6 md:grid-cols-2">
+                {WEBSITE_PRICING_PLANS.map((plan) => (
+                  <Card
+                    key={plan.key}
+                    className={cn(
+                      "relative p-6 space-y-4 hover:shadow-lg transition-shadow",
+                      plan.isPopular && "border-primary/50",
+                    )}
+                  >
+                    {plan.isPopular && (
+                      <span className="absolute -top-3 right-6 rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground">
+                        Most popular
+                      </span>
+                    )}
+                    <div>
+                      <h3 className="text-lg font-medium text-muted-foreground">{plan.name}</h3>
+                      <p className="text-3xl font-bold text-foreground">
+                        ${plan.monthlyPrice}
+                        <span className="text-muted-foreground">{plan.periodLabel}</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground">{plan.description}</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Users className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">1 team member</span>
+                    <div className="space-y-3">
+                      {plan.features.map((feature) => (
+                        <div key={feature} className="flex items-center gap-3">
+                          <Check className="w-5 h-5 text-emerald-500" />
+                          <span className="text-sm">{feature}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Check className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">Basic features</span>
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full">
-                    Get Starter
-                  </Button>
-                  <a href="#" className="text-xs text-center block text-muted-foreground underline">
-                    Terms and conditions
-                  </a>
-                </Card>
-
-                {/* Pro Plan */}
-                <Card className="p-6 space-y-4 border-primary/50 hover:shadow-lg transition-shadow">
-                  <div>
-                    <h3 className="text-lg font-medium text-muted-foreground">Pro</h3>
-                    <p className="text-3xl font-bold text-foreground">$49.99</p>
-                    <p className="text-sm text-muted-foreground">Scale your business.</p>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Coins className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">500 credits per month</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Users className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">5 team members</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">Advanced features</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Zap className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">Priority support</span>
-                    </div>
-                  </div>
-                  <Button className="w-full bg-cyan-500 hover:bg-cyan-600 text-white">
-                    Get Pro
-                  </Button>
-                  <a href="#" className="text-xs text-center block text-muted-foreground underline">
-                    Terms and conditions
-                  </a>
-                </Card>
-
-                {/* Enterprise Plan */}
-                <Card className="p-6 space-y-4 hover:shadow-lg transition-shadow">
-                  <div>
-                    <h3 className="text-lg font-medium text-muted-foreground">Enterprise</h3>
-                    <p className="text-3xl font-bold text-foreground">Custom</p>
-                    <p className="text-sm text-muted-foreground">Custom solutions for teams.</p>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">Early access to features</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Users className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">Unlimited team members</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Shield className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">Dedicated support</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Check className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm">Custom integrations</span>
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full">
-                    Talk to our team
-                  </Button>
-                  <a href="#" className="text-xs text-center block text-muted-foreground underline">
-                    Terms and conditions
-                  </a>
-                </Card>
+                    <Button
+                      className={cn(
+                        "w-full",
+                        plan.isPopular && "bg-cyan-500 hover:bg-cyan-600 text-white",
+                      )}
+                      variant={plan.isPopular ? "default" : "outline"}
+                    >
+                      Start free trial
+                    </Button>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
