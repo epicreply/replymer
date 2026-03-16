@@ -2,7 +2,8 @@ import { CreditCard, Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useLeads } from "@/context/LeadsContext";
+import { Loader2 } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "@/hooks/use-toast";
 import { WEBSITE_PRICING_PLANS, getPlanByName } from "@/constants/pricingPlans";
 
@@ -13,9 +14,18 @@ const billingHistory = [
 ];
 
 export default function BillingPage() {
-  const { usageQuota } = useLeads();
-  const usagePercent = (usageQuota.used / usageQuota.limit) * 100;
-  const currentPlan = getPlanByName(usageQuota.plan);
+  const { data: subscription, isLoading } = useSubscription();
+
+  const usageUsed = subscription?.usage.replies_used ?? 0;
+  const usageLimit = subscription?.usage.replies_limit ?? 100;
+  const usagePercent = usageLimit > 0 ? (usageUsed / usageLimit) * 100 : 0;
+  
+  const currentPlan = getPlanByName(subscription?.current_plan.plan);
+
+  const resetDateStr = subscription?.usage.reset_at;
+  const resetDate = resetDateStr 
+    ? new Date(resetDateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : 'N/A';
 
   const handleUpgrade = (planName: string) => {
     toast({
@@ -23,6 +33,14 @@ export default function BillingPage() {
       description: "Checkout is coming soon.",
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto flex max-w-2xl items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -51,12 +69,12 @@ export default function BillingPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Reply quota used</span>
                 <span className="font-medium">
-                  {usageQuota.used} / {usageQuota.limit} replies
+                  {usageUsed} / {usageLimit} replies
                 </span>
               </div>
               <Progress value={usagePercent} className="h-2" />
               <p className="text-xs text-muted-foreground">
-                Resets on February 1, 2024
+                Resets on {resetDate}
               </p>
             </div>
           </CardContent>

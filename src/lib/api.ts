@@ -669,3 +669,76 @@ export const rewriteLeadSuggestion = async ({
 
   return (await response.json()) as RewriteSuggestionResponse;
 };
+
+export interface CurrentPlan {
+  id: string;
+  project_id: string;
+  plan: string;
+  status: string;
+  amount_cents: number | null;
+  currency: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  trial_end: string | null;
+  cancel_at: string | null;
+  canceled_at: string | null;
+}
+
+export interface UsageSnapshot {
+  replies_used: number;
+  replies_limit: number;
+  replies_remaining: number;
+  replies_usage_percent: number;
+  reset_at: string | null;
+}
+
+export interface AvailablePlan {
+  code: string;
+  name: string;
+  amount_cents: number;
+  currency: string;
+  interval: string;
+  description: string;
+  features: string[];
+  replies_limit: number | null;
+  is_current: boolean;
+}
+
+export interface SubscriptionActions {
+  manage_subscription_url: string | null;
+  upgrade_url: string | null;
+}
+
+export interface SubscriptionSummaryResponse {
+  current_plan: CurrentPlan;
+  usage: UsageSnapshot;
+  available_plans: AvailablePlan[];
+  actions: SubscriptionActions;
+}
+
+export const fetchSubscriptionSummary = async ({
+  accessToken,
+  projectId,
+  signal,
+}: {
+  accessToken: string;
+  projectId: string;
+  signal?: AbortSignal;
+}): Promise<SubscriptionSummaryResponse> => {
+  const url = new URL('/v1.0/subscription', API_BASE_URL);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch subscription summary');
+  }
+
+  return (await response.json()) as SubscriptionSummaryResponse;
+};
