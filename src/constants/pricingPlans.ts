@@ -19,6 +19,7 @@ export const WEBSITE_PRICING_PLANS: PricingPlan[] = [
     description: "For individuals and side projects getting started.",
     features: [
       "50 leads per day",
+      "Track up to 10 subreddits",
       "AI reply generation",
       "Reddit & X support",
     ],
