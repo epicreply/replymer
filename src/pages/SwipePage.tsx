@@ -552,7 +552,7 @@ export default function SwipePage() {
 
               <div className="absolute inset-0 pb-20 pt-2">
                 {nextLead ? (
-                  <div className="absolute inset-0 px-0" style={stackedCardStyle}>
+                  <div className="absolute inset-0 px-2" style={stackedCardStyle}>
                     <SwipeLeadCard
                       lead={nextLead}
                       className="pointer-events-none scale-[0.99] opacity-80 shadow-lg"
@@ -560,7 +560,7 @@ export default function SwipePage() {
                   </div>
                 ) : null}
 
-                <div className="absolute inset-0 px-2">
+                <div className="absolute inset-0 px-0">
                   <div
                     className={cn(
                       'h-full select-none',
