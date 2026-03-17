@@ -25,6 +25,7 @@ export interface SwipeLeadsQueryParams {
   limit?: number;
   sortBy?: 'relevancy_score';
   sortOrder?: 'asc' | 'desc';
+  status?: 'unread';
 }
 
 export interface AnalyticsQueryParams {
@@ -141,11 +142,13 @@ const buildSwipeLeadsQueryParams = ({
   limit = 20,
   sortBy = 'relevancy_score',
   sortOrder = 'desc',
+  status = 'unread',
 }: SwipeLeadsQueryParams) => {
   const params = new URLSearchParams();
   params.set('sort_by', sortBy);
   params.set('sort_order', sortOrder);
   params.set('limit', String(limit));
+  params.set('status', status);
   appendQueryParam(params, 'cursor', cursor ?? undefined);
   return params;
 };
@@ -229,7 +232,7 @@ export const fetchSwipeLeads = async ({
   params?: SwipeLeadsQueryParams;
   signal?: AbortSignal;
 }) => {
-  const url = new URL('/v1.0/leads', API_BASE_URL);
+  const url = new URL('/v1.0/projects/leads', API_BASE_URL);
   url.search = buildSwipeLeadsQueryParams(params).toString();
 
   const response = await fetch(url.toString(), {
