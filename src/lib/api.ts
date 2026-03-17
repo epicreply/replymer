@@ -229,7 +229,7 @@ export const fetchSwipeLeads = async ({
   params?: SwipeLeadsQueryParams;
   signal?: AbortSignal;
 }) => {
-  const url = new URL('/v1.0/leads', API_BASE_URL);
+  const url = new URL('/v1.0/projects/leads', API_BASE_URL);
   url.search = buildSwipeLeadsQueryParams(params).toString();
 
   const response = await fetch(url.toString(), {
