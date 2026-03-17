@@ -577,7 +577,7 @@ export default function SwipePage() {
                 </div>
               </div>
 
-              <div className="absolute inset-x-0 bottom-0 z-30 px-2">
+              <div className="absolute inset-x-0 bottom-0 z-30 px-2 pb-2">
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
