@@ -19,7 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlatformBadge } from '@/components/leads/PlatformBadge';
 import { RelevancyBadge } from '@/components/leads/RelevancyBadge';
 
-const SWIPE_LIMIT = 20;
+const SWIPE_LIMIT = 100;
 const SWIPE_THRESHOLD = 120;
 const SWIPE_ANIMATION_MS = 240;
 const PREFETCH_THRESHOLD = 5;
@@ -47,7 +47,7 @@ function SwipeLeadCard({ lead, className }: SwipeLeadCardProps) {
           <PlatformBadge platform={lead.platform} />
         </div>
 
-        <CardContent className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <CardContent className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-16">
           <div className="space-y-4">
             <section className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -560,7 +560,7 @@ export default function SwipePage() {
                   </div>
                 ) : null}
 
-                <div className="absolute inset-0 px-2">
+                <div className="absolute inset-0 px-0">
                   <div
                     className={cn(
                       'h-full select-none',
@@ -577,7 +577,7 @@ export default function SwipePage() {
                 </div>
               </div>
 
-              <div className="mt-3 px-2 md:absolute md:inset-x-0 md:bottom-0 md:z-30 md:mt-0">
+              <div className="absolute inset-x-0 bottom-0 z-30 px-2 pb-2">
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
