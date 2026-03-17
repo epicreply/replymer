@@ -138,7 +138,7 @@ const buildLeadsQueryParams = (filters: LeadsQueryParams) => {
 
 const buildSwipeLeadsQueryParams = ({
   cursor,
-  limit = 20,
+  limit = 100,
   sortBy = 'relevancy_score',
   sortOrder = 'desc',
 }: SwipeLeadsQueryParams) => {
