@@ -19,7 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlatformBadge } from '@/components/leads/PlatformBadge';
 import { RelevancyBadge } from '@/components/leads/RelevancyBadge';
 
-const SWIPE_LIMIT = 20;
+const SWIPE_LIMIT = 100;
 const SWIPE_THRESHOLD = 120;
 const SWIPE_ANIMATION_MS = 240;
 const PREFETCH_THRESHOLD = 5;
