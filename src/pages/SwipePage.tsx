@@ -47,7 +47,7 @@ function SwipeLeadCard({ lead, className }: SwipeLeadCardProps) {
           <PlatformBadge platform={lead.platform} />
         </div>
 
-        <CardContent className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-4">
+        <CardContent className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-16">
           <div className="space-y-4">
             <section className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
