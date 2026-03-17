@@ -528,7 +528,7 @@ export default function SwipePage() {
               </Card>
             </div>
           ) : (
-            <div ref={deckRef} className="relative h-full">
+            <div ref={deckRef} className="relative flex h-full min-h-0 flex-col">
               <div className="pointer-events-none absolute inset-x-4 top-3 z-20 flex items-center justify-between">
                 <span
                   className={cn(
@@ -550,7 +550,7 @@ export default function SwipePage() {
                 </span>
               </div>
 
-              <div className="absolute inset-0 pb-20 pt-2">
+              <div className="relative flex-1 min-h-0 pt-2 md:absolute md:inset-0 md:pb-20">
                 {nextLead ? (
                   <div className="absolute inset-0 px-2" style={stackedCardStyle}>
                     <SwipeLeadCard
@@ -577,7 +577,7 @@ export default function SwipePage() {
                 </div>
               </div>
 
-              <div className="absolute inset-x-0 bottom-0 z-30 px-2">
+              <div className="mt-3 px-2 md:absolute md:inset-x-0 md:bottom-0 md:z-30 md:mt-0">
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
