@@ -20,6 +20,13 @@ export interface LeadsQueryParams {
   limit?: number;
 }
 
+export interface SwipeLeadsQueryParams {
+  cursor?: string | null;
+  limit?: number;
+  sortBy?: 'relevancy_score';
+  sortOrder?: 'asc' | 'desc';
+}
+
 export interface AnalyticsQueryParams {
   accessToken: string;
   projectId: string;
@@ -72,6 +79,7 @@ interface LeadsApiResponse {
   data?: LeadsApiLead[];
   items?: LeadsApiLead[];
   next_cursor?: string | null;
+  has_more?: boolean;
   total?: number;
 }
 
@@ -125,6 +133,20 @@ const buildLeadsQueryParams = (filters: LeadsQueryParams) => {
   appendQueryParam(params, 'cursor', filters.cursor ?? undefined);
   appendQueryParam(params, 'limit', filters.limit ? String(filters.limit) : undefined);
 
+  return params;
+};
+
+const buildSwipeLeadsQueryParams = ({
+  cursor,
+  limit = 20,
+  sortBy = 'relevancy_score',
+  sortOrder = 'desc',
+}: SwipeLeadsQueryParams) => {
+  const params = new URLSearchParams();
+  params.set('sort_by', sortBy);
+  params.set('sort_order', sortOrder);
+  params.set('limit', String(limit));
+  appendQueryParam(params, 'cursor', cursor ?? undefined);
   return params;
 };
 
@@ -192,6 +214,44 @@ export const fetchProjectLeads = async ({
   return {
     leads: leads.map(mapApiLead),
     nextCursor: data.next_cursor ?? null,
+    total: data.total ?? leads.length,
+  };
+};
+
+export const fetchSwipeLeads = async ({
+  accessToken,
+  projectId,
+  params = {},
+  signal,
+}: {
+  accessToken: string;
+  projectId: string;
+  params?: SwipeLeadsQueryParams;
+  signal?: AbortSignal;
+}) => {
+  const url = new URL('/v1.0/leads', API_BASE_URL);
+  url.search = buildSwipeLeadsQueryParams(params).toString();
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-Project-ID': projectId,
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch swipe leads');
+  }
+
+  const data = (await response.json()) as LeadsApiResponse;
+  const leads = data.leads ?? data.data ?? data.items ?? [];
+
+  return {
+    leads: leads.map(mapApiLead),
+    nextCursor: data.next_cursor ?? null,
+    hasMore: data.has_more ?? Boolean(data.next_cursor),
     total: data.total ?? leads.length,
   };
 };
