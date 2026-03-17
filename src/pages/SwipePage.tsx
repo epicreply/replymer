@@ -47,7 +47,7 @@ function SwipeLeadCard({ lead, className }: SwipeLeadCardProps) {
           <PlatformBadge platform={lead.platform} />
         </div>
 
-        <CardContent className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-16">
+        <CardContent className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-4 md:pb-16">
           <div className="space-y-4">
             <section className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -478,7 +478,7 @@ export default function SwipePage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="flex h-[calc(100dvh-120px)] flex-col -my-6 md:h-[calc(100vh-140px)] md:-my-8">
+      <div className="flex h-full min-h-0 flex-col -my-6 md:h-[calc(100vh-140px)] md:-my-8">
         <div className="px-4 pb-3 pt-4 md:px-3">
           <div className="flex items-center justify-between gap-4">
             <div className="hidden md:block">
@@ -494,7 +494,7 @@ export default function SwipePage() {
           </div>
         </div>
 
-        <div className="relative flex-1 px-0 pb-4">
+        <div className="relative flex-1 min-h-0 px-0 pb-0 md:pb-4">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -577,7 +577,7 @@ export default function SwipePage() {
                 </div>
               </div>
 
-              <div className="absolute inset-x-0 bottom-0 z-30 px-2 pb-2">
+              <div className="mt-3 px-2 pb-[env(safe-area-inset-bottom)] md:absolute md:inset-x-0 md:bottom-0 md:z-30 md:mt-0 md:pb-2">
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
