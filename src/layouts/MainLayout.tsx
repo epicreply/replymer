@@ -39,6 +39,13 @@ export default function MainLayout() {
       };
     }
 
+    if (path.startsWith("/swipe")) {
+      return {
+        title: "Swipe",
+        subtitle: "Review leads quickly with swipe decisions",
+      };
+    }
+
     if (path.startsWith("/completed")) {
       return {
         title: "Completed",

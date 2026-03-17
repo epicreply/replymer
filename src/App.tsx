@@ -16,6 +16,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { SidebarProvider } from "./context/SidebarContext";
 import MainLayout from "./layouts/MainLayout";
 import InboxPage from "./pages/InboxPage";
+import SwipePage from "./pages/SwipePage";
 import CompletedPage from "./pages/CompletedPage";
 import DiscardedPage from "./pages/DiscardedPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
@@ -46,6 +47,7 @@ const router = createBrowserRouter(
         <Route path="/" element={<Navigate to="/inbox" replace />} />
         <Route path="/dashboard" element={<Navigate to="/inbox" replace />} />
         <Route path="/inbox" element={<InboxPage />} />
+        <Route path="/swipe" element={<SwipePage />} />
         <Route path="/completed" element={<CompletedPage />} />
         <Route path="/discarded" element={<DiscardedPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />

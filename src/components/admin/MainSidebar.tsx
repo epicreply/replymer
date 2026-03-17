@@ -19,6 +19,7 @@ import {
   Sparkles,
   ChevronUp,
   Zap,
+  Hand,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -48,6 +49,7 @@ interface NavItem {
 
 const primaryNavItems: NavItem[] = [
   { icon: Inbox, label: "Inbox", path: "/inbox" },
+  { icon: Hand, label: "Swipe", path: "/swipe" },
   { icon: CheckCircle2, label: "Completed", path: "/completed" },
   { icon: XCircle, label: "Discarded", path: "/discarded" },
 ];
