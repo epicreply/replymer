@@ -204,7 +204,11 @@ export function MainSidebar({
           {primaryNavItems.map((item) => {
             const isItemActive = isActive(item.path);
             const Icon = item.icon;
-            const badgeCount = item.path === "/inbox" ? inboxCounts.unread : undefined;
+            const badgeCountByPath: Record<string, number | undefined> = {
+              "/inbox": inboxCounts.unread,
+              "/completed": inboxCounts.completed,
+            };
+            const badgeCount = badgeCountByPath[item.path];
 
             return (
               <Button
