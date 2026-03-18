@@ -2,10 +2,11 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { PlatformBadge } from './PlatformBadge';
 import { RelevancyBadge } from './RelevancyBadge';
-import type { Lead } from '@/data/mockLeads';
+import type { Lead, LeadStatus } from '@/data/mockLeads';
 
 interface LeadCardProps {
   lead: Lead;
+  activeFilterStatus: LeadStatus | 'all';
   isSelected?: boolean;
   onClick?: () => void;
 }
@@ -43,8 +44,24 @@ const highlightKeywords = (content: string, keywords: string[]) => {
   });
 };
 
-export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
+const statusBadgeConfig: Partial<Record<LeadStatus, { label: string; className: string }>> = {
+  unread: {
+    label: 'New',
+    className: 'bg-primary/10 text-primary',
+  },
+  completed: {
+    label: 'Completed',
+    className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+  },
+  discarded: {
+    label: 'Discarded',
+    className: 'bg-muted text-muted-foreground',
+  },
+};
+
+export function LeadCard({ lead, activeFilterStatus, isSelected, onClick }: LeadCardProps) {
   const isUnread = lead.status === 'unread';
+  const statusBadge = activeFilterStatus === 'all' ? statusBadgeConfig[lead.status] : undefined;
 
   return (
     <button
@@ -68,9 +85,9 @@ export function LeadCard({ lead, isSelected, onClick }: LeadCardProps) {
             <span>{lead.community}</span>
             <span aria-hidden="true">•</span>
             <span>{formatDistanceToNow(lead.repliedAt ?? lead.createdAt, { addSuffix: true })}</span>
-            {isUnread && (
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                New
+            {statusBadge && (
+              <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium', statusBadge.className)}>
+                {statusBadge.label}
               </span>
             )}
           </div>
