@@ -748,11 +748,16 @@ export interface CurrentPlan {
 }
 
 export interface UsageSnapshot {
-  replies_used: number;
-  replies_limit: number;
-  replies_remaining: number;
-  replies_usage_percent: number;
-  replies_unlimited: boolean;
+  leads_used: number;
+  leads_limit: number | null;
+  leads_remaining: number | null;
+  leads_usage_percent: number | null;
+  leads_unlimited: boolean;
+  replies_used?: number;
+  replies_limit?: number | null;
+  replies_remaining?: number | null;
+  replies_usage_percent?: number | null;
+  replies_unlimited?: boolean;
   reset_at: string | null;
 }
 
@@ -764,8 +769,10 @@ export interface AvailablePlan {
   interval: string;
   description: string;
   features: string[];
-  replies_limit: number | null;
-  replies_unlimited: boolean;
+  leads_limit: number | null;
+  leads_unlimited: boolean;
+  replies_limit?: number | null;
+  replies_unlimited?: boolean;
   is_current: boolean;
 }
 
