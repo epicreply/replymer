@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const billingHistory = [
   { date: "Jan 1, 2024", description: "Professional Plan - Monthly", amount: "$49.00", status: "Paid" },
@@ -61,7 +62,9 @@ const formatInterval = (interval: string | null | undefined) => {
 
 export default function BillingPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: subscription, isLoading } = useSubscription();
+  const isBillingCardsVisible = user?.email?.trim().toLowerCase() === "microsaas.farm@gmail.com";
 
   const availablePlans = subscription?.available_plans ?? [];
   const currentPlanCode = normalizePlanCode(subscription?.current_plan.plan);
@@ -240,48 +243,52 @@ export default function BillingPage() {
           </div>
         ) : null}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Payment Method</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/50 p-4">
-              <CreditCard className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">•••• •••• •••• 4242</p>
-                <p className="text-xs text-muted-foreground">Expires 12/25</p>
-              </div>
-              <Button variant="outline" size="sm" className="ml-auto">
-                Update
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Billing History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {billingHistory.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between border-b border-border py-2 last:border-0"
-                >
+        {isBillingCardsVisible ? (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Payment Method</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/50 p-4">
+                  <CreditCard className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="text-sm font-medium">{item.description}</p>
-                    <p className="text-xs text-muted-foreground">{item.date}</p>
+                    <p className="text-sm font-medium">•••• •••• •••• 4242</p>
+                    <p className="text-xs text-muted-foreground">Expires 12/25</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{item.amount}</p>
-                    <p className="text-xs text-primary">{item.status}</p>
-                  </div>
+                  <Button variant="outline" size="sm" className="ml-auto">
+                    Update
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Billing History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {billingHistory.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between border-b border-border py-2 last:border-0"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{item.description}</p>
+                        <p className="text-xs text-muted-foreground">{item.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{item.amount}</p>
+                        <p className="text-xs text-primary">{item.status}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        ) : null}
       </div>
     </div>
   );
