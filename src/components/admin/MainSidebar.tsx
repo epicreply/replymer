@@ -75,6 +75,65 @@ interface MainSidebarProps {
   isDesktopSidebarOpen?: boolean;
 }
 
+function RollingBadgeCount({ value }: { value: number }) {
+  const [currentValue, setCurrentValue] = useState(value);
+  const [previousValue, setPreviousValue] = useState(value);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (value === currentValue) {
+      return;
+    }
+
+    setPreviousValue(currentValue);
+    setCurrentValue(value);
+    setIsAnimating(true);
+
+    const timeoutId = window.setTimeout(() => {
+      setIsAnimating(false);
+    }, 220);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [value, currentValue]);
+
+  const nextString = String(currentValue);
+  const prevString = String(previousValue);
+  const maxLength = Math.max(nextString.length, prevString.length);
+  const paddedNext = nextString.padStart(maxLength, " ");
+  const paddedPrev = prevString.padStart(maxLength, " ");
+
+  return (
+    <span className="inline-flex items-center tabular-nums">
+      {paddedNext.split("").map((nextChar, index) => {
+        const prevChar = paddedPrev[index] ?? " ";
+        const nextDisplayChar = nextChar === " " ? "\u00A0" : nextChar;
+        const prevDisplayChar = prevChar === " " ? "\u00A0" : prevChar;
+        const hasDigitChanged = nextChar !== prevChar;
+
+        return (
+          <span
+            key={`${index}-${nextChar}-${prevChar}`}
+            className="relative inline-flex h-[1em] w-[0.62em] items-center justify-center overflow-hidden leading-none"
+          >
+            {isAnimating && hasDigitChanged ? (
+              <>
+                <span className="rolling-digit-prev absolute inset-0 flex items-center justify-center">
+                  {prevDisplayChar}
+                </span>
+                <span className="rolling-digit-next absolute inset-0 flex items-center justify-center">
+                  {nextDisplayChar}
+                </span>
+              </>
+            ) : (
+              <span className="flex items-center justify-center">{nextDisplayChar}</span>
+            )}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 export function MainSidebar({
   onClose,
   onToggleSidebar,
@@ -227,7 +286,7 @@ export function MainSidebar({
                 </div>
                 {badgeCount !== undefined && badgeCount > 0 && (
                   <Badge variant="default" className="h-5 min-w-5 px-1.5 text-xs">
-                    {badgeCount}
+                    <RollingBadgeCount value={badgeCount} />
                   </Badge>
                 )}
               </Button>

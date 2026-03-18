@@ -607,6 +607,18 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     return () => inboxCountsAbortControllerRef.current?.abort();
   }, [refreshInboxCounts]);
 
+  useEffect(() => {
+    if (!accessToken || !selectedProjectId) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void refreshInboxCounts();
+    }, 60000);
+
+    return () => window.clearInterval(intervalId);
+  }, [accessToken, selectedProjectId, refreshInboxCounts]);
+
   const resolvedInboxCounts = useMemo(() => {
     return hasInboxCountsLoaded ? inboxCounts : {
       all: stats.total,
