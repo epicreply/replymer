@@ -6,18 +6,19 @@ import { Progress } from "@/components/ui/progress";
 import { useSubscription } from "@/hooks/useSubscription";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import {
+  isProfessionalCode,
+  isStarterLikeCode,
+  mapSubscriptionUsage,
+  normalizePlanCode,
+  resolveCurrentPlan,
+} from "@/lib/subscriptionUsage";
 
 const billingHistory = [
   { date: "Jan 1, 2024", description: "Professional Plan - Monthly", amount: "$49.00", status: "Paid" },
   { date: "Dec 1, 2023", description: "Professional Plan - Monthly", amount: "$49.00", status: "Paid" },
   { date: "Nov 1, 2023", description: "Professional Plan - Monthly", amount: "$49.00", status: "Paid" },
 ];
-
-const normalizePlanCode = (value: string | null | undefined) => value?.trim().toLowerCase() ?? "";
-
-const isProfessionalCode = (code: string) => code === "pro" || code === "professional";
-const isStarterLikeCode = (code: string) => code === "starter" || code === "free_trial";
-const PRO_PROGRESS_MAX = 999;
 
 const toDisplayPlanName = (value: string | null | undefined) => {
   if (!value) {
@@ -68,18 +69,9 @@ export default function BillingPage() {
 
   const availablePlans = subscription?.available_plans ?? [];
   const currentPlanCode = normalizePlanCode(subscription?.current_plan.plan);
-  const currentPlanByFlag = availablePlans.find((plan) => plan.is_current);
-  const currentPlanByCode = availablePlans.find((plan) => {
-    const normalizedCode = normalizePlanCode(plan.code);
-    return (
-      normalizedCode === currentPlanCode ||
-      (isStarterLikeCode(currentPlanCode) && normalizedCode === "starter")
-    );
-  });
-  const currentPlan = currentPlanByFlag ?? currentPlanByCode ?? null;
-  const isProfessionalCurrentPlan = isProfessionalCode(
-    normalizePlanCode(currentPlan?.code ?? subscription?.current_plan.plan),
-  );
+  const currentPlan = resolveCurrentPlan(subscription);
+  const usageSnapshot = mapSubscriptionUsage(subscription);
+  const isProfessionalCurrentPlan = usageSnapshot.isProfessionalCurrentPlan;
 
   const currentPlanName = currentPlan?.name ?? toDisplayPlanName(subscription?.current_plan.plan);
   const currentPlanPrice = formatPrice(
@@ -88,13 +80,8 @@ export default function BillingPage() {
   );
   const currentPlanPeriod = formatInterval(currentPlan?.interval);
 
-  const usageUsed = subscription?.usage.leads_used ?? subscription?.usage.replies_used ?? 0;
-  const usageLimit = subscription?.usage.leads_limit ?? subscription?.usage.replies_limit ?? 0;
-  const usageUnlimited = subscription?.usage.leads_unlimited ?? subscription?.usage.replies_unlimited ?? false;
-  const usageLabel = usageUnlimited ? `${usageUsed} leads` : `${usageUsed} / ${usageLimit} leads`;
-  const usagePercentLimit = isProfessionalCurrentPlan ? PRO_PROGRESS_MAX : usageLimit;
-  const usagePercent =
-    usagePercentLimit <= 0 ? 0 : Math.min(100, Math.max(0, (usageUsed / usagePercentLimit) * 100));
+  const usageLabel = usageSnapshot.label;
+  const usagePercent = usageSnapshot.progressPercent;
 
   const resetDateStr = subscription?.usage.reset_at;
   const resetDate = resetDateStr

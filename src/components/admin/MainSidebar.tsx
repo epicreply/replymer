@@ -39,6 +39,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useLeads } from "@/context/LeadsContext";
 import { useAuth, type Project } from "@/context/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { mapSubscriptionUsage } from "@/lib/subscriptionUsage";
 
 interface NavItem {
   icon: React.ElementType;
@@ -80,8 +82,9 @@ export function MainSidebar({
 }: MainSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { inboxCounts, usageQuota } = useLeads();
+  const { inboxCounts } = useLeads();
   const { user, selectProject, logout } = useAuth();
+  const { data: subscription, refetch: refetchSubscription } = useSubscription();
 
   const isInSettings = location.pathname.startsWith("/settings");
   const [settingsOpen, setSettingsOpen] = useState(isInSettings);
@@ -127,7 +130,15 @@ export function MainSidebar({
 
   const isActive = (path: string) => location.pathname === path;
 
-  const usagePercent = (usageQuota.used / usageQuota.limit) * 100;
+  const usageSnapshot = mapSubscriptionUsage(subscription);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void refetchSubscription();
+    }, 300000);
+
+    return () => window.clearInterval(intervalId);
+  }, [refetchSubscription]);
 
   return (
     <div className="flex min-h-screen flex-col bg-sidebar">
@@ -302,12 +313,12 @@ export function MainSidebar({
         {/* Usage Quota */}
         <div className="px-4 py-3">
           <div className="flex items-center justify-between text-xs mb-2">
-            <span className="text-muted-foreground">Replies used</span>
+            <span className="text-muted-foreground">Leads quota used</span>
             <span className="font-medium text-foreground">
-              {usageQuota.used}/{usageQuota.limit}
+              {usageSnapshot.label}
             </span>
           </div>
-          <Progress value={usagePercent} className="h-1.5" />
+          <Progress value={usageSnapshot.progressPercent} className="h-1.5" />
           <Button
             variant="outline"
             size="sm"
