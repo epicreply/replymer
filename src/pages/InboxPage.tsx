@@ -313,6 +313,7 @@ export default function InboxPage() {
                       <div key={lead.id}>
                         <LeadCard
                           lead={lead}
+                          activeFilterStatus={filters.status}
                           isSelected={selectedLead?.id === lead.id}
                           onClick={() => handleLeadSelect(lead)}
                         />

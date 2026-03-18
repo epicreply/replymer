@@ -84,10 +84,10 @@ export default function BillingPage() {
   );
   const currentPlanPeriod = formatInterval(currentPlan?.interval);
 
-  const usageUsed = subscription?.usage.replies_used ?? 0;
-  const usageLimit = subscription?.usage.replies_limit ?? 0;
-  const usageUnlimited = subscription?.usage.replies_unlimited ?? false;
-  const usageLabel = usageUnlimited ? `${usageUsed} replies` : `${usageUsed} / ${usageLimit} replies`;
+  const usageUsed = subscription?.usage.leads_used ?? subscription?.usage.replies_used ?? 0;
+  const usageLimit = subscription?.usage.leads_limit ?? subscription?.usage.replies_limit ?? 0;
+  const usageUnlimited = subscription?.usage.leads_unlimited ?? subscription?.usage.replies_unlimited ?? false;
+  const usageLabel = usageUnlimited ? `${usageUsed} leads` : `${usageUsed} / ${usageLimit} leads`;
   const usagePercent =
     usageUnlimited || usageLimit <= 0 ? 0 : Math.min(100, Math.max(0, (usageUsed / usageLimit) * 100));
 
@@ -164,7 +164,7 @@ export default function BillingPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Reply quota used</span>
+                <span className="text-muted-foreground">Leads quota used</span>
                 <span className="font-medium">{usageLabel}</span>
               </div>
               <Progress value={usagePercent} className="h-2" />
