@@ -16,6 +16,7 @@ const normalizePlanCode = (value: string | null | undefined) => value?.trim().to
 
 const isProfessionalCode = (code: string) => code === "pro" || code === "professional";
 const isStarterLikeCode = (code: string) => code === "starter" || code === "free_trial";
+const PRO_PROGRESS_MAX = 999;
 
 const toDisplayPlanName = (value: string | null | undefined) => {
   if (!value) {
@@ -79,8 +80,8 @@ export default function BillingPage() {
 
   const currentPlanName = currentPlan?.name ?? toDisplayPlanName(subscription?.current_plan.plan);
   const currentPlanPrice = formatPrice(
-    subscription?.current_plan.amount_cents ?? currentPlan?.amount_cents,
-    subscription?.current_plan.currency ?? currentPlan?.currency,
+    currentPlan?.amount_cents ?? subscription?.current_plan.amount_cents,
+    currentPlan?.currency ?? subscription?.current_plan.currency,
   );
   const currentPlanPeriod = formatInterval(currentPlan?.interval);
 
@@ -88,8 +89,9 @@ export default function BillingPage() {
   const usageLimit = subscription?.usage.leads_limit ?? subscription?.usage.replies_limit ?? 0;
   const usageUnlimited = subscription?.usage.leads_unlimited ?? subscription?.usage.replies_unlimited ?? false;
   const usageLabel = usageUnlimited ? `${usageUsed} leads` : `${usageUsed} / ${usageLimit} leads`;
+  const usagePercentLimit = isProfessionalCurrentPlan ? PRO_PROGRESS_MAX : usageLimit;
   const usagePercent =
-    usageUnlimited || usageLimit <= 0 ? 0 : Math.min(100, Math.max(0, (usageUsed / usageLimit) * 100));
+    usagePercentLimit <= 0 ? 0 : Math.min(100, Math.max(0, (usageUsed / usagePercentLimit) * 100));
 
   const resetDateStr = subscription?.usage.reset_at;
   const resetDate = resetDateStr
