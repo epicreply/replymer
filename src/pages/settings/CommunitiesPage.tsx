@@ -56,6 +56,7 @@ export default function CommunitiesPage() {
   const [keywords, setKeywords] = useState<MonitoredKeyword[]>([]);
   const [newKeyword, setNewKeyword] = useState('');
   const [enabledPlatforms, setEnabledPlatforms] = useState<Platform[]>([]);
+  const [updatingPlatforms, setUpdatingPlatforms] = useState<Set<Platform>>(new Set());
   const [isPlatformsLoading, setIsPlatformsLoading] = useState(true);
   const [isCommunitiesLoading, setIsCommunitiesLoading] = useState(true);
   const [isKeywordsLoading, setIsKeywordsLoading] = useState(true);
@@ -388,9 +389,19 @@ export default function CommunitiesPage() {
 
   const handlePlatformToggle = async (platform: Platform, checked: boolean) => {
     if (isComingSoonPlatform(platform)) return;
-    if (!accessToken || !selectedProjectId) return;
+    if (updatingPlatforms.has(platform)) return;
+
+    const rollbackPlatforms = enabledPlatforms;
+    setEnabledPlatforms((prev) =>
+      checked ? [...new Set([...prev, platform])] : prev.filter((item) => item !== platform)
+    );
+    setUpdatingPlatforms((prev) => new Set(prev).add(platform));
 
     try {
+      if (!accessToken || !selectedProjectId) {
+        throw new Error('Missing authentication or project selection.');
+      }
+
       const response = await fetch(
         `https://internal-api.autoreply.ing/v1.0/platform-connections/${platform}`,
         {
@@ -408,9 +419,6 @@ export default function CommunitiesPage() {
         throw new Error('Failed to update platform');
       }
 
-      setEnabledPlatforms((prev) =>
-        checked ? [...new Set([...prev, platform])] : prev.filter((item) => item !== platform)
-      );
       toast({
         title: checked ? 'Platform enabled' : 'Platform disabled',
         description: `${getPlatformLabel(platform)} monitoring has been ${
@@ -418,10 +426,18 @@ export default function CommunitiesPage() {
         }.`,
       });
     } catch (error) {
+      setEnabledPlatforms(rollbackPlatforms);
       toast({
         title: 'Error',
-        description: 'Failed to update platform.',
+        description:
+          error instanceof Error ? error.message : 'Failed to update platform.',
         variant: 'destructive',
+      });
+    } finally {
+      setUpdatingPlatforms((prev) => {
+        const next = new Set(prev);
+        next.delete(platform);
+        return next;
       });
     }
   };
@@ -515,7 +531,8 @@ export default function CommunitiesPage() {
                         'flex items-center gap-2',
                         isComingSoonPlatform(platform)
                           ? 'cursor-not-allowed text-muted-foreground'
-                          : 'cursor-pointer'
+                          : 'cursor-pointer',
+                        updatingPlatforms.has(platform) && 'opacity-70 pointer-events-none'
                       )}
                     >
                       <span>{getPlatformLabel(platform)}</span>
