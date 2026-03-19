@@ -20,6 +20,7 @@ const suggestedCommunities = [
 ];
 const platforms: Platform[] = ['reddit', 'twitter', 'linkedin'];
 const comingSoonPlatforms: Platform[] = ['twitter', 'linkedin'];
+const lockedPlatforms: Platform[] = ['reddit'];
 
 interface PlatformConnection {
   platform: Platform;
@@ -65,6 +66,7 @@ export default function CommunitiesPage() {
   const communityBounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const keywordBounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isComingSoonPlatform = (platform: Platform) => comingSoonPlatforms.includes(platform);
+  const isLockedPlatform = (platform: Platform) => lockedPlatforms.includes(platform);
 
   const triggerCommunityBounce = (bounceKey: string) => {
     if (communityBounceTimeoutRef.current) {
@@ -388,7 +390,7 @@ export default function CommunitiesPage() {
   };
 
   const handlePlatformToggle = async (platform: Platform, checked: boolean) => {
-    if (isComingSoonPlatform(platform)) return;
+    if (isComingSoonPlatform(platform) || isLockedPlatform(platform)) return;
     if (updatingPlatforms.has(platform)) return;
 
     const rollbackPlatforms = enabledPlatforms;
@@ -522,16 +524,18 @@ export default function CommunitiesPage() {
                   <div key={platform} className="flex items-center gap-2">
                     <RadioToggle
                       id={`platform-${platform}`}
-                      disabled={isComingSoonPlatform(platform)}
+                      disabled={isComingSoonPlatform(platform) || isLockedPlatform(platform)}
                       checked={enabledPlatforms.includes(platform)}
                       onCheckedChange={(checked) =>
+                        !isLockedPlatform(platform) &&
                         handlePlatformToggle(platform, checked as boolean)
                       }
                       className={cn(
                         'flex items-center gap-2',
-                        isComingSoonPlatform(platform)
+                        isComingSoonPlatform(platform) || isLockedPlatform(platform)
                           ? 'cursor-not-allowed text-muted-foreground'
                           : 'cursor-pointer',
+                        (isComingSoonPlatform(platform) || isLockedPlatform(platform)) && 'opacity-70',
                         updatingPlatforms.has(platform) && 'opacity-70 pointer-events-none'
                       )}
                     >
