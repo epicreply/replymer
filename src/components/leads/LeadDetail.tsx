@@ -31,6 +31,9 @@ export function LeadDetail() {
     [user]
   );
 
+  const [isRewritingComment, setIsRewritingComment] = useState(false);
+  const [isRewritingDM, setIsRewritingDM] = useState(false);
+
   if (!selectedLead) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -152,9 +155,6 @@ export function LeadDetail() {
       });
     }
   };
-
-  const [isRewritingComment, setIsRewritingComment] = useState(false);
-  const [isRewritingDM, setIsRewritingDM] = useState(false);
 
   const handleRewrite = async (type: 'comment' | 'dm') => {
     if (!selectedLead) return;
