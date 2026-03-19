@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RadioToggle } from '@/components/ui/radio-toggle';
@@ -102,6 +101,13 @@ export default function CommunitiesPage() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (enabledPlatforms.length === 0) return;
+    if (!enabledPlatforms.includes(selectedPlatform)) {
+      setSelectedPlatform(enabledPlatforms[0]);
+    }
+  }, [enabledPlatforms, selectedPlatform]);
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
@@ -210,6 +216,14 @@ export default function CommunitiesPage() {
   const handleAddCommunity = async (name: string, platform: Platform) => {
     const trimmedName = name.trim();
     if (!trimmedName || !accessToken || !selectedProjectId) return;
+    if (!enabledPlatforms.includes(platform)) {
+      toast({
+        title: 'Platform disabled',
+        description: `Enable ${getPlatformLabel(platform)} to add communities.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     const normalizedName = normalizeText(trimmedName);
     const duplicateCommunity = communities.find(
       (community) =>
@@ -456,6 +470,8 @@ export default function CommunitiesPage() {
     }
   };
 
+  const canAddCommunities = enabledPlatforms.includes(selectedPlatform);
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6">
@@ -495,9 +511,6 @@ export default function CommunitiesPage() {
                       onCheckedChange={(checked) =>
                         handlePlatformToggle(platform, checked as boolean)
                       }
-                    />
-                    <Label
-                      htmlFor={`platform-${platform}`}
                       className={cn(
                         'flex items-center gap-2',
                         isComingSoonPlatform(platform)
@@ -505,7 +518,7 @@ export default function CommunitiesPage() {
                           : 'cursor-pointer'
                       )}
                     >
-                      {getPlatformLabel(platform)}
+                      <span>{getPlatformLabel(platform)}</span>
                       {isComingSoonPlatform(platform) && (
                         <Badge
                           variant="outline"
@@ -514,7 +527,7 @@ export default function CommunitiesPage() {
                           Soon
                         </Badge>
                       )}
-                    </Label>
+                    </RadioToggle>
                   </div>
                 ))}
               </div>
@@ -570,7 +583,11 @@ export default function CommunitiesPage() {
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                   >
                     {platforms.map((p) => (
-                      <option key={p} value={p} disabled={isComingSoonPlatform(p)}>
+                      <option
+                        key={p}
+                        value={p}
+                        disabled={isComingSoonPlatform(p) || !enabledPlatforms.includes(p)}
+                      >
                         {getPlatformLabel(p)}{isComingSoonPlatform(p) ? ' (Soon)' : ''}
                       </option>
                     ))}
@@ -580,11 +597,17 @@ export default function CommunitiesPage() {
                     value={newCommunity}
                     onChange={(e) => setNewCommunity(e.target.value)}
                     onKeyDown={(e) =>
-                      e.key === 'Enter' && handleAddCommunity(newCommunity, selectedPlatform)
+                      e.key === 'Enter' &&
+                      canAddCommunities &&
+                      handleAddCommunity(newCommunity, selectedPlatform)
                     }
                     className="flex-1"
+                    disabled={!canAddCommunities}
                   />
-                  <Button onClick={() => handleAddCommunity(newCommunity, selectedPlatform)}>
+                  <Button
+                    onClick={() => handleAddCommunity(newCommunity, selectedPlatform)}
+                    disabled={!canAddCommunities}
+                  >
                     <Plus className="h-4 w-4 mr-1" />
                     Add
                   </Button>
@@ -641,6 +664,7 @@ export default function CommunitiesPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleAddSuggested(suggestion)}
+                          disabled={!enabledPlatforms.includes(suggestion.platform)}
                         >
                           <Plus className="h-3 w-3 mr-1" />
                           {suggestion.name}

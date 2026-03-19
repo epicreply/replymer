@@ -10,14 +10,17 @@ const RadioToggle = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      "peer h-4 w-4 shrink-0 rounded-full border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+      "peer inline-flex items-center gap-2 rounded-md ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     {...props}
   >
-    <CheckboxPrimitive.Indicator className="flex items-center justify-center">
-      <span className="h-2 w-2 rounded-full bg-primary" />
-    </CheckboxPrimitive.Indicator>
+    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-primary">
+      <CheckboxPrimitive.Indicator className="flex items-center justify-center">
+        <span className="h-2 w-2 rounded-full bg-primary" />
+      </CheckboxPrimitive.Indicator>
+    </span>
+    {props.children}
   </CheckboxPrimitive.Root>
 ));
 RadioToggle.displayName = "RadioToggle";
