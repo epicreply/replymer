@@ -40,6 +40,11 @@ export interface PromptSettings {
   searchPrompt: string;
   commentPrompt: string;
   dmPrompt: string;
+  additionalPrompt1: string;
+  additionalPrompt2: string;
+  additionalPrompt3: string;
+  additionalPrompt4: string;
+  additionalPrompt5: string;
 }
 
 // Mock communities
@@ -421,6 +426,11 @@ Focus on high-intent signals like:
 - Suggests a low-commitment next step (quick call, share resources)
 - Keeps it under 100 words
 - Signs off with [your_name]`,
+  additionalPrompt1: '',
+  additionalPrompt2: '',
+  additionalPrompt3: '',
+  additionalPrompt4: '',
+  additionalPrompt5: '',
 };
 
 // Usage quota mock

@@ -15,6 +15,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+const additionalPromptFields = [
+  { formKey: 'additionalPrompt1', apiKey: 'additional_prompt_1', label: 'Additional Prompt 1' },
+  { formKey: 'additionalPrompt2', apiKey: 'additional_prompt_2', label: 'Additional Prompt 2' },
+  { formKey: 'additionalPrompt3', apiKey: 'additional_prompt_3', label: 'Additional Prompt 3' },
+  { formKey: 'additionalPrompt4', apiKey: 'additional_prompt_4', label: 'Additional Prompt 4' },
+  { formKey: 'additionalPrompt5', apiKey: 'additional_prompt_5', label: 'Additional Prompt 5' },
+] as const;
+
 const placeholders = [
   { name: '<product_name>', description: 'Your product name' },
   { name: '<product_description>', description: 'Your product description' },
@@ -65,6 +73,21 @@ function PromptsPageSkeleton() {
             </CardContent>
           </Card>
         ))}
+
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-full max-w-md" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={`additional-prompt-skeleton-${index}`} className="space-y-2">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-40 w-full" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -84,11 +107,23 @@ export default function PromptsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const isSaveDisabled = !accessToken || !selectedProjectId || isLoading || isSaving;
 
-  const normalizePromptSettings = (promptData: Partial<Record<string, string | null>>) => ({
+  const normalizePromptSettings = (
+    promptData: Partial<Record<string, string | null>>
+  ): PromptSettings => ({
     searchPrompt: promptData.search_prompt ?? defaultPromptSettings.searchPrompt,
     commentPrompt: promptData.comment_prompt ?? defaultPromptSettings.commentPrompt,
     dmPrompt: promptData.dm_prompt ?? defaultPromptSettings.dmPrompt,
+    additionalPrompt1: promptData.additional_prompt_1 ?? defaultPromptSettings.additionalPrompt1,
+    additionalPrompt2: promptData.additional_prompt_2 ?? defaultPromptSettings.additionalPrompt2,
+    additionalPrompt3: promptData.additional_prompt_3 ?? defaultPromptSettings.additionalPrompt3,
+    additionalPrompt4: promptData.additional_prompt_4 ?? defaultPromptSettings.additionalPrompt4,
+    additionalPrompt5: promptData.additional_prompt_5 ?? defaultPromptSettings.additionalPrompt5,
   });
+
+  const normalizeOptionalPromptValue = (value: string) => {
+    const trimmedValue = value.trim();
+    return trimmedValue ? trimmedValue : null;
+  };
 
   useEffect(() => {
     if (!accessToken || !selectedProjectId) {
@@ -174,6 +209,11 @@ export default function PromptsPage() {
           search_prompt: formData.searchPrompt,
           comment_prompt: formData.commentPrompt,
           dm_prompt: formData.dmPrompt,
+          additional_prompt_1: normalizeOptionalPromptValue(formData.additionalPrompt1),
+          additional_prompt_2: normalizeOptionalPromptValue(formData.additionalPrompt2),
+          additional_prompt_3: normalizeOptionalPromptValue(formData.additionalPrompt3),
+          additional_prompt_4: normalizeOptionalPromptValue(formData.additionalPrompt4),
+          additional_prompt_5: normalizeOptionalPromptValue(formData.additionalPrompt5),
         }),
       });
 
@@ -341,6 +381,29 @@ export default function PromptsPage() {
                 className="min-h-40 font-mono text-sm"
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Additional Prompts</CardTitle>
+            <CardDescription>
+              Optional extra prompt fields saved with your direct message settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {additionalPromptFields.map((field) => (
+              <div key={field.formKey} className="space-y-2">
+                <Label htmlFor={field.formKey}>{field.label}</Label>
+                <Textarea
+                  id={field.formKey}
+                  value={formData[field.formKey]}
+                  onChange={(e) => handleChange(field.formKey, e.target.value)}
+                  disabled={isLoading}
+                  className="min-h-40 font-mono text-sm"
+                />
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
