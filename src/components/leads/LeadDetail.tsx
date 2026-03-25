@@ -3,10 +3,7 @@ import {
   X,
   ThumbsDown,
   Check,
-  Copy,
   ExternalLink,
-  RefreshCw,
-  Edit3,
   MessageSquare,
   Mail,
   Sparkles,
@@ -17,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useLeads } from '@/context/LeadsContext';
 import { useAuth } from '@/context/AuthContext';
+import { SuggestionActionButtons } from './SuggestionActionButtons';
 import { PlatformBadge } from './PlatformBadge';
 import { RelevancyBadge } from './RelevancyBadge';
 import { toast } from '@/hooks/use-toast';
@@ -48,55 +46,6 @@ export function LeadDetail() {
   const reasoningText = selectedLead.reasoning?.trim() ?? '';
   const isLeadCompleted = selectedLead.status === 'completed';
   const isLeadDiscarded = selectedLead.status === 'discarded';
-
-  const handleCopyAndOpen = (text: string, type: 'comment' | 'dm') => {
-    navigator.clipboard.writeText(text);
-    window.open(selectedLead.url, '_blank');
-    incrementUsage();
-    toast({
-      title: `${type === 'comment' ? 'Comment' : 'DM'} copied!`,
-      description: 'Opening the original post in a new tab.',
-    });
-  };
-
-  const getRedditUsername = (handle: string) => {
-    return handle
-      .trim()
-      .replace(/^\/?u\//i, '')
-      .replace(/^@/, '');
-  };
-
-  const handleCopyAndOpenDM = () => {
-    const message = selectedLead.suggestedDM;
-    navigator.clipboard.writeText(message);
-
-    const redditUsername =
-      selectedLead.platform === 'reddit'
-        ? getRedditUsername(selectedLead.authorHandle || selectedLead.author || '')
-        : '';
-
-    if (redditUsername) {
-      const params = new URLSearchParams({
-        to: redditUsername,
-        subject: 'Quick question',
-        message,
-      });
-      window.open(`https://www.reddit.com/message/compose/?${params.toString()}`, '_blank');
-      incrementUsage();
-      toast({
-        title: 'DM copied!',
-        description: 'Opening Reddit DM composer in a new tab.',
-      });
-      return;
-    }
-
-    window.open(selectedLead.url, '_blank');
-    incrementUsage();
-    toast({
-      title: 'DM copied!',
-      description: 'Opening the original post in a new tab.',
-    });
-  };
 
   const handleMarkComplete = async () => {
     if (isLeadCompleted) {
@@ -293,24 +242,15 @@ export function LeadDetail() {
             <p className="text-sm text-foreground/80 bg-muted/50 p-3 rounded-lg">
               {selectedLead.suggestedComment}
             </p>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleRewrite('comment')} disabled={isRewritingComment}>
-                <RefreshCw className={`hidden md:inline-block h-3 w-3 md:mr-1 ${isRewritingComment ? 'animate-spin' : ''}`} />
-                {isRewritingComment ? 'Rewriting…' : 'Rewrite'}
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleEditPrompt}>
-                <Edit3 className="hidden md:inline-block h-3 w-3 md:mr-1" />
-                Edit Prompt
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => handleCopyAndOpen(selectedLead.suggestedComment, 'comment')}
-              >
-                <Copy className="h-3 w-3 mr-1" />
-                Copy & Open
-              </Button>
-            </div>
+            <SuggestionActionButtons
+              lead={selectedLead}
+              type="comment"
+              text={selectedLead.suggestedComment}
+              isRewriting={isRewritingComment}
+              onRewrite={() => void handleRewrite('comment')}
+              onEditPrompt={handleEditPrompt}
+              incrementUsage={incrementUsage}
+            />
           </CardContent>
         </Card>
 
@@ -326,24 +266,15 @@ export function LeadDetail() {
             <p className="text-sm text-foreground/80 bg-muted/50 p-3 rounded-lg">
               {selectedLead.suggestedDM}
             </p>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleRewrite('dm')} disabled={isRewritingDM}>
-                <RefreshCw className={`hidden md:inline-block h-3 w-3 md:mr-1 ${isRewritingDM ? 'animate-spin' : ''}`} />
-                {isRewritingDM ? 'Rewriting…' : 'Rewrite'}
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleEditPrompt}>
-                <Edit3 className="hidden md:inline-block h-3 w-3 md:mr-1" />
-                Edit Prompt
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleCopyAndOpenDM}
-              >
-                <Copy className="h-3 w-3 mr-1" />
-                {selectedLead.platform === 'reddit' ? 'Open Reddit DM' : 'Copy & Open DMs'}
-              </Button>
-            </div>
+            <SuggestionActionButtons
+              lead={selectedLead}
+              type="dm"
+              text={selectedLead.suggestedDM}
+              isRewriting={isRewritingDM}
+              onRewrite={() => void handleRewrite('dm')}
+              onEditPrompt={handleEditPrompt}
+              incrementUsage={incrementUsage}
+            />
           </CardContent>
         </Card>
       </div>

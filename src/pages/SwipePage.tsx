@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import {
   Check,
@@ -9,15 +9,21 @@ import {
   ThumbsDown,
 } from 'lucide-react';
 import type { Lead } from '@/data/mockLeads';
+import { SuggestionActionButtons } from '@/components/leads/SuggestionActionButtons';
 import { useAuth } from '@/context/AuthContext';
 import { useLeads } from '@/context/LeadsContext';
-import { fetchSwipeLeads, updateLeadStatus as updateLeadStatusApi } from '@/lib/api';
+import {
+  fetchSwipeLeads,
+  rewriteLeadSuggestion,
+  updateLeadStatus as updateLeadStatusApi,
+} from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlatformBadge } from '@/components/leads/PlatformBadge';
 import { RelevancyBadge } from '@/components/leads/RelevancyBadge';
+import type { SuggestionType } from '@/lib/leadSuggestionActions';
 
 const SWIPE_LIMIT = 100;
 const SWIPE_THRESHOLD = 120;
@@ -32,12 +38,26 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 interface SwipeLeadCardProps {
   lead: Lead;
   className?: string;
+  onRewrite: (leadId: string, type: SuggestionType) => void;
+  isRewritingComment: boolean;
+  isRewritingDM: boolean;
+  incrementUsage: () => void;
 }
 
-function SwipeLeadCard({ lead, className }: SwipeLeadCardProps) {
+function SwipeLeadCard({
+  lead,
+  className,
+  onRewrite,
+  isRewritingComment,
+  isRewritingDM,
+  incrementUsage,
+}: SwipeLeadCardProps) {
   const reasoningText = lead.reasoning?.trim() ?? '';
   const suggestedComment = lead.suggestedComment?.trim() ?? '';
   const suggestedDM = lead.suggestedDM?.trim() ?? '';
+  const stopPointerPropagation = (event: PointerEvent<HTMLElement>) => {
+    event.stopPropagation();
+  };
 
   return (
     <Card className={cn('h-full overflow-hidden rounded-2xl border-border/70 shadow-xl', className)}>
@@ -65,7 +85,12 @@ function SwipeLeadCard({ lead, className }: SwipeLeadCardProps) {
               </p>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <Button variant="outline" size="sm" asChild>
-                  <a href={lead.url} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={lead.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onPointerDown={stopPointerPropagation}
+                  >
                     <ExternalLink className="mr-1 h-3 w-3" />
                     View Original
                   </a>
@@ -97,6 +122,18 @@ function SwipeLeadCard({ lead, className }: SwipeLeadCardProps) {
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">
                   {suggestedComment}
                 </p>
+                <div className="mt-3">
+                  <SuggestionActionButtons
+                    lead={lead}
+                    type="comment"
+                    text={suggestedComment}
+                    isRewriting={isRewritingComment}
+                    onRewrite={() => onRewrite(lead.id, 'comment')}
+                    showCopy
+                    preventPointerPropagation
+                    incrementUsage={incrementUsage}
+                  />
+                </div>
               </section>
             ) : null}
 
@@ -109,6 +146,18 @@ function SwipeLeadCard({ lead, className }: SwipeLeadCardProps) {
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">
                   {suggestedDM}
                 </p>
+                <div className="mt-3">
+                  <SuggestionActionButtons
+                    lead={lead}
+                    type="dm"
+                    text={suggestedDM}
+                    isRewriting={isRewritingDM}
+                    onRewrite={() => onRewrite(lead.id, 'dm')}
+                    showCopy
+                    preventPointerPropagation
+                    incrementUsage={incrementUsage}
+                  />
+                </div>
               </section>
             ) : null}
           </div>
@@ -120,7 +169,7 @@ function SwipeLeadCard({ lead, className }: SwipeLeadCardProps) {
 
 export default function SwipePage() {
   const { accessToken, user } = useAuth();
-  const { refreshInboxCounts } = useLeads();
+  const { incrementUsage, refreshInboxCounts } = useLeads();
 
   const selectedProjectId = useMemo(
     () =>
@@ -139,6 +188,8 @@ export default function SwipePage() {
   const [swipeX, setSwipeX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isActionInFlight, setIsActionInFlight] = useState(false);
+  const [rewritingCommentLeadId, setRewritingCommentLeadId] = useState<string | null>(null);
+  const [rewritingDMLeadId, setRewritingDMLeadId] = useState<string | null>(null);
 
   const swipeXRef = useRef(0);
   const deckRef = useRef<HTMLDivElement | null>(null);
@@ -262,6 +313,58 @@ export default function SwipePage() {
       setIsLoadingMore(false);
     }
   }, [nextCursor, isLoading, isLoadingMore, hasMore, accessToken, selectedProjectId]);
+
+  const handleRewrite = useCallback(
+    async (leadId: string, type: SuggestionType) => {
+      if (!accessToken || !selectedProjectId) {
+        toast({
+          title: 'Error',
+          description: 'Missing authentication or project selection.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const setLoadingLeadId =
+        type === 'comment' ? setRewritingCommentLeadId : setRewritingDMLeadId;
+      setLoadingLeadId(leadId);
+
+      toast({
+        title: 'Regenerating...',
+        description: `AI is generating a new ${type === 'comment' ? 'comment' : 'DM'}.`,
+      });
+
+      try {
+        const result = await rewriteLeadSuggestion({
+          accessToken,
+          projectId: selectedProjectId,
+          leadId,
+          type,
+        });
+
+        const fieldKey = type === 'comment' ? 'suggestedComment' : 'suggestedDM';
+        setLeads((prev) =>
+          prev.map((lead) =>
+            lead.id === leadId ? { ...lead, [fieldKey]: result.content } : lead
+          )
+        );
+
+        toast({
+          title: 'Rewrite complete',
+          description: `New ${type === 'comment' ? 'comment' : 'DM'} generated successfully.`,
+        });
+      } catch (error) {
+        toast({
+          title: 'Rewrite failed',
+          description: error instanceof Error ? error.message : 'An error occurred while rewriting.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoadingLeadId((currentLeadId) => (currentLeadId === leadId ? null : currentLeadId));
+      }
+    },
+    [accessToken, selectedProjectId]
+  );
 
   const handleDecision = useCallback(
     async (direction: SwipeDirection) => {
@@ -556,6 +659,10 @@ export default function SwipePage() {
                     <SwipeLeadCard
                       lead={nextLead}
                       className="pointer-events-none scale-[0.99] opacity-80 shadow-lg"
+                      onRewrite={(leadId, type) => void handleRewrite(leadId, type)}
+                      isRewritingComment={rewritingCommentLeadId === nextLead.id}
+                      isRewritingDM={rewritingDMLeadId === nextLead.id}
+                      incrementUsage={incrementUsage}
                     />
                   </div>
                 ) : null}
@@ -572,7 +679,13 @@ export default function SwipePage() {
                     onPointerCancel={handlePointerCancel}
                     style={topCardStyle}
                   >
-                    <SwipeLeadCard lead={currentLead} />
+                    <SwipeLeadCard
+                      lead={currentLead}
+                      onRewrite={(leadId, type) => void handleRewrite(leadId, type)}
+                      isRewritingComment={rewritingCommentLeadId === currentLead.id}
+                      isRewritingDM={rewritingDMLeadId === currentLead.id}
+                      incrementUsage={incrementUsage}
+                    />
                   </div>
                 </div>
               </div>
